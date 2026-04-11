@@ -2,18 +2,25 @@
 
 import argparse
 
-def get_count_somme(array):
-    somme = 0
+def get_count_sum_(array):
+    sum_ = 0
     count = 0
+    min_ = float('inf')
+    max_ = float('-inf')
     for x in array:
         if x is not None:
+            if x > max_:
+                max_ = x
+            if x < min_:
+                min_ = x
             count += 1
-            somme += x
-    return count, somme
+            sum_ += x
+    return count, sum_
 
+def 
 
 def get_full_description(array, feature_name):
-    count, somme = get_count_somme(array)
+    count, sum = get_count_sum_(array)
     return {
         "feature": feature_name,
         "count": count,
