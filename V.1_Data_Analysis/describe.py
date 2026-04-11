@@ -2,18 +2,28 @@
 
 import argparse
 
+def get_count_somme(array):
+    somme = 0
+    count = 0
+    for x in array:
+        if x is not None:
+            count += 1
+            somme += x
+    return count, somme
 
-def get_full_description(column, feature_name):
+
+def get_full_description(array, feature_name):
+    count, somme = get_count_somme(array)
     return {
         "feature": feature_name,
-        "count": len(column),
-        "std": (sum((x - (sum(column) / len(column))) ** 2 for x in column) / len(column)) ** 0.5 if column else 0,
-        "mean": sum(column) / len(column) if column else 0,
-        "min": min(column) if column else 0,
-        "25%": sorted(column)[int(len(column) * 0.25)] if column else 0,
-        "50%": sorted(column)[int(len(column) * 0.5)] if column else 0,
-        "75%": sorted(column)[int(len(column) * 0.75)] if column else 0,
-        "max": max(column) if column else 0,
+        "count": count,
+        "std": (sum((x - (sum(array) / count)) ** 2 for x in array) / count) ** 0.5 if array else 0,
+        "mean": sum(array) / count if array else 0,
+        "min": min(array) if array else 0,
+        "25%": sorted(array)[int(count * 0.25)] if array else 0,
+        "50%": sorted(array)[int(count * 0.5)] if array else 0,
+        "75%": sorted(array)[int(count * 0.75)] if array else 0,
+        "max": max(array) if array else 0,
     }
 
 def get_shifted_data(line, shift):
