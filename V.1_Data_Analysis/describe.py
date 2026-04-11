@@ -3,43 +3,45 @@
 import argparse
 
 
+def get_full_description(column, feature_name):
+    return {
+        "feature": feature_name,
+        "count": len(column),
+        "std": (sum((x - (sum(column) / len(column))) ** 2 for x in column) / len(column)) ** 0.5 if column else 0,
+        "mean": sum(column) / len(column) if column else 0,
+        "min": min(column) if column else 0,
+        "25%": sorted(column)[int(len(column) * 0.25)] if column else 0,
+        "50%": sorted(column)[int(len(column) * 0.5)] if column else 0,
+        "75%": sorted(column)[int(len(column) * 0.75)] if column else 0,
+        "max": max(column) if column else 0,
+    }
+
 def get_shifted_data(line, shift):
     features = line.strip().split(',')
     return features[shift:]
 
 # Read lines one by one and collect basics statistics
 def read_lines(file_path):
-    lines = 0
+    # lines = 0
     # Features that are not counted
     shift = 6
     with open(file_path, 'r') as file:
         # Header line is not counted
         features = get_shifted_data(file.readline(), shift)
         data = [[] for _ in features]
-        sums = [0 for _ in features]
-        counts = [0 for _ in features]
-        ignore = 0
+        descriptions = {feature: {} for feature in features}
         print(f"Data: {data}")
         for line in file:
             if line.strip():
                 for i, feature in enumerate(get_shifted_data(line, shift)):
                     # if the feature is a number, add it to the sum and count, otherwise ignore it
                     try:
-                        sums[i] += float(feature)
-                        counts[i] += 1
-                        data[i].append(feature)
+                        data[i].append(float(feature))
                     except ValueError:
-                        ignore = ignore + 1
                         pass
-                lines = lines + 1
-    print(f"Features: {features}")
-    print(f"Data: {data}")
-    print(f"Sums: {sums}")
-    print(f"Counts: {counts}")
-    print(f"Total number of lines: {lines}")
-    print(f"Total number of ignored features: {ignore}")
-
-    return lines
+        for i, feature in enumerate(features):
+            descriptions[i] = get_full_description(data[i], feature)
+    return {"features": features, "data": data, "descriptions": descriptions}
 
 
 # Entry point for the script
@@ -61,4 +63,7 @@ if __name__ == "__main__":
         exit(1)
 
     # Read the lines from the file
-    total_lines = read_lines(args.file_path)
+    ret = read_lines(args.file_path)
+    descriptions = ret["descriptions"]  
+    print(f"Descriptions: {descriptions[0]}")
+    print(f"Descriptions: {descriptions[1]}")
