@@ -1,5 +1,9 @@
 # Statistiques descriptives
 
+```bash
+./describe.py ../datasets/dataset_train.csv
+```
+
 ## 1. Cadres de travail
 
 On distingue deux présentations usuelles d'une série statistique quantitative.

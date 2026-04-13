@@ -17,10 +17,8 @@ def get_count_sum_(array):
             sum_ += x
     return count, sum_
 
-def 
-
 def get_full_description(array, feature_name):
-    count, sum = get_count_sum_(array)
+    count, sum_ = get_count_sum_(array)
     return {
         "feature": feature_name,
         "count": count,
@@ -54,7 +52,7 @@ def read_lines(file_path):
                     # if the feature is a number, add it to the sum and count, otherwise ignore it
                     try:
                         data[i].append(float(feature))
-                    except ValueError:
+                    except:
                         pass
         for i, feature in enumerate(features):
             descriptions[i] = get_full_description(data[i], feature)
