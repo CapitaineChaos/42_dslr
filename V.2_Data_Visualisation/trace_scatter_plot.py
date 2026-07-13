@@ -1,28 +1,15 @@
 #!/usr/bin/env python3
 
-### Tout revoir de 0 car le fichier a été réalisé par COPILOTE !!!!!!!!
-
-"""
-scatter_plot.py — Which two Hogwarts features are the most similar?
-
-Displays the full lower-triangle scatter plot matrix (78 pairs).
-Each point is one student, coloured by house.
-The most visually aligned pair is the answer.
-"""
-
 import argparse
+import signal
 import sys
 import os
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from describe_modified import get_rows
+from parse import load_rows
 
-try:
-    import matplotlib.pyplot as plt
-    import matplotlib.patches as mpatches
-except ImportError:
-    print("matplotlib is required: pip install matplotlib")
-    sys.exit(1)
 
 HOUSE_COLORS = {
     "Gryffindor": "#C1121F",
@@ -33,7 +20,6 @@ HOUSE_COLORS = {
 
 
 def open_detail(feat_x, feat_y, rows, houses):
-    """Open a single scatter plot in its own zoomable window."""
     fig2, ax2 = plt.subplots(figsize=(7, 6))
     fig2.suptitle(f"{feat_x}  vs  {feat_y}", fontsize=12)
     for house, color in HOUSE_COLORS.items():
@@ -85,18 +71,14 @@ def plot_scatter_matrix(features, rows, houses):
 
             for house, (xs, ys) in points.items():
                 if xs:
-                    ax.scatter(xs, ys, s=1, alpha=0.3,
-                               color=HOUSE_COLORS[house], linewidths=0)
+                    ax.scatter(xs, ys, s=1, alpha=0.3, color=HOUSE_COLORS[house], linewidths=0)
 
-            ax.tick_params(left=False, bottom=False,
-                           labelleft=False, labelbottom=False)
+            ax.tick_params(left=False, bottom=False, labelleft=False, labelbottom=False)
 
             if col == 0:
-                ax.set_ylabel(feat_y, fontsize=5, rotation=30,
-                              ha='right', labelpad=2)
+                ax.set_ylabel(feat_y, fontsize=5, rotation=30, ha='right', labelpad=2)
             if row == n - 1:
-                ax.set_xlabel(feat_x, fontsize=5, rotation=30,
-                              ha='right', labelpad=2)
+                ax.set_xlabel(feat_x, fontsize=5, rotation=30, ha='right', labelpad=2)
 
     def on_click(event):
         if event.inaxes is None:
@@ -119,6 +101,7 @@ def plot_scatter_matrix(features, rows, houses):
     fig.legend(handles=legend_handles, loc="upper right",
                fontsize=8, bbox_to_anchor=(1.0, 1.0))
 
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
     plt.tight_layout()
     plt.show()
 
@@ -130,5 +113,5 @@ if __name__ == "__main__":
     parser.add_argument("file_path", help="Path to dataset CSV")
     args = parser.parse_args()
 
-    features, rows, houses = get_rows(args.file_path)
+    features, rows, houses = load_rows(args.file_path)
     plot_scatter_matrix(features, rows, houses)

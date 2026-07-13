@@ -15,6 +15,16 @@ def get_count(array):
             sum_ += x
     return count, sum_
 
+def percentile(sorted_array, q):
+    if not sorted_array:
+        return None
+    pos = q * (len(sorted_array) - 1)
+    low = int(pos)
+    high = min(low + 1, len(sorted_array) - 1)
+    frac = pos - low
+    return sorted_array[low] + frac * (sorted_array[high] - sorted_array[low])
+
+
 def get_full_description(array):
     _count, _sum = get_count(array)
     _mean = _sum / _count if array else None
@@ -22,9 +32,9 @@ def get_full_description(array):
     _sorted = sorted(array)
     _min = _sorted[0] if array else None
     _max = _sorted[-1] if array else None
-    _25p = _sorted[int(_count * 0.25)] if array else None
-    _50p = _sorted[int(_count * 0.50)] if array else None
-    _75p = _sorted[int(_count * 0.75)] if array else None
+    _25p = percentile(_sorted, 0.25) if array else None
+    _50p = percentile(_sorted, 0.50) if array else None
+    _75p = percentile(_sorted, 0.75) if array else None
     return {
         "count": _count,
         "std":   _std,
@@ -48,6 +58,8 @@ def read_lines(file_path):
     with open(file_path, 'r') as file:
         # Header line is not counted
         features = get_shifted_data(file.readline(), shift)
+        if not features:
+            raise ValueError("empty file or no describable columns")
         data = [[] for _ in features]
         descriptions = {feature: {} for feature in features}
         for line in file:
@@ -126,9 +138,22 @@ if __name__ == "__main__":
     try:
         # Read the lines from the file
         ret = read_lines(args.file_path)
-        # descriptions = ret["descriptions"]
         disp_data(ret)
     except KeyboardInterrupt:
         print("\nInterrupted")
+        exit(130)
+    except FileNotFoundError:
+        print(f"Error: file not found: {args.file_path}")
+        exit(1)
+    except PermissionError:
+        print(f"Error: permission denied: {args.file_path}")
+        exit(1)
+    except IsADirectoryError:
+        print(f"Error: is a directory: {args.file_path}")
+        exit(1)
+    except (ValueError, UnicodeDecodeError) as e:
+        print(f"Error: invalid file '{args.file_path}': {e}")
+        exit(1)
     except Exception as e:
         print(f"Error: {e}")
+        exit(1)

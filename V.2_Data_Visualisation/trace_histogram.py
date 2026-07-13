@@ -1,28 +1,15 @@
 #!/usr/bin/env python3
 
-### Tout revoir de 0 car le fichier a été réalisé par COPILOTE !!!!!!!!
-
-"""
-histogram.py — Which Hogwarts course has the most homogeneous scores across houses?
-
-Displays a histogram for each course, with one colour per house.
-The course with the most similar distributions across houses (lowest η²) is the answer.
-"""
-
-
 import argparse
 import sys
 import os
+import signal
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from describe_modified import get_data_from_lines
+from parse import load_rows
 
-try:
-    import matplotlib.pyplot as plt
-    import matplotlib.patches as mpatches
-except ImportError:
-    print("matplotlib is required: pip install matplotlib")
-    sys.exit(1)
 
 HOUSE_COLORS = {
     "Gryffindor": "#C1121F",
@@ -32,13 +19,13 @@ HOUSE_COLORS = {
 }
 
 
+
 def plot_histograms(data, features):
     n = len(features)
-    ncols = 4
-    nrows = (n + ncols - 1) // ncols
+    ncols = 5
+    nrows = 3
 
-    fig, axes = plt.subplots(nrows, ncols, figsize=(20, nrows * 3.5))
-    fig.suptitle("lower η² = more homogeneous across houses", fontsize=13, y=1.01)
+    fig, axes = plt.subplots(nrows, ncols, figsize=(20, nrows * 3.5), layout="constrained")
     axes_flat = axes.flatten()
 
     for ax, feat in zip(axes_flat, features):
@@ -48,12 +35,13 @@ def plot_histograms(data, features):
             if vals:
                 ax.hist(vals, bins=20, alpha=0.5, color=color, label=house, density=True)
 
-        title_color = "black"
-        ax.set_title(f"{feat}", fontsize=8,
-                     color=title_color, fontweight="normal")
-        ax.set_xlabel("Score", fontsize=7)
-        ax.set_ylabel("Density", fontsize=7)
+        ax.set_title( f"{feat}", fontsize=8)
         ax.tick_params(labelsize=6)
+        ax.tick_params(labelleft=False, left=False)
+        ax.yaxis.offsetText.set_visible(False)
+
+    fig.supxlabel("Score", fontsize=9)
+    fig.supylabel("Density", fontsize=9)
 
     # Hide unused subplots
     for ax in axes_flat[n:]:
@@ -64,10 +52,11 @@ def plot_histograms(data, features):
         mpatches.Patch(color=color, label=house)
         for house, color in HOUSE_COLORS.items()
     ]
-    fig.legend(handles=legend_handles, loc="lower center", ncol=4,
-               fontsize=9, bbox_to_anchor=(0.5, -0.02))
 
-    plt.tight_layout()
+    fig.legend(handles=legend_handles, loc="outside lower center", ncol=4, fontsize=9)
+
+
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
     plt.show()
 
 
@@ -78,5 +67,10 @@ if __name__ == "__main__":
     parser.add_argument("file_path", help="Path to dataset CSV")
     args = parser.parse_args()
 
-    data, features = get_data_from_lines(args.file_path)
+    features, rows, houses = load_rows(args.file_path)
+    data = {feat: {} for feat in features}
+    for feat in features:
+        for house, value in zip(houses, rows[feat]):
+            if value is not None:
+                data[feat].setdefault(house, []).append(value)
     plot_histograms(data, features)
