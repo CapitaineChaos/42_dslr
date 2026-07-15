@@ -1,0 +1,282 @@
+\chapter{Évaluation et expérience reproductible}
+\label{ch:evaluation}
+
+\section{Matrice de confusion et mesures}
+
+\begin{lecture}
+L'exactitude compte la proportion totale de décisions correctes. La matrice de
+confusion conserve davantage d'information : ses lignes indiquent les maisons
+réelles et ses colonnes les maisons prédites. Elle montre ainsi quelles classes
+sont bien reconnues et lesquelles sont confondues.
+\end{lecture}
+
+Pour un test de taille $m_{\mathrm{te}}$, l'exactitude est
+\[
+  \operatorname{accuracy}=\frac1{m_{\mathrm{te}}}
+  \sum_{i\in\mathcal I_{\mathrm{te}}}\ind[\widehat c_i=c_i].
+\]
+Cette quantité est l'estimateur empirique de la probabilité de classification
+correcte sur un échantillon test indépendant \cite[chap.~7]{hastie2009}.
+En français statistique, \emph{exactitude} évite la confusion avec la
+\emph{précision} au sens anglophone de $\mathrm{precision}=TP/(TP+FP)$.
+
+L'évaluation reçoit deux vecteurs de même longueur : les classes réelles
+$(c_i)$ et les classes prédites $(\widehat c_i)$ du test. Chaque paire
+$(c_i,\widehat c_i)$ incrémente une case d'une matrice $K\times K$. L'exactitude
+est calculée depuis la diagonale ; les mesures par classe utilisent ensuite les
+sommes des lignes et des colonnes. Aucun réentraînement n'intervient dans ces
+comptages.
+
+La matrice de confusion $M$, définie par
+$M_{ab}=\#\{i:c_i=a,\widehat c_i=b\}$, révèle quelles maisons sont
+confondues. Pour chaque classe, on complète par rappel, précision et score $F_1$.
+La moyenne macro donne le même poids à chaque maison ; la moyenne pondérée tient
+compte de leurs effectifs. Une valeur unique ne remplace pas ces diagnostics.
+
+Le score $F_1$ d'une classe est la moyenne harmonique de sa précision $P$ et de
+son rappel $R$ :
+\[
+  F_1=\frac{2PR}{P+R}.
+\]
+Il n'est élevé que si les deux quantités le sont. Avec $P=0{,}80$ et $R=0{,}50$,
+on obtient $F_1\approx0{,}615$, et non leur moyenne arithmétique $0{,}65$.
+
+Supposons ensuite deux classes : la première contient $900$ observations et a un
+$F_1$ de $0{,}95$ ; la seconde en contient $100$ et a un $F_1$ de $0{,}40$. La
+moyenne macro vaut $(0{,}95+0{,}40)/2=0{,}675$. La moyenne pondérée vaut
+$(900\times0{,}95+100\times0{,}40)/1000=0{,}895$. Le second nombre paraît bien
+meilleur parce que la classe majoritaire domine le calcul. Rapporter les deux
+indique si l'on privilégie la performance par individu ou l'équilibre entre
+classes.
+
+\begin{table}[htbp]
+\centering
+\setlength{\tabcolsep}{9pt}
+\begin{tabular}{lrrrr|r}
+\toprule
+réelle $\backslash$ prédite & G & H & R & S & total \\
+\midrule
+G & \cellcolor{accent!35}$42$ & $3$ & $2$ & $3$ & $50$ \\
+H & $4$ & \cellcolor{accent!35}$35$ & $6$ & $5$ & $50$ \\
+R & $1$ & $4$ & \cellcolor{accent!35}$43$ & $2$ & $50$ \\
+S & $5$ & $2$ & $3$ & \cellcolor{accent!35}$40$ & $50$ \\
+\midrule
+total prédit & $52$ & $44$ & $54$ & $50$ & $200$ \\
+\bottomrule
+\end{tabular}
+\caption{Matrice de confusion fictive. Les bonnes décisions occupent la
+diagonale. L'exactitude vaut $(42+35+43+40)/200=0{,}80$, mais la ligne Hufflepuff
+révèle un rappel inférieur aux autres classes.}
+\label{tab:confusion-example}
+\end{table}
+
+Dans cet exemple, le rappel de Hufflepuff vaut $35/50=0{,}70$, tandis que sa
+précision vaut $35/44\approx0{,}80$. La première quantité répond à « quelle part
+des vrais Hufflepuff est retrouvée ? » ; la seconde à « parmi les élèves prédits
+Hufflepuff, quelle part l'est réellement ? ». Ces dénominateurs différents
+expliquent pourquoi les deux mesures ne sont pas interchangeables.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[x=.12cm,y=1cm]
+  \draw[-{Latex},thick] (0,0)--(105,0) node[right]{\%};
+  \foreach \x in {0,20,40,60,80,100}{
+    \draw (\x,.08)--(\x,-.08) node[below]{\x};
+  }
+  \foreach \yy/\name/\rec/\prec in
+    {4/Gryffindor/84/80.8,3/Hufflepuff/70/79.5,2/Ravenclaw/86/79.6,1/Slytherin/80/80}{
+    \node[anchor=east] at (-2,\yy){\name};
+    \fill[accent!75] (0,\yy+.05) rectangle (\rec,\yy+.35);
+    \fill[warning!70] (0,\yy-.35) rectangle (\prec,\yy-.05);
+  }
+  \node[accent,anchor=west] at (5,5){rappel};
+  \node[warning,anchor=west] at (25,5){précision};
+\end{tikzpicture}
+\caption{Rappel et précision par classe calculés à partir de la
+table~\ref{tab:confusion-example}. Une exactitude globale de $80\,\%$ masque
+notamment le rappel plus faible de Hufflepuff.}
+\label{fig:metrics-comparison}
+\end{figure}
+
+\begin{procedure}{Construire les mesures de classification}
+\textbf{Entrées :} $m_{\mathrm{te}}$ classes réelles et autant de classes
+prédites, codées dans le même ordre de $K$ libellés. \textbf{Sorties :} une
+matrice de confusion $M$, l'exactitude et les mesures par classe.
+\begin{enumerate}
+  \item initialiser $M\in\mathbb{N}^{K\times K}$ à zéro ; les lignes représentent le
+        réel et les colonnes la prédiction ;
+  \item pour chaque paire $(c_i,\widehat c_i)$, incrémenter $M_{c_i,\widehat c_i}$ ;
+  \item vérifier que la somme de toutes les cases vaut $m_{\mathrm{te}}$ ;
+  \item calculer l'exactitude comme somme diagonale divisée par $m_{\mathrm{te}}$ ;
+  \item pour la classe $k$, calculer rappel = diagonale/somme de la ligne et
+        précision = diagonale/somme de la colonne, puis $F_1$ ;
+  \item signaler tout dénominateur nul et rapporter les valeurs par classe.
+\end{enumerate}
+\end{procedure}
+
+\section{Protocole minimal d'évaluation}
+
+\begin{lecture}
+Un score isolé est impossible à interpréter sans connaître la manière dont il a
+été obtenu. Le protocole enregistre les données utilisées, leur préparation, les
+paramètres d'entraînement et les mesures finales afin que la même expérience
+puisse être reproduite et contrôlée.
+\end{lecture}
+
+Une expérience exploitable doit conserver :
+\begin{enumerate}
+  \item les variables retenues et la politique de valeurs manquantes ;
+  \item la partition, sa stratification et sa graine ;
+  \item les statistiques de préparation apprises sur le train ;
+  \item $\alpha$, $\eps$, le nombre maximal d'itérations et, le cas échéant,
+        $\lambda$ ;
+  \item pour chaque classe, le coût initial, le coût final, le nombre
+        d'itérations et la norme finale du gradient ;
+  \item sur le test : matrice de confusion, exactitude et mesures par classe.
+\end{enumerate}
+
+Deux contrôles simples donnent du sens au résultat. Le modèle doit dépasser une
+référence majoritaire qui prédit toujours la maison la plus fréquente. Puis une
+permutation aléatoire des étiquettes doit ramener la performance vers le hasard ;
+une performance anormalement élevée après permutation signale souvent une fuite
+de données ou une erreur de protocole.
+
+Exemple : si Gryffindor représente $35\,\%$ du test, prédire Gryffindor pour tout
+le monde donne déjà $35\,\%$ d'exactitude. Un modèle obtenant $38\,\%$ ne doit
+donc pas être comparé seulement au hasard uniforme de $25\,\%$, mais aussi à
+cette référence majoritaire. Pour le contrôle par permutation, on mélange les
+maisons entre les lignes avant l'entraînement tout en conservant les notes. Le
+lien entre caractéristiques et réponse est alors détruit. Sur quatre classes
+équilibrées, une exactitude proche de $25\,\%$ est attendue ; obtenir encore
+$80\,\%$ indiquerait presque certainement que la réponse ou une information qui
+la révèle s'est introduite dans les variables ou dans la préparation.
+
+\begin{procedure}{Exécuter une évaluation contrôlée}
+\textbf{Entrées :} modèle figé, statistiques de préparation, indices de test et
+classes réelles. \textbf{Sortie :} un compte rendu reproductible, sans
+modification du modèle.
+\begin{enumerate}
+  \item sélectionner les lignes désignées par $\mathcal I_{\mathrm{te}}$ et leur
+        appliquer les statistiques d'apprentissage déjà conservées ;
+  \item produire exactement une prédiction par ligne, sans mise à jour des paramètres ;
+  \item vérifier l'égalité des longueurs entre prédictions et classes réelles ;
+  \item construire matrice de confusion, exactitude et mesures par classe ;
+  \item comparer l'exactitude à celle de la classe majoritaire et exécuter
+        séparément le contrôle par permutation sur une expérience d'apprentissage ;
+  \item enregistrer résultats, paramètres, hyperparamètres, graine et indices.
+\end{enumerate}
+\end{procedure}
+
+\section{Validation croisée : plis et répétitions}
+
+\begin{lecture}
+Une seule partition peut avantager ou désavantager un modèle par hasard. La
+validation croisée fait tourner le rôle de validation entre plusieurs blocs :
+chaque observation est évaluée une fois tout en restant hors de l'apprentissage
+correspondant. Répéter l'ensemble du découpage mesure la sensibilité à cette
+répartition aléatoire.
+\end{lecture}
+
+Un \emph{pli} désigne un bloc d'observations. Dans une validation croisée
+à cinq plis, on découpe les données disponibles pour la sélection du modèle en
+cinq blocs disjoints $B_1,\ldots,B_5$. On entraîne cinq fois le modèle : à chaque
+fois, quatre blocs servent à l'ajustement et le bloc restant sert à la validation.
+
+\begin{figure}[htbp]
+\centering
+\begingroup
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{r*{5}{>{\centering\arraybackslash}p{13mm}}}
+& $B_1$ & $B_2$ & $B_3$ & $B_4$ & $B_5$ \\
+validation sur $B_1$ & \cellcolor{warning!70}V & \cellcolor{accent!55}A & \cellcolor{accent!55}A & \cellcolor{accent!55}A & \cellcolor{accent!55}A \\
+validation sur $B_2$ & \cellcolor{accent!55}A & \cellcolor{warning!70}V & \cellcolor{accent!55}A & \cellcolor{accent!55}A & \cellcolor{accent!55}A \\
+validation sur $B_3$ & \cellcolor{accent!55}A & \cellcolor{accent!55}A & \cellcolor{warning!70}V & \cellcolor{accent!55}A & \cellcolor{accent!55}A \\
+validation sur $B_4$ & \cellcolor{accent!55}A & \cellcolor{accent!55}A & \cellcolor{accent!55}A & \cellcolor{warning!70}V & \cellcolor{accent!55}A \\
+validation sur $B_5$ & \cellcolor{accent!55}A & \cellcolor{accent!55}A & \cellcolor{accent!55}A & \cellcolor{accent!55}A & \cellcolor{warning!70}V \\
+\end{tabular}
+
+\vspace{.6em}
+\textcolor{accent}{A : apprentissage}\qquad
+\textcolor{warning}{V : validation}
+\endgroup
+\caption{Validation croisée à cinq plis. Chaque observation sert quatre fois à
+l'apprentissage et exactement une fois à la validation. Le test final reste à
+l'écart de l'ensemble de ce mécanisme.}
+\label{fig:five-fold}
+\end{figure}
+
+Supposons que les exactitudes de validation des cinq tours soient
+$0{,}79$, $0{,}82$, $0{,}77$, $0{,}81$ et $0{,}80$. Leur moyenne vaut
+$0{,}798$. Leur dispersion montre aussi que le résultat dépend quelque peu des
+observations placées dans le bloc de validation ; annoncer seulement « environ
+$0{,}80$ » masque cette information.
+
+Une \emph{répétition} consiste à refaire tout le découpage en cinq blocs avec une
+autre permutation aléatoire, puis à recommencer les cinq entraînements. Les
+observations ne changent pas ; seule leur affectation aux blocs change. Deux
+répétitions produisent ici dix mesures :
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lccccc|c}
+\toprule
+& pli 1 & pli 2 & pli 3 & pli 4 & pli 5 & moyenne \\
+\midrule
+répétition 1 & $0{,}79$ & $0{,}82$ & $0{,}77$ & $0{,}81$ & $0{,}80$ & $0{,}798$ \\
+répétition 2 & $0{,}81$ & $0{,}78$ & $0{,}80$ & $0{,}76$ & $0{,}83$ & $0{,}796$ \\
+\midrule
+\multicolumn{6}{r}{moyenne des dix validations} & $0{,}797$ \\
+\bottomrule
+\end{tabular}
+\caption{Exemple fictif de validation croisée répétée. Les dix nombres ne sont
+pas dix évaluations finales indépendantes : les ensembles d'apprentissage se
+recouvrent fortement. Ils décrivent néanmoins la sensibilité au découpage.}
+\label{tab:repeated-cv}
+\end{table}
+
+\begin{procedure}{Comparer des configurations par validation croisée}
+\textbf{Entrées :} les données d'apprentissage, une liste de configurations et
+un nombre de plis $q$. Un pli est une liste d'indices utilisée une fois pour la
+validation. \textbf{Sortie :} une configuration choisie sans consulter le test.
+\begin{enumerate}
+  \item répartir les indices en $q$ blocs disjoints et enregistrer ces blocs ;
+  \item pour une configuration donnée et un bloc $B_r$, ajuster sur tous les
+        indices hors de $B_r$, puis mesurer sur $B_r$ ;
+  \item répéter pour $r=1,\ldots,q$ : chaque ligne sert ainsi une fois à la validation ;
+  \item calculer la moyenne et la dispersion des $q$ mesures ;
+  \item recommencer avec exactement les mêmes blocs pour chaque configuration ;
+  \item choisir selon une règle fixée, puis seulement exécuter le protocole final et le test.
+\end{enumerate}
+\end{procedure}
+
+Pour comparer deux modèles A et B, on utilise exactement les mêmes blocs pour les
+deux. Si, sur un pli donné, A obtient $0{,}81$ et B $0{,}79$, la différence est
+$+0{,}02$. Répéter ce calcul pli par pli sépare mieux l'effet du modèle de la
+difficulté particulière d'un bloc. Employer des découpages différents ajouterait
+inutilement la variation des données à la comparaison.
+
+\begin{vigilance}[Incertitude de l'évaluation]
+Une exactitude test est elle-même une estimation soumise à la variabilité
+d'échantillonnage. Sur $200$ observations, une différence de deux bonnes
+prédictions ne représente qu'un point de pourcentage et ne suffit généralement
+pas à conclure qu'un modèle est réellement supérieur. La comparaison de modèles
+doit conserver les mêmes partitions. Les plis et répétitions de la section
+précédente mesurent la sensibilité pendant la sélection ; ils ne transforment pas
+le test final en certitude.
+\end{vigilance}
+
+Par exemple, A classe correctement $162$ élèves sur $200$ et B en classe $160$.
+L'écart d'exactitude vaut $0{,}01$, mais il faut regarder les décisions appariées.
+Si A corrige deux erreurs de B sans introduire aucune nouvelle erreur, l'écart est
+cohérent sur ces deux cas. Si A et B se trompent chacun sur vingt élèves presque
+tous différents, le même total cache des comportements très différents. La
+matrice de confusion et la liste des désaccords sont alors plus informatives que
+le seul écart d'un point.
+
+\begin{resultat}[Résultats produits par l'évaluation]
+L'évaluation finale produit le vecteur des classes prédites, la matrice de
+confusion, l'exactitude globale et les mesures par classe. Les historiques de
+coût et de norme du gradient décrivent la convergence de l'entraînement ; ils ne
+remplacent pas les mesures calculées sur le test.
+\end{resultat}

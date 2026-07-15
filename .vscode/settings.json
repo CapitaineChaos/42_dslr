@@ -2,5 +2,50 @@
   "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
   "python.analysis.extraPaths": [
     "${workspaceFolder}/V.2_Data_Visualisation"
-  ]
+  ],
+  "cSpell.language": "fr,en",
+  "cSpell.words": [
+    "venv",
+    "ltex",
+    "dslr",
+    "logreg",
+    "hypersetup",
+    "hidelinks",
+    "matplotlib"
+  ],
+  "cSpell.enabledFileTypes": {
+    "latex": false,
+    "markdown": false
+  },
+  "cSpell.ignorePaths": [
+    "**/.gitignore",
+    "**/.gitattributes",
+    "**/Makefile",
+    "**/*.toc",
+    "**/*.aux"
+  ],
+  "latex-workshop.linting.chktex.enabled": false,
+  "latex.linter.enabled": false,
+  "ltex.language": "fr",
+  "ltex.diagnosticSeverity": "hint",
+  "ltex.disabledRules": {
+    "fr": ["FRENCH_WHITESPACE"]
+  },
+  "ltex.dictionary": {
+    "fr": [
+      "one-vs-all",
+      "log-odds",
+      "logit",
+      "argmax",
+      "DSLR",
+      "dataset",
+      "Poudlard",
+      "Gryffondor",
+      "Poufsouffle",
+      "Serdaigle",
+      "Serpentard",
+      "Wolfram",
+      "MathWorld"
+    ]
+  }
 }

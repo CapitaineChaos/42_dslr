@@ -1,0 +1,332 @@
+\chapter{Données, préparation et protocole expérimental}
+\label{ch:data}
+
+\section{Matrice de design}
+
+\begin{lecture}
+Une matrice de design est le tableau numérique effectivement reçu par le modèle.
+Chaque ligne décrit un élève ; chaque colonne décrit une caractéristique. Une
+colonne supplémentaire remplie de $1$ permet d'ajouter le même terme constant au
+score de tous les élèves.
+\end{lecture}
+
+Après préparation, on ajoute une coordonnée constante à chaque observation :
+\[
+  \xt_i=(1,x_{i1},\ldots,x_{in})^\top\in\R^{n+1}.
+\]
+La matrice de design empile les observations par lignes,
+\[
+  \X=\begin{bmatrix}\xt_1^\top\\ \vdots\\\xt_m^\top\end{bmatrix}
+  \in\R^{m\times(n+1)}.
+\]
+Cette convention fixe toutes les dimensions ultérieures : les paramètres sont
+des vecteurs colonnes de $\R^{n+1}$ et $\X\thv\in\R^m$.
+
+Sur trois élèves décrits par deux notes standardisées, la construction devient
+par exemple
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  box/.style={draw=ink!55,rounded corners=2pt,fill=accentlight,
+    inner xsep=7pt,inner ysep=5pt,align=center}]
+  \node[box] (raw) {$
+    \begin{array}{c|rr}
+      &x_1&x_2\\\hline
+      \text{élève 1}&-1{,}2&0{,}4\\
+      \text{élève 2}& 0{,}3&-0{,}8\\
+      \text{élève 3}& 1{,}1&0{,}6
+    \end{array}$};
+  \node[box,right=30mm of raw] (design) {$
+    \X=\begin{bmatrix}
+      1&-1{,}2& 0{,}4\\
+      1& 0{,}3&-0{,}8\\
+      1& 1{,}1& 0{,}6
+    \end{bmatrix}$};
+  \draw[-{Latex},thick] (raw)--node[above,align=center]{ajout de la\\colonne du biais}(design);
+  \coordinate (midboxes) at ($(raw.south)!.5!(design.south)$);
+  \node[below=4mm of midboxes,align=center]
+    {une ligne $=$ une observation ; une colonne $=$ une caractéristique\\
+     la première colonne, constante, est associée à $\theta_0$};
+\end{tikzpicture}
+
+\vspace{4mm}
+\[
+  \underbrace{\begin{bmatrix}
+    1&-1{,}2&0{,}4\\1&0{,}3&-0{,}8\\1&1{,}1&0{,}6
+  \end{bmatrix}}_{\X\;(3\times3)}
+  \underbrace{\begin{bmatrix}\theta_0\\\theta_1\\\theta_2\end{bmatrix}}_{\thv\;(3\times1)}
+  =
+  \underbrace{\begin{bmatrix}
+    \theta_0-1{,}2\theta_1+0{,}4\theta_2\\
+    \theta_0+0{,}3\theta_1-0{,}8\theta_2\\
+    \theta_0+1{,}1\theta_1+0{,}6\theta_2
+  \end{bmatrix}}_{\X\thv=(z_1,z_2,z_3)^\top\;(3\times1)}.
+\]
+\caption{Construction concrète d'une matrice de design. La colonne de $1$
+multiplie $\theta_0$ dans chaque score et encode ainsi le terme constant.
+Ici $\X\in\R^{3\times3}$, $\thv\in\R^3$ et $\X\thv\in\R^3$.}
+\label{fig:design-matrix-example}
+\end{figure}
+\FloatBarrier
+
+\begin{procedure}{Former la matrice de design}
+\textbf{Entrée :} $m$ observations déjà préparées, chacune décrite par les mêmes
+$n$ caractéristiques dans un ordre fixé. \textbf{Sortie :} une matrice
+$\X\in\R^{m\times(n+1)}$.
+\begin{enumerate}
+  \item écrire les $n$ valeurs de l'observation $i$ sur la ligne $i$ ;
+  \item ajouter à gauche une colonne de $1$, associée au biais $\theta_0$ ;
+  \item enregistrer l'ordre des colonnes, par exemple
+        $(1,\text{Astronomy},\text{Herbology},\ldots)$ ;
+  \item vérifier que chaque ligne contient $n+1$ nombres et que $\X\thv$ produit
+        exactement $m$ scores.
+\end{enumerate}
+\end{procedure}
+
+Avec deux caractéristiques, le rôle de la constante apparaît dans l'équation de
+la frontière.
+Sans première coordonnée égale à $1$, le score serait
+$\theta_1x_1+\theta_2x_2$ et la frontière passerait nécessairement par l'origine.
+Avec $\theta_0$, elle devient
+$\theta_0+\theta_1x_1+\theta_2x_2=0$ et peut se déplacer parallèlement à
+elle-même. Le biais est un paramètre du modèle qui règle cette translation de la
+frontière.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[courseplot,axis lines=middle,xlabel={$x_1$},ylabel={$x_2$},
+  xmin=-3,xmax=3,ymin=-3,ymax=3,legend style={at={(.5,1.03)},anchor=south,
+  legend columns=3,draw=none}]
+  \addplot[ink,very thick,domain=-3:3]{-.7*x};
+  \addlegendentry{$\theta_0=0$}
+  \addplot[accent,very thick,domain=-3:3]{1.3-.7*x};
+  \addlegendentry{$\theta_0<0$}
+  \addplot[warning,very thick,domain=-3:3]{-1.3-.7*x};
+  \addlegendentry{$\theta_0>0$}
+  \addplot[only marks,mark=*,ink] coordinates {(0,0)};
+\end{axis}
+\end{tikzpicture}
+\caption{Effet du biais pour des poids $\theta_1$ et $\theta_2$ fixés. Modifier
+$\theta_0$ translate la frontière parallèlement à elle-même ; sans biais, elle
+est contrainte de passer par l'origine.}
+\label{fig:bias-geometry}
+\end{figure}
+
+\section{Valeurs manquantes et standardisation}
+
+\begin{lecture}
+Le calcul exige un nombre dans chaque case et des échelles comparables. Imputer
+consiste à définir la valeur utilisée lorsqu'une mesure manque. Standardiser
+consiste à exprimer ensuite chaque mesure par rapport à la moyenne et à
+l'écart-type calculés sur l'apprentissage.
+\end{lecture}
+
+Une régression logistique ne définit aucune opération sur une valeur manquante.
+Il faut donc choisir explicitement une règle, par exemple l'imputation médiane,
+et conserver pour chaque variable la valeur d'imputation utilisée. Une ligne ne
+doit être supprimée que si ce choix est justifié et documenté.
+
+Exemple : les valeurs d'apprentissage d'un cours sont
+$\{4,7,9,12,100\}$. La médiane vaut $9$ ; une note manquante est donc remplacée
+par $9$. La moyenne vaudrait $26{,}4$ et serait fortement déplacée par la valeur
+$100$. Ce calcul explique l'intérêt possible de la médiane, mais ne démontre pas
+qu'elle est toujours optimale : l'imputation réduit artificiellement la
+dispersion et peut masquer un mécanisme de données manquantes informatif.
+
+\begin{figure}[htbp]
+\centering
+\begin{tabular}{c@{\hspace{14mm}$\xrightarrow{\text{médiane }=9}$\hspace{14mm}}c}
+\begin{tabular}{c}\toprule valeur observée\\\midrule
+$4$\\$7$\\\cellcolor{warning!25}\textcolor{warning}{manquante}\\$12$\\$100$\\\bottomrule
+\end{tabular}
+&
+\begin{tabular}{c}\toprule valeur préparée\\\midrule
+$4$\\$7$\\\cellcolor{warning!25}$9$\\$12$\\$100$\\\bottomrule
+\end{tabular}
+\end{tabular}
+\caption{Imputation médiane sur une variable. La valeur ajoutée est mise en
+évidence : elle n'a pas été observée et ne doit pas être confondue avec une
+mesure réelle. La médiane est calculée sur l'apprentissage seulement.}
+\label{fig:median-imputation}
+\end{figure}
+
+Pour une note brute $r_j$, on estime sur l'apprentissage
+\[
+  \mu_j=\frac1{m_{\mathrm{tr}}}\sum_{i\in\mathcal I_{\mathrm{tr}}}r_{ij},
+  \qquad
+  s_j=\sqrt{\frac1{m_{\mathrm{tr}}}\sum_{i\in\mathcal I_{\mathrm{tr}}}
+    (r_{ij}-\mu_j)^2},
+  \qquad x_j=\frac{r_j-\mu_j}{s_j}.
+\]
+Le choix du diviseur ($m_{\mathrm{tr}}$ ou $m_{\mathrm{tr}}-1$) a peu d'effet
+ici, mais doit rester identique entre entraînement et prédiction. Si $s_j=0$, la
+variable est constante sur l'apprentissage et doit être retirée.
+
+La standardisation ne modifie pas la famille des frontières linéaires : elle
+reparamètre le modèle. Elle améliore en revanche le conditionnement numérique de
+l'optimisation et rend une éventuelle pénalisation comparable entre variables
+\cite[sec.~4.6.3]{hastie2009}.
+
+Le \emph{conditionnement} décrit ici la sensibilité du calcul aux différentes
+directions de l'espace des paramètres. Si une variable varie autour de $10^3$ et
+une autre autour de $10^{-2}$, un même déplacement numérique de leurs
+coefficients ne modifie pas le score dans des proportions comparables. Les
+courbes de niveau du coût deviennent très allongées : la descente zigzague ou
+nécessite un petit pas. La figure~\ref{fig:contours} en donne la représentation
+géométrique ; la standardisation rapproche les échelles sans modifier
+l'information portée par l'ordre des observations.
+
+\begin{resultat}[Exemple de standardisation]
+Supposons que la note Astronomy ait, sur l'apprentissage, une moyenne
+$\mu=20$ et un écart-type $s=100$. Les notes brutes $-180$, $20$ et $170$
+deviennent respectivement $-2$, $0$ et $1{,}5$. La transformation conserve leur
+ordre et leurs positions relatives, mais fixe une origine et une échelle
+communes. Une valeur standardisée de $1{,}5$ signifie « un écart-type et demi
+au-dessus de la moyenne d'apprentissage » ; elle ne signifie ni $150\,\%$ ni une
+probabilité de $1{,}5$.
+\end{resultat}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \node[anchor=east] at (.4,1.25){note brute $r$};
+  \node[anchor=east] at (.4,-.35){valeur $x=(r-20)/100$};
+  \draw[{Latex}-{Latex},thick] (.7,1.25)--(11.3,1.25);
+  \draw[{Latex}-{Latex},thick] (.7,-.35)--(11.3,-.35);
+  \foreach \xpos/\raw/\std in {1/-240/-2{,}6,11/240/2{,}2}{
+    \draw (\xpos,1.16)--(\xpos,1.34) node[above=2pt]{\raw};
+    \draw (\xpos,-.44)--(\xpos,-.26) node[below=2pt]{\std};
+  }
+  \foreach \xpos/\raw/\std in {2.25/-180/-2,6.4167/20/0,9.5417/170/1{,}5}{
+    \fill[accent] (\xpos,1.25) circle (2.5pt) node[above=7pt]{\raw};
+    \fill[warning] (\xpos,-.35) circle (2.5pt) node[below=7pt]{\std};
+    \draw[-{Latex},dashed,gridgray!80] (\xpos,1.02)--(\xpos,-.12);
+  }
+  \node[draw=ink!45,fill=white,rounded corners=2pt,inner sep=4pt]
+    at (6,2.35){$r=20+100x$ : même position, autre origine et autre unité};
+\end{tikzpicture}
+\caption{Correspondance complète entre l'axe des notes brutes et l'axe
+standardisé. Chaque flèche verticale relie deux écritures de la même observation :
+$-180\leftrightarrow-2$, $20\leftrightarrow0$ et $170\leftrightarrow1{,}5$.}
+\label{fig:standardization}
+\end{figure}
+
+\begin{vigilance}[Fuite de données]
+Calculer $\mu_j$, $s_j$, une médiane d'imputation ou choisir des variables à
+partir de l'ensemble complet transmet de l'information du test vers
+l'apprentissage. L'évaluation devient alors optimiste. La partition doit
+précéder toute transformation apprise des données.
+\end{vigilance}
+
+\begin{procedure}{Préparer une caractéristique numérique}
+\textbf{Entrée :} les valeurs brutes $r_{ij}$ de la caractéristique $j$ sur les
+lignes d'apprentissage. \textbf{Sortie :} la valeur d'imputation, $\mu_j$, $s_j$
+et les valeurs transformées $x_{ij}$.
+\begin{enumerate}
+  \item calculer la médiane des valeurs présentes et l'utiliser pour remplacer
+        les valeurs manquantes ;
+  \item calculer ensuite $\mu_j$ et $s_j$ sur cette colonne d'apprentissage complétée ;
+  \item transformer chaque valeur par $x_{ij}=(r_{ij}-\mu_j)/s_j$ ; par exemple,
+        $r=170$, $\mu=20$, $s=100$ donnent $x=1{,}5$ ;
+  \item conserver médiane, $\mu_j$ et $s_j$, puis les réutiliser sans les recalculer ;
+  \item si $s_j=0$, signaler une colonne constante et la retirer du calcul.
+\end{enumerate}
+\end{procedure}
+
+\section{Partition et déséquilibre des classes}
+
+\begin{lecture}
+La partition produit deux listes d'indices disjointes : les indices
+d'apprentissage $\mathcal I_{\mathrm{tr}}$ et les indices de test
+$\mathcal I_{\mathrm{te}}$. Une ligne appartient à une seule liste. Toutes les
+transformations et tous les coefficients sont estimés depuis la première ; la
+seconde reste intacte jusqu'à l'évaluation finale.
+\end{lecture}
+
+Les deux listes vérifient
+\[
+  \mathcal I_{\mathrm{tr}}\cap\mathcal I_{\mathrm{te}}=\varnothing,
+  \qquad
+  \mathcal I_{\mathrm{tr}}\cup\mathcal I_{\mathrm{te}}=\{1,\ldots,m\}.
+\]
+Pour construire une partition stratifiée, on regroupe d'abord les indices par
+classe. Dans chaque groupe, on mélange les indices avec une graine fixée, puis on
+affecte la proportion prévue à l'apprentissage et le reste au test. Les morceaux
+obtenus sont enfin réunis dans les deux listes. Les données numériques restent
+inchangées : seuls leurs indices sont répartis.
+
+Les objets à conserver sont donc la graine et les deux listes d'indices. Les
+moyennes, écarts-types et valeurs d'imputation sont ensuite calculés uniquement
+sur les lignes désignées par $\mathcal I_{\mathrm{tr}}$. Au moment du test, ces
+mêmes statistiques sont appliquées aux lignes de $\mathcal I_{\mathrm{te}}$ sans
+nouvelle estimation.
+
+\paragraph{Préservation des effectifs par classe.}
+Avec $1\,000$ élèves, dont $900$ majoritaires et $100$ dans la classe étudiée,
+une répartition $80\,\%/20\,\%$ affecte séparément $80\,\%$ de chaque classe à
+l'apprentissage. On obtient ainsi $720+80=800$ lignes d'apprentissage et
+$180+20=200$ lignes de test. La stratification ne modifie pas le déséquilibre
+$90\,\%/10\,\%$ ; elle le reproduit dans les deux sous-ensembles.
+
+\begin{figure}[htbp]
+\centering
+\setlength{\tabcolsep}{12pt}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{lrrr}
+\toprule
+classe & ensemble disponible & apprentissage ($80\,\%$) & test ($20\,\%$) \\
+\midrule
+\textcolor{accent}{majoritaire} & $900$ & $720$ & $180$ \\
+\textcolor{warning}{classe étudiée} & $100$ & $80$ & $20$ \\
+\midrule
+total & $1\,000$ & $800$ & $200$ \\
+\bottomrule
+\end{tabular}
+
+\vspace{.7em}
+\begin{tabular}{ccc}
+$900=720+180$ & \qquad & $100=80+20$
+\end{tabular}
+\caption{Effectifs produits par une partition stratifiée $80\,\%/20\,\%$.}
+\label{fig:stratification}
+\end{figure}
+
+Un \emph{hyperparamètre} est fixé par le protocole et non estimé directement par
+le gradient. Par exemple, les coefficients $\thv$ sont des paramètres appris ;
+le taux $\alpha$ et la pénalisation $\lambda$ sont des hyperparamètres. Si trois
+valeurs de $\lambda$ donnent sur validation des exactitudes $0{,}78$, $0{,}83$ et
+$0{,}80$, on retient la deuxième avant d'évaluer une seule fois le modèle sur le
+test. La validation croisée, construite explicitement au
+chapitre~\ref{ch:evaluation}, généralise ce principe lorsque l'on ne souhaite pas
+réserver un unique ensemble de validation.
+
+\begin{resultat}[Quantités fixées après la préparation]
+La préparation produit les listes d'indices d'apprentissage et de test, une
+valeur d'imputation par caractéristique, une moyenne et un écart-type par
+caractéristique, puis les matrices numériques transformées. Ces quantités sont
+estimées une fois sur l'apprentissage et réutilisées sans modification pour la
+validation, le test et toute observation future.
+\end{resultat}
+
+\begin{procedure}{Construire une partition stratifiée}
+\textbf{Entrées :} les numéros de lignes $1,\ldots,m$, leur classe $c_i$, une
+proportion d'apprentissage et une \emph{graine}. La graine est un entier qui
+initialise le générateur pseudo-aléatoire : reprendre le même entier reproduit
+le même mélange. \textbf{Sorties :} deux listes d'indices
+$\mathcal I_{\mathrm{tr}}$ et $\mathcal I_{\mathrm{te}}$.
+\begin{enumerate}
+  \item former une liste de numéros de lignes par classe ; par exemple, une liste
+        contient les $100$ indices de la classe étudiée ;
+  \item mélanger chaque liste après initialisation avec la graine enregistrée ;
+  \item pour une proportion $80\,\%$, placer les $80$ premiers indices de cette
+        liste dans $\mathcal I_{\mathrm{tr}}$ et les $20$ autres dans
+        $\mathcal I_{\mathrm{te}}$ ; répéter pour chaque classe ;
+  \item concaténer les morceaux obtenus : dans l'exemple complet, les deux listes
+        contiennent respectivement $800$ et $200$ indices ;
+  \item vérifier qu'aucun indice n'apparaît deux fois, qu'aucun ne manque et que
+        les effectifs par classe correspondent à la table~\ref{fig:stratification} ;
+  \item enregistrer définitivement graine et listes avant de calculer médianes,
+        moyennes ou écarts-types.
+\end{enumerate}
+\end{procedure}

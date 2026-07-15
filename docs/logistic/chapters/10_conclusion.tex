@@ -1,0 +1,22 @@
+\chapter*{Conclusion}
+\addcontentsline{toc}{chapter}{Conclusion}
+
+La régression logistique repose sur une chaîne cohérente : modèle linéaire des
+log-cotes, loi de Bernoulli conditionnelle, maximum de vraisemblance, log-perte
+convexe et optimisation numérique contrôlée. OvR réutilise exactement ce
+problème binaire $K$ fois et fournit une règle multiclasses simple par maximum
+des scores. Sa simplicité a une contrepartie précise : la somme des sorties
+indépendantes est libre, alors qu'une distribution catégorielle exige une somme
+égale à $1$. La validité du résultat dépend enfin autant du protocole
+expérimental --- absence de fuite, test indépendant, diagnostics par classe ---
+que de la correction des équations.
+
+\begin{resultat}[Enchaînement des opérations]
+Le modèle reçoit des caractéristiques préparées, calcule quatre combinaisons
+linéaires, transforme éventuellement leurs scores par la fonction logistique et
+retient le score maximal. Son apprentissage consiste à choisir chaque vecteur de
+paramètres de façon à maximiser la vraisemblance de la cible binaire associée.
+Sa validation consiste à vérifier séparément la convergence numérique, la
+généralisation et les erreurs propres à chaque maison. Ces trois niveaux ne
+doivent jamais être confondus.
+\end{resultat}

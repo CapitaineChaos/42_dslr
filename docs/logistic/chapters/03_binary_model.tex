@@ -1,0 +1,200 @@
+\chapter{Modèle logistique binaire}
+\label{ch:binary}
+
+\begin{lecture}
+Le cas binaire pose une question à deux réponses, par exemple « Ravenclaw ou
+non-Ravenclaw ? ». Les caractéristiques produisent d'abord un score réel, qui
+peut être négatif ou positif. La sigmoïde convertit ce score en un nombre entre
+$0$ et $1$ interprété comme une probabilité conditionnelle.
+\end{lecture}
+
+Considérons provisoirement des étiquettes $y_i\in\{0,1\}$. On pose
+\[
+  z_{\thv}(\x)=\thv^\top\xt,
+  \qquad
+  \sigma(z)=\frac1{1+e^{-z}},
+  \qquad
+  p_{\thv}(\x)=\sigma(z_{\thv}(\x)).
+\]
+Cette paramétrisation définit la régression logistique binaire
+\cite[sec.~4.4]{hastie2009,cox1958}.
+
+Pour un ensemble de $m$ observations, le même calcul est effectué simultanément :
+$\X\thv$ produit un vecteur de $m$ scores, puis la sigmoïde appliquée composante
+par composante produit un vecteur de $m$ probabilités. Le vecteur $\thv$ contient
+les seules quantités ajustées par l'apprentissage ; $\X$ reste fixé pendant les
+itérations.
+
+\section{Interprétation par les log-cotes}
+
+\begin{lecture}
+Les cotes comparent la probabilité de l'événement à celle de son contraire. Une
+probabilité de $0{,}75$ correspond à des cotes $0{,}75/0{,}25=3$ : l'événement
+est trois fois plus probable que son contraire. Le logarithme transforme les
+multiplications de cotes en additions, compatibles avec un score linéaire.
+\end{lecture}
+
+La fonction logistique est équivalente au modèle linéaire
+\[
+  \log\frac{\Pp(Y=1\mid X=\x)}{\Pp(Y=0\mid X=\x)}
+  =\thv^\top\xt.
+\]
+Cette égalité est précisément la formulation en log-cotes du modèle logistique
+\cite[équations~4.17--4.18]{hastie2009}.
+
+Le modèle suppose que les log-cotes sont une fonction affine des
+caractéristiques. La transformation inverse est
+\[
+  p=\sigma(z)=\frac{1}{1+e^{-z}}.
+\]
+Le calcul reçoit donc un score réel $z=\thv^\top\xt$ et produit une probabilité
+comprise entre $0$ et $1$. Les étapes algébriques de l'inversion sont données à
+l'annexe~\ref{app:logit-inversion}.
+Ainsi, à caractéristiques égales par ailleurs, augmenter $x_j$ d'une unité
+multiplie les \emph{cotes} de la classe positive par $e^{\theta_j}$. Après
+standardisation, cette unité correspond à un écart-type de la variable brute.
+Cette interprétation porte sur les cotes conditionnelles, non sur une variation
+constante de probabilité.
+
+Par exemple, $\theta_j=\log 2\approx0{,}693$ signifie qu'une augmentation d'une
+unité de $x_j$ double les cotes, puisque $e^{\theta_j}=2$. Si la probabilité
+initiale vaut $0{,}20$, les cotes valent $0{,}20/0{,}80=0{,}25$ ; après
+doublement, elles valent $0{,}50$, soit une probabilité
+$0{,}50/(1+0{,}50)=1/3$. La probabilité n'a donc pas doublé : c'est bien le
+rapport de chances qui a été multiplié par deux.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[node distance=13mm,
+  box/.style={draw=accent,fill=accentlight,rounded corners,minimum width=34mm,
+    minimum height=13mm,align=center},
+  arr/.style={-{Latex},very thick,draw=ink}]
+  \node[box] (p1) {probabilité\\$p=0{,}20$};
+  \node[box,right=of p1] (o1) {cotes\\$p/(1-p)=0{,}25$};
+  \node[box,right=of o1] (l1) {log-cotes\\$\log(0{,}25)=-1{,}386$};
+  \draw[arr] (p1)--node[above,scale=.8]{$p/(1-p)$}(o1);
+  \draw[arr] (o1)--node[above,scale=.8]{$\log$}(l1);
+  \node[box,below=14mm of p1] (p2) {probabilité\\$p=1/3$};
+  \node[box,right=of p2] (o2) {cotes doublées\\$0{,}50$};
+  \node[box,right=of o2] (l2) {log-cotes augmentées\\de $\log 2$};
+  \draw[arr] (p2)--(o2); \draw[arr] (o2)--(l2);
+  \draw[warning,very thick,-{Latex}] (o1)--node[left]{${}\times2$}(o2);
+  \draw[warning,very thick,-{Latex}] (l1)--node[right]{${}+\log2$}(l2);
+\end{tikzpicture}
+\caption{Passage entre probabilité, cotes et log-cotes. Ajouter $\log2$ au score
+double les cotes, mais transforme ici la probabilité de $0{,}20$ en $1/3$, pas
+en $0{,}40$.}
+\label{fig:odds-map}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[courseplot,axis lines=left,
+      xlabel={score $z=\thv^\top\xt$},ylabel={$\sigma(z)$},
+      xmin=-8,xmax=8,ymin=-.03,ymax=1.03,xtick={-6,-3,0,3,6},
+      ytick={0,.25,.5,.75,1},grid=major,grid style={gridgray!50},samples=250]
+      \addplot[accent,very thick,domain=-8:8]{1/(1+exp(-x))};
+      \addplot[dashed,ink,domain=-8:0]{.5};
+      \addplot[dashed,ink] coordinates {(0,0) (0,.5)};
+    \end{axis}
+  \end{tikzpicture}
+  \caption{La logistique est strictement croissante, vérifie
+  $\sigma(-z)=1-\sigma(z)$ et $\sigma'(z)=\sigma(z)(1-\sigma(z))$. Le seuil de
+  probabilité $1/2$ correspond donc au score nul.}
+  \label{fig:sigmoid}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[courseplot,axis lines=left,
+  xlabel={score $z$},ylabel={sortie},xmin=-5,xmax=5,ymin=-.05,ymax=1.05,
+  grid=major,grid style={gridgray!45},legend pos=south east,samples=200]
+  \addplot[accent,very thick,domain=-5:5]{1/(1+exp(-x))};
+  \addlegendentry{probabilité $\sigma(z)$}
+  \addplot[warning,very thick,const plot] coordinates {(-5,0) (0,0) (0,1) (5,1)};
+  \addlegendentry{décision $\ind[z\geq0]$}
+\end{axis}
+\end{tikzpicture}
+\caption{La probabilité et la décision ne sont pas le même objet. La sigmoïde
+exprime une transition continue et conserve le degré de confiance ; le seuil
+produit seulement une étiquette binaire discontinue.}
+\label{fig:sigmoid-threshold}
+\end{figure}
+
+\begin{procedure}{Calculer une sortie binaire}
+\textbf{Entrées :} une ligne $\xt\in\R^{n+1}$ et les paramètres
+$\thv\in\R^{n+1}$. \textbf{Sorties :} un score réel $z$ et une probabilité $p$.
+\begin{enumerate}
+  \item vérifier que $\xt$ et $\thv$ ont la même longueur et le même ordre de colonnes ;
+  \item calculer $z=\theta_0+\theta_1x_1+\cdots+\theta_nx_n$ ;
+  \item calculer $p=1/(1+e^{-z})$ avec la forme stable du chapitre~\ref{ch:optim} ;
+  \item vérifier $0<p<1$ et conserver $z$ séparément de $p$ : OvR compare les scores.
+\end{enumerate}
+\end{procedure}
+
+\section{Frontière de décision}
+
+\begin{lecture}
+La probabilité varie continûment, mais la décision exige une classe. Avec un
+seuil de $0{,}5$, la frontière réunit les observations pour lesquelles le modèle
+hésite exactement entre les deux réponses. Dans deux dimensions, cette frontière
+est une droite ; dans davantage de dimensions, c'est un hyperplan.
+\end{lecture}
+
+Avec des coûts d'erreur symétriques, la règle de Bayes estimée est
+\[
+  \widehat y(\x)=\ind[p_{\thv}(\x)\geq 1/2]
+  =\ind[\thv^\top\xt\geq0].
+\]
+La règle générale consiste à choisir la classe de probabilité conditionnelle
+maximale ; le seuil $1/2$ en est le cas binaire à coûts symétriques
+\cite[sec.~2.4]{hastie2009}.
+La frontière $\{\x:\thv^\top\xt=0\}$ est un hyperplan. La transformation
+logistique rend la sortie bornée, mais n'introduit aucune non-linéarité dans la
+géométrie de la frontière exprimée dans les variables fournies au modèle.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[courseplot,axis lines=middle,
+  xlabel={$x_1$},ylabel={$x_2$},xmin=-3,xmax=3,ymin=-3,ymax=3,
+  grid=major,grid style={gridgray!45},legend pos=south east]
+  \addplot[only marks,mark=*,accent,mark size=2.4pt]
+    coordinates {(-2,-1.2) (-1.5,-.4) (-1.8,.5) (-.8,-1.4) (-.4,-.8)};
+  \addlegendentry{$y=0$}
+  \addplot[only marks,mark=triangle*,warning,mark size=2.8pt]
+    coordinates {(.3,1.2) (1,.6) (1.4,1.8) (2,.8) (1.6,-.2)};
+  \addlegendentry{$y=1$}
+  \addplot[ink,very thick,domain=-3:3]{.4-.75*x};
+  \addlegendentry{$\theta_0+\theta_1x_1+\theta_2x_2=0$}
+  \addplot[accent!55,dashed,domain=-3:3]{1.5-.75*x};
+  \addplot[accent!55,dashed,domain=-3:3]{-0.7-.75*x};
+\end{axis}
+\end{tikzpicture}
+\caption{Exemple à deux caractéristiques. La droite pleine est la frontière
+$p=0{,}5$ ; les droites pointillées sont des lignes d'égale probabilité. Elles
+sont parallèles parce que le score est affine. Les points sont illustratifs et
+ne représentent pas les données complètes du projet.}
+\label{fig:boundary}
+\end{figure}
+
+\begin{procedure}{Appliquer une décision binaire}
+\textbf{Entrée :} une probabilité $p$ et un seuil $\tau$ fixé avant le test.
+\textbf{Sortie :} une étiquette $\widehat y\in\{0,1\}$.
+\begin{enumerate}
+  \item avec des coûts symétriques, choisir $\tau=0{,}5$ ;
+  \item produire $\widehat y=1$ si $p\geq\tau$, sinon $\widehat y=0$ ;
+  \item exemple : $p=0{,}71$ donne $1$, tandis que $p=0{,}23$ donne $0$ ;
+  \item si un autre seuil est nécessaire, le sélectionner sur validation et
+        enregistrer sa valeur avant l'évaluation du test.
+\end{enumerate}
+\end{procedure}
+
+\begin{resultat}[Quantités produites par un modèle binaire]
+Une ligne préparée $\xt$ et un vecteur de paramètres $\thv$ produisent d'abord
+un score $z=\thv^\top\xt$, puis une probabilité $p=\sigma(z)$, puis une décision
+binaire après comparaison au seuil. L'apprentissage modifie $\thv$ ; la
+prédiction utilise ensuite ce vecteur sans le réestimer.
+\end{resultat}

@@ -1,0 +1,232 @@
+\chapter{Notations et lecture des formules}
+\label{ch:notations}
+
+\begin{lecture}
+Une formule se lit d'abord comme une phrase : quels objets entrent dans le
+calcul, quelle opération les relie et quel objet en sort ? Les tableaux de ce
+chapitre donnent pour chaque symbole sa nature, sa lecture orale professionnelle
+et son rôle dans le modèle.
+\end{lecture}
+
+Ce chapitre fixe non seulement le sens des symboles, mais aussi la manière de les
+nommer à l'oral. Une notation ne peut être comprise indépendamment de sa nature :
+un scalaire, un vecteur, une matrice, une fonction et un ensemble ne se manipulent
+pas de la même façon. Les vecteurs sont écrits en gras, les ensembles en lettres
+calligraphiques et les paramètres grecs en gras lorsqu'ils forment un vecteur.
+
+Le document adopte la convention statistique suivante : l'indice d'observation
+est placé en bas. Ainsi, $\x_i$ est le vecteur de l'élève $i$, $x_{ij}$ sa
+caractéristique $j$ et $c_i$ sa classe. Certains cours de machine learning
+écrivent $\x^{(i)}$ afin de distinguer le numéro d'exemple d'une puissance ; cette
+convention est légitime, mais elle est moins naturelle à l'oral et entre en conflit
+avec l'usage matriciel $x_{ij}$. Elle n'est donc pas retenue ici. Les crochets en
+exposant, comme $\thv^{[t]}$, sont réservés au numéro d'itération et ne désignent
+jamais une puissance.
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  n/.style={draw=accent,fill=accentlight,rounded corners,align=center,
+    minimum height=9mm,text width=27mm},
+  a/.style={-{Latex},thick,draw=ink},node distance=6mm]
+  \node[n] (raw) {$r_{ij}$\\valeur brute};
+  \node[n,right=of raw] (x) {$\x_i$\\vecteur préparé};
+  \node[n,right=of x] (z) {$z_k$\\score réel};
+  \node[n,right=of z] (q) {$q_k$\\sortie binaire};
+  \node[n,right=of q] (c) {$\widehat c$\\classe prédite};
+  \draw[a] (raw)--node[above,scale=.78]{standardiser}(x);
+  \draw[a] (x)--node[above,scale=.78]{$\thv_k^\top\xt$}(z);
+  \draw[a] (z)--node[above,scale=.78]{$\sigma$}(q);
+  \draw[a] (q)--node[above,scale=.78]{$\Argmax_k$}(c);
+\end{tikzpicture}}
+\caption{Nature des objets successifs. Ce schéma empêche notamment de confondre
+une caractéristique, un score, une sortie logistique et une classe.}
+\label{fig:notation-chain}
+\end{figure}
+
+\section{Indices, effectifs et ensembles}
+
+\begin{table}[htbp]
+\centering
+\begin{tabularx}{\textwidth}{>{$}l<{$} >{\raggedright\arraybackslash}p{3.1cm} X}
+\toprule
+\text{symbole} & \text{lecture orale} & \text{signification exacte} \\
+\midrule
+i & « indice i » lorsqu'il est attaché à un symbole & indice d'une observation : ici, un élève. Il varie de $1$ à $m$. \\
+j & « indice j » lorsqu'il est attaché à un symbole & indice d'une caractéristique : ici, un cours ou une note. Il varie de $1$ à $n$. \\
+k & « indice k » lorsqu'il est attaché à un symbole & indice d'une classe : ici, une maison. Il varie de $1$ à $K$. \\
+t & « itération t » & indice d'une itération de l'algorithme d'optimisation. \\
+m & « m » & nombre total d'observations dans l'ensemble considéré. \\
+n & « n » & nombre de caractéristiques utilisées par le modèle, avant ajout du biais. \\
+K & « K » & nombre de classes ; dans ce problème, $K=4$. \\
+\mathcal C & « l'ensemble des classes C » & ensemble des classes possibles, et non une classe particulière. On précise « C calligraphique » seulement si l'on doit dicter la graphie. \\
+\R & « R » ou « l'ensemble des réels » & ensemble dans lequel prennent leurs valeurs les scores, paramètres et caractéristiques numériques. \\
+\mathcal I_{\mathrm{tr}} & « I indice apprentissage » & ensemble des indices appartenant à l'échantillon d'apprentissage. \\
+\mathcal I_{\mathrm{te}} & « I indice test » & ensemble des indices appartenant à l'échantillon de test. \\
+\bottomrule
+\end{tabularx}
+\caption{Indices, tailles et ensembles. Un même indice conserve le même rôle dans
+tout le document.}
+\end{table}
+
+L'écriture $i\in\mathcal I_{\mathrm{tr}}$ se lit « $i$ appartient à l'ensemble
+des indices d'apprentissage ». L'écriture $k\in\{1,\ldots,K\}$ se lit « $k$ varie
+de un à $K$ ».
+
+\section{Une observation et ses caractéristiques}
+
+\begin{table}[htbp]
+\centering
+\begin{tabularx}{\textwidth}{>{$}l<{$} >{\raggedright\arraybackslash}p{3.4cm} X}
+\toprule
+\text{symbole} & \text{lecture orale} & \text{signification exacte} \\
+\midrule
+r_{ij} & « r indice i j » & valeur brute de la caractéristique $j$ pour l'élève $i$, avant standardisation. Le premier indice repère la ligne, le second la variable. \\
+\mu_j & « mu indice j » & moyenne de la caractéristique $j$, estimée uniquement sur l'apprentissage. \\
+s_j & « s indice j » & écart-type de la caractéristique $j$, estimé uniquement sur l'apprentissage. \\
+x_{ij} & « x indice i j » & caractéristique $j$ standardisée de l'observation $i$ ; c'est un scalaire. \\
+\x_i & « x indice i » & vecteur colonne des $n$ caractéristiques standardisées de l'observation $i$ ; $\x_i\in\R^n$. Le caractère gras est généralement implicite à l'oral. \\
+\xt_i & « x tilde indice i » ou « x i augmenté » & vecteur $\x_i$ précédé d'une coordonnée égale à $1$ pour intégrer le biais ; $\xt_i\in\R^{n+1}$. \\
+\X & « la matrice X » ou « la matrice de design » & matrice qui empile les vecteurs augmentés en lignes ; $\X\in\R^{m\times(n+1)}$. \\
+X_i & « la variable aléatoire X indice i » & vecteur aléatoire représentant les caractéristiques de l'observation $i$ avant leur réalisation. Il se distingue de la valeur observée $\x_i$ et de la matrice $\X$. \\
+\bottomrule
+\end{tabularx}
+\caption{Les minuscules désignent une observation ou une composante ; la
+majuscule grasse $\X$ désigne l'ensemble des observations sous forme matricielle.}
+\end{table}
+
+La formule
+\[
+  x_{ij}=\frac{r_{ij}-\mu_j}{s_j}
+\]
+se lit : « x indice i j égale r indice i j moins mu indice j, sur s indice j ».
+Elle exprime la valeur de la note en nombre d'écarts-types au-dessus ou au-dessous
+de la moyenne d'apprentissage.
+
+\section{Classes observées, cibles binaires et prédictions}
+
+\begin{table}[htbp]
+\centering
+\begin{tabularx}{\textwidth}{>{$}l<{$} >{\raggedright\arraybackslash}p{3.5cm} X}
+\toprule
+\text{symbole} & \text{lecture orale} & \text{signification exacte} \\
+\midrule
+C_i & « la variable aléatoire C indice i » & maison de l'élève $i$ avant observation ; $C_i$ prend ses valeurs dans $\mathcal C$. \\
+c_i & « c indice i » & maison effectivement observée pour l'élève $i$ ; $c_i\in\mathcal C$. La minuscule désigne ici une réalisation de $C_i$. \\
+y_{ik} & « y indice i k » & cible binaire du classifieur $k$ pour l'observation $i$ : $1$ si $c_i=k$, sinon $0$. \\
+\y_k & « le vecteur y indice k » & vecteur colonne réunissant les $m$ cibles du problème « classe $k$ contre le reste » ; $\y_k\in\{0,1\}^m$. \\
+\widehat y_i & « y chapeau indice i » & classe binaire prédite pour l'observation $i$, égale à $0$ ou $1$. Le chapeau marque une valeur estimée. \\
+\widehat c(\x) & « c chapeau évalué en x » ou « la classe prédite en x » & règle de classification multiclasses évaluée pour les caractéristiques $\x$. \\
+\ind[A] & « l'indicatrice de l'événement A » & vaut $1$ lorsque la proposition $A$ est vraie et $0$ sinon. \\
+\bottomrule
+\end{tabularx}
+\caption{Une classe observée $c_i$ ne doit pas être confondue avec la cible
+binaire $y_{ik}$ fabriquée pour le sous-problème OvR numéro $k$.}
+\end{table}
+
+L'écriture $y_{ik}=\ind[c_i=k]$ se lit : « y indice i k est l'indicatrice de
+l'événement c indice i égale k » ; en contexte, on dira plus naturellement :
+« la cible de l'observation i pour la classe k vaut un si sa classe est k ».
+
+\section{Paramètres, score et probabilité binaire}
+
+\begin{table}[htbp]
+\centering
+\begin{tabularx}{\textwidth}{>{$}l<{$} >{\raggedright\arraybackslash}p{3.7cm} X}
+\toprule
+\text{symbole} & \text{lecture orale} & \text{signification exacte} \\
+\midrule
+\theta_j & « thêta indice j » & coefficient scalaire associé à la caractéristique $j$. Son signe indique le sens de son effet sur les log-cotes, toutes choses égales par ailleurs. \\
+\theta_0 & « thêta zéro » & biais ou constante du modèle ; il multiplie la coordonnée ajoutée $x_0=1$. \\
+\thv & « thêta » ou « le vecteur des paramètres thêta » & vecteur colonne de tous les paramètres $(\theta_0,\ldots,\theta_n)^\top\in\R^{n+1}$. On ne dit « vecteur » que lorsque sa nature doit être soulignée. \\
+\thv_k & « thêta indice k » & vecteur des paramètres du classifieur binaire « classe $k$ contre le reste ». \\
+z_{\thv}(\x) & « le score z, paramétré par thêta, évalué en x » ; souvent « le score en x » & score linéaire réel $\thv^\top\xt$. Il n'est ni une classe ni une probabilité. \\
+\sigma & « sigma » & fonction logistique $z\mapsto(1+e^{-z})^{-1}$, qui transforme un score réel en nombre strictement compris entre $0$ et $1$. \\
+p_{\thv}(\x) & « p paramétré par thêta, évalué en x » ; souvent « la probabilité prédite en x » & probabilité conditionnelle modélisée de la classe binaire positive : $\Pp(Y=1\mid X=\x)$. \\
+q_k(\x) & « q indice k évalué en x » & sortie du classifieur binaire $k$, égale à $\sigma(\thv_k^\top\xt)$. Les $q_k$ OvR ne sont pas contraints de sommer à $1$. \\
+\Theta & « thêta majuscule » ou « la matrice des paramètres » & matrice regroupant les $K$ vecteurs de paramètres, un par classifieur OvR. \\
+\bottomrule
+\end{tabularx}
+\caption{Le score $z$, la probabilité binaire $p$ et la décision $\widehat y$ sont
+trois objets distincts produits successivement par le modèle.}
+\end{table}
+
+Le produit $\thv^\top\xt$ se lit « thêta transposé x tilde », ou « le produit
+scalaire de thêta et x tilde ». Le symbole
+$\top$ indique la transposition : il transforme ici le vecteur colonne $\thv$ en
+vecteur ligne afin que le produit scalaire soit défini. Développé, ce produit vaut
+\[
+  \thv^\top\xt=\theta_0+\theta_1x_1+\cdots+\theta_nx_n.
+\]
+
+\section{Vraisemblance, perte et optimisation}
+
+\begin{table}[htbp]
+\centering
+\begin{tabularx}{\textwidth}{>{$}l<{$} >{\raggedright\arraybackslash}p{3.7cm} X}
+\toprule
+\text{symbole} & \text{lecture orale} & \text{signification exacte} \\
+\midrule
+L(\thv) & « la vraisemblance évaluée en thêta » & vraisemblance : probabilité des étiquettes observées, considérée comme fonction des paramètres. \\
+\log L(\thv) & « la log-vraisemblance en thêta » & logarithme de la vraisemblance ; il remplace les produits par des sommes sans changer le maximiseur. \\
+\ell_i(\thv) & « ell indice i évaluée en thêta » ou « la perte de l'observation i » & opposé de la contribution de l'observation $i$ à la log-vraisemblance. \\
+J(\thv) & « J évaluée en thêta » ou « le coût en thêta » & fonction objectif : moyenne des pertes sur l'échantillon d'apprentissage. \\
+\nabla J(\thv) & « le gradient de J en thêta » & vecteur des $n+1$ dérivées partielles de $J$ ; il pointe dans la direction locale de plus forte augmentation. « Nabla J » sert surtout à dicter la formule. \\
+\nabla^2J(\thv) & « la Hessienne de J en thêta » & matrice des dérivées secondes ; elle décrit la courbure locale de la fonction objectif. « Nabla carré J » décrit la notation, moins bien l'objet. \\
+W & « la matrice W » & matrice diagonale dont le terme $i$ vaut $p_i(1-p_i)$ ; elle intervient dans la Hessienne. \\
+\alpha & « alpha » & taux d'apprentissage, c'est-à-dire longueur multiplicative du pas de descente de gradient. \\
+\lambda & « lambda » & intensité de la pénalisation quadratique ; $\lambda=0$ signifie absence de régularisation. \\
+\eps & « epsilon » & tolérance numérique utilisée dans le critère d'arrêt. \\
+\bottomrule
+\end{tabularx}
+\caption{Objets employés pour estimer les paramètres. La vraisemblance est
+maximisée ; son opposé logarithmique $J$ est minimisé.}
+\end{table}
+
+La formule
+\[
+  \nabla J(\thv)=\frac1m\X^\top\bigl(\sigma(\X\thv)-\y\bigr)
+\]
+se lit : « le gradient de J en thêta vaut un sur m, X transposé, multiplié par
+le vecteur sigma de X thêta moins y ». Le vecteur entre parenthèses contient les
+écarts entre probabilités prédites et étiquettes observées.
+
+La mise à jour
+\[
+  \thv^{[t+1]}=\thv^{[t]}-\alpha\nabla J(\thv^{[t]})
+\]
+se lit : « à l'itération t plus un, thêta vaut sa valeur à l'itération t moins
+alpha fois le gradient évalué en cette valeur ». Les crochets $[t]$ repèrent une
+itération ; ils ne désignent pas une puissance.
+
+\section{Probabilités et opérateurs}
+
+\begin{table}[htbp]
+\centering
+\begin{tabularx}{\textwidth}{>{$}l<{$} >{\raggedright\arraybackslash}p{3.9cm} X}
+\toprule
+\text{symbole} & \text{lecture orale} & \text{signification exacte} \\
+\midrule
+\Pp(A) & « probabilité de l'événement A » & probabilité de l'événement $A$. \\
+\Pp(A\mid B) & « probabilité de A conditionnellement à B » ; couramment « A sachant B » & probabilité conditionnelle de $A$ lorsque l'information $B$ est connue. \\
+Y\mid X=\x & « la loi de Y conditionnellement à X égal x » & loi conditionnelle de la réponse pour une observation dont les caractéristiques valent $\x$. \\
+\sum_{i=1}^m & « somme sur i, de un à m » & addition de l'expression située à droite pour toutes les observations. \\
+\prod_{i=1}^m & « produit sur i, de un à m » & multiplication de l'expression située à droite pour toutes les observations. \\
+\Argmax_k a_k & « l'argument du maximum sur k de a indice k » & valeur de l'indice $k$ pour laquelle $a_k$ est maximal ; le résultat est un indice, pas la valeur maximale elle-même. Dans l'usage, « arg max » est également courant. \\
+\|v\|_2 & « norme euclidienne de v » ou « norme deux de v » & longueur euclidienne du vecteur $v$. \\
+\operatorname{diag}(a_i) & « la matrice diagonale de termes a indice i » & matrice dont la diagonale contient les $a_i$ et dont les autres termes sont nuls. \\
+\partial J/\partial\theta_j & « dérivée partielle de J par rapport à thêta indice j » & variation locale de $J$ lorsque seul $\theta_j$ varie, les autres paramètres étant maintenus fixes. \\
+\bottomrule
+\end{tabularx}
+\caption{Opérateurs qui apparaissent dans les dérivations et les règles de
+décision.}
+\end{table}
+
+Enfin,
+\[
+  \widehat c(\x)=\Argmax_{k\in\{1,\ldots,K\}}\thv_k^\top\xt
+\]
+se lit : « la classe prédite en x est l'argument qui maximise, sur les classes k,
+le score thêta indice k transposé x tilde ». Cette formule renvoie le nom de la
+classe gagnante après conversion de l'indice vers le libellé correspondant.

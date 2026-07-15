@@ -1,0 +1,125 @@
+\documentclass[12pt,a4paper,openany]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{csquotes}
+\usepackage{libertinus}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{booktabs,tabularx,array,colortbl}
+\usepackage{graphicx}
+\usepackage{placeins}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\pgfplotsset{courseplot/.style={width=.82\textwidth,height=7.2cm,
+  grid=major,grid style={gridgray!40}}}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{tcolorbox}
+\tcbuselibrary{breakable,skins}
+\usepackage[margin=2.45cm]{geometry}
+\usepackage[backend=biber,style=numeric,sorting=none,defernumbers=true]{biblatex}
+\addbibresource{references.bib}
+\DeclareBibliographyCategory{reading}
+\addtocategory{reading}{bishop2006,ng2018cs229,murphy2022,goodfellow2016,
+  james2023,openintro2024,stanfordcs109,psustat504}
+\usepackage{hyperref}
+
+\definecolor{ink}{HTML}{18212B}
+\definecolor{accent}{HTML}{155E75}
+\definecolor{accentlight}{HTML}{E7F3F6}
+\definecolor{warning}{HTML}{9A3412}
+\definecolor{warninglight}{HTML}{FFF1E8}
+\definecolor{gridgray}{HTML}{CBD5E1}
+\hypersetup{colorlinks=true,linkcolor=ink,citecolor=accent,urlcolor=accent,
+  pdftitle={Régression logistique et classification un-contre-tous}}
+\setlist{nosep,leftmargin=*}
+\setlength{\parindent}{0pt}
+\linespread{1.08}
+\setlength{\parskip}{0.72em}
+\setlength{\abovedisplayskip}{0.9em}
+\setlength{\belowdisplayskip}{0.9em}
+\setlength{\abovedisplayshortskip}{0.65em}
+\setlength{\belowdisplayshortskip}{0.65em}
+\setlength{\textfloatsep}{1.25em plus 0.25em minus 0.2em}
+\setlength{\floatsep}{1.1em plus 0.2em minus 0.2em}
+\renewcommand{\arraystretch}{1.16}
+\setcounter{tocdepth}{2}
+
+\newtcolorbox{resultat}[1][]{enhanced,breakable,colback=accentlight,
+  colframe=accent,boxrule=0.7pt,arc=1mm,left=2mm,right=2mm,top=1.5mm,
+  bottom=1.5mm,title={#1},fonttitle=\bfseries}
+\newtcolorbox{vigilance}[1][]{enhanced,breakable,colback=warninglight,
+  colframe=warning,boxrule=0.7pt,arc=1mm,left=2mm,right=2mm,top=1.5mm,
+  bottom=1.5mm,title={#1},fonttitle=\bfseries}
+\newtcolorbox{lecture}{enhanced,breakable,colback=gridgray!12,
+  colframe=ink!55,boxrule=0.55pt,arc=1mm,left=2mm,right=2mm,top=1.5mm,
+  bottom=1.5mm}
+% Une sous-procédure forme une unité de lecture : si l'espace restant est
+% insuffisant, LaTeX la reporte entière à la page suivante.
+\newtcolorbox{procedure}[1]{enhanced,colback=white,
+  colframe=accent!75,boxrule=0.65pt,arc=1mm,left=2mm,right=2mm,top=1.5mm,
+  bottom=1.5mm,title={Sous-procédure --- #1},fonttitle=\bfseries}
+\newtcolorbox{workflow}[1]{enhanced,breakable,colback=accentlight,
+  colframe=accent,boxrule=0.9pt,arc=1mm,left=2mm,right=2mm,top=1.5mm,
+  bottom=1.5mm,title={#1},fonttitle=\bfseries}
+
+\DeclareMathOperator*{\Argmax}{arg\,max}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Pp}{\mathbb{P}}
+\newcommand{\ind}{\mathbf{1}}
+\newcommand{\x}{\mathbf{x}}
+\newcommand{\xt}{\tilde{\mathbf{x}}}
+\newcommand{\X}{\mathbf{X}}
+\newcommand{\y}{\mathbf{y}}
+\newcommand{\thv}{\boldsymbol{\theta}}
+\newcommand{\eps}{\varepsilon}
+
+\title{\textbf{Régression logistique et classification un-contre-tous}\\
+  \large Modélisation, estimation, calcul numérique et évaluation}
+\author{Sylvain Maitre}
+\date{\today}
+
+\begin{document}
+\hypersetup{pageanchor=false}
+\maketitle
+\pagenumbering{roman}
+
+\begin{abstract}
+Ce document répond à une question précise : comment apprendre, à partir
+d'observations étiquetées, une règle qui attribue l'une de plusieurs classes à
+une nouvelle observation ? Il établit d'abord le modèle logistique binaire depuis
+les log-cotes et une loi de Bernoulli, puis dérive la log-vraisemblance, le
+gradient et les conditions de l'optimisation. Le cas des quatre maisons est traité
+par quatre modèles « une classe contre le reste » : la décision OvR est le maximum
+de leurs scores, sans recours nécessaire à softmax. La préparation des données,
+la régularisation et l'évaluation sont développées comme des parties du modèle
+statistique, avec des exemples numériques et les contrôles nécessaires pour
+distinguer convergence sur l'apprentissage et performance hors échantillon.
+\end{abstract}
+
+\tableofcontents
+\clearpage
+\pagenumbering{arabic}
+\hypersetup{pageanchor=true}
+\include{chapters/01_problem}
+\include{chapters/02_data}
+\include{chapters/03_binary_model}
+\include{chapters/04_likelihood}
+\include{chapters/05_optimization}
+\include{chapters/06_ovr}
+\include{chapters/07_evaluation}
+\include{chapters/09_notation}
+\include{chapters/11_reading_guide}
+\include{chapters/10_conclusion}
+\appendix
+\include{chapters/12_derivations}
+
+\printbibliography[title={Références citées},notcategory=reading]
+\nocite{bishop2006,ng2018cs229,murphy2022,goodfellow2016,james2023,
+  openintro2024,stanfordcs109,psustat504}
+\printbibliography[title={Lectures complémentaires},category=reading]
+\end{document}
