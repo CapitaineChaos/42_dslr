@@ -65,6 +65,13 @@ colonnes restent hors du modèle.
 
 \section{Redondance}
 
+\begin{lecture}
+Deux colonnes qui portent la même information gênent le calcul. Le modèle peut
+augmenter le coefficient de l'une et diminuer celui de l'autre sans rien changer
+à ses prédictions : ses coefficients dérivent alors sans jamais se fixer. Une des
+deux colonnes suffit.
+\end{lecture}
+
 Le jeu de données vérifie
 \[
   \text{Astronomy}=-100\times\text{Defense Against the Dark Arts}
@@ -78,6 +85,14 @@ cette direction pendant que les scores restent identiques. Astronomy est
 conservée, Defense Against the Dark Arts sert à l'imputation décrite plus bas.
 
 \section{Pouvoir discriminant}
+
+\begin{lecture}
+Une note aide à reconnaître une maison lorsque les quatre maisons y obtiennent
+des résultats différents. Si les quatre ont la même moyenne, la note ne distingue
+personne. Le nombre $\delta_j$ ci-dessous mesure cet écart entre maisons, dans
+une unité qui permet de comparer des cours notés sur des échelles très
+différentes.
+\end{lecture}
 
 Pour la variable $j$, l'étendue des moyennes par maison rapportée à l'écart-type
 global vaut
@@ -172,6 +187,13 @@ stratifié $80\,\%/20\,\%$ du chapitre~\ref{ch:evaluation} partage les $1\,600$
 lignes d'apprentissage en $1\,278$ et $322$.
 
 \section{Le programme d'entraînement}
+
+\begin{lecture}
+L'entraînement répète quatre calculs jusqu'à ce que les coefficients cessent de
+bouger : un score pour chaque élève, la probabilité qui lui correspond, l'écart
+entre cette probabilité et la bonne réponse, puis une correction des coefficients
+proportionnelle à cet écart. La même boucle tourne quatre fois, une par maison.
+\end{lecture}
 
 L'entraînement traite les quatre maisons l'une après l'autre. Pour la maison $k$,
 il forme la cible $\y_k\in\{0,1\}^{1600}$ par $y_{ik}=\ind[c_i=k]$, part de

@@ -62,7 +62,9 @@ L'équation~\eqref{eq:loss} est l'opposé de la log-vraisemblance binomiale,
 également appelée \rsym{logperte}{log-perte} ou entropie croisée binaire
 \cite[équations~4.19--4.20]{hastie2009}.
 Cette quantité est l'opposé du logarithme de la probabilité attribuée par le
-modèle aux étiquettes observées.
+modèle aux étiquettes observées. Le sujet du projet écrit la même formule avec
+$h_\theta(x^i)$ à la place de $p_i$ ; la section~\ref{sec:sujet} donne la
+correspondance terme à terme.
 
 \begin{table}[htbp]
 \centering
@@ -155,7 +157,9 @@ Cette expression est le \rsym{gradient}{gradient} de la log-perte sous forme mat
 Sa dérivation par la règle de chaîne figure à
 l'annexe~\ref{app:gradient-derivation}.
 Le gradient a bien la dimension $n+1$ : $\X^\top$ est de taille
-$(n+1)\times m$ et le vecteur des résidus probabilistes est de taille $m$.
+$(n+1)\times m$ et le vecteur des résidus probabilistes est de taille $m$. Le
+sujet donne cette formule composante par composante ; la
+section~\ref{sec:sujet} montre que les deux écritures effectuent le même calcul.
 
 Le terme $(p_i-y_i)\xt_i$ permet une lecture locale. Pour un positif
 $y_i=1$ sous-estimé à $p_i=0{,}1$, le résidu vaut $-0{,}9$ : l'observation exerce

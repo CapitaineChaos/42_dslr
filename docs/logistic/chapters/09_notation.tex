@@ -521,3 +521,63 @@ classe gagnante après conversion de l'indice vers le libellé correspondant.
   en estimant moyennes, écarts-types ou médianes sur le fichier complet. Elle rend
   l'évaluation optimiste.
 \end{description}
+
+\section{Correspondance avec les notations du sujet}
+\label{sec:sujet}
+
+L'annexe mathématique du sujet donne les quatre formules du modèle. Elles sont
+reproduites ici telles qu'elles y figurent :
+\[
+  J(\theta)=-\frac1m\sum_{i=1}^m
+  \Bigl[y^i\log\bigl(h_\theta(x^i)\bigr)
+  +(1-y^i)\log\bigl(1-h_\theta(x^i)\bigr)\Bigr],
+\]
+\[
+  h_\theta(x)=g(\theta^Tx),
+  \qquad
+  g(z)=\frac{1}{1+e^{-z}},
+  \qquad
+  \frac{\partial}{\partial\theta_j}J(\theta)
+  =\frac1m\sum_{i=1}^m\bigl(h_\theta(x^i)-y^i\bigr)x^i_j .
+\]
+
+Ce document emploie des noms différents pour les mêmes objets. La
+table~\ref{tab:sujet} donne la correspondance terme à terme.
+
+\begin{table}[htbp]
+\centering
+\begin{tabularx}{\textwidth}{>{$}l<{$} >{$}l<{$} X}
+\toprule
+\text{sujet} & \text{ce document} & \text{objet désigné} \\
+\midrule
+g(z) & \sigma(z) & \rsym{sigmoide}{fonction logistique} \\
+h_\theta(x) & p_{\thv}(\x) & probabilité prédite pour la classe positive \\
+\theta^Tx & \thv^\top\xt & score réel, produit scalaire des paramètres et de la ligne augmentée \\
+x^i & \x_i & vecteur des caractéristiques de l'observation $i$ \\
+x^i_j & x_{ij} & caractéristique $j$ de l'observation $i$ \\
+y^i & y_i & cible binaire de l'observation $i$ \\
+J(\theta) & J(\thv) & \rsym{logperte}{log-perte} moyenne, équation~\eqref{eq:loss} \\
+\partial J/\partial\theta_j & \bigl(\nabla J(\thv)\bigr)_j & composante $j$ du \rsym{gradient}{gradient}, équation~\eqref{eq:gradient} \\
+\bottomrule
+\end{tabularx}
+\caption{Le sujet place l'indice d'observation en exposant, ce document en
+indice. Les objets et les formules sont identiques.}
+\label{tab:sujet}
+\end{table}
+
+Les deux écritures du gradient méritent une lecture appariée. Le sujet donne une
+composante à la fois :
+\[
+  \frac{\partial J}{\partial\theta_j}
+  =\frac1m\sum_{i=1}^m\bigl(p_i-y_i\bigr)x_{ij},
+\]
+somme sur les $m$ observations du résidu $p_i-y_i$ multiplié par la
+caractéristique $j$. L'équation~\eqref{eq:gradient} réunit les $n+1$ composantes
+en une seule opération :
+\[
+  \nabla J(\thv)=\frac1m\X^\top\bigl(\sigma(\X\thv)-\y\bigr).
+\]
+Le produit $\X^\top(\cdot)$ effectue exactement les $n+1$ sommes précédentes,
+puisque la ligne $j$ de $\X^\top$ contient les $x_{ij}$ de toutes les
+observations. Un programme peut donc écrire l'une ou l'autre forme ; la seconde
+laisse la bibliothèque de calcul matriciel exécuter les boucles.
