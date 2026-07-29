@@ -75,6 +75,9 @@
   colframe=accent,boxrule=0.9pt,arc=1mm,left=2mm,right=2mm,top=1.5mm,
   bottom=1.5mm,title={#1},fonttitle=\bfseries}
 
+\newcommand{\dsym}[2]{\hypertarget{sym:#1}{#2}}
+\newcommand{\rsym}[2]{\hyperlink{sym:#1}{\textcolor{accent}{#2}}}
+
 \DeclareMathOperator*{\Argmax}{arg\,max}
 \newcommand{\R}{\mathbb{R}}
 \newcommand{\Pp}{\mathbb{P}}

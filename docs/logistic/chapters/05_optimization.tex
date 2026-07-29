@@ -9,12 +9,12 @@ descente suit donc la direction opposée, avec une longueur de pas réglée par
 $\alpha$.
 \end{lecture}
 
-La descente de gradient simultanée produit la suite
+La \rsym{descente}{descente de gradient} simultanée produit la suite
 \[
   \thv^{[t+1]}=\thv^{[t]}-\alpha\nabla J(\thv^{[t]}),
   \qquad \alpha>0.
 \]
-Cette itération est la descente de gradient par lot appliquée à la
+Cette itération est la descente par lot appliquée à la
 log-vraisemblance négative \cite[chap.~8]{boyd2004}.
 
 Le gradient donne la direction locale de hausse du coût, son opposé la direction
@@ -81,7 +81,7 @@ dit que l'algorithme avance. Une petite norme du gradient dit qu'il approche un
 point stationnaire. Une bonne performance de validation dit que ce point produit
 un modèle utile hors échantillon. Chacun se vérifie séparément.
 
-Un \emph{point stationnaire} est un point où le gradient s'annule. Pour
+Un \rsym{stationnaire}{point stationnaire} est un point où le gradient s'annule. Pour
 $J(\theta)=\theta^2$, le point $0$ est stationnaire et donne le minimum. Pour
 $J(\theta)=\theta^3$, le point $0$ est stationnaire alors que la fonction décroît
 à sa gauche et croît à sa droite : c'est un point d'inflexion. Dans le problème
@@ -208,7 +208,7 @@ ou $1$. Cette identité résulte du remplacement de $p$ par $\sigma(z)$ dans la
 log-perte et constitue la forme usuelle de la perte logistique
 \cite[sec.~7.1]{murphy2022}.
 
-La fonction softplus demande elle-même une évaluation protégée, car $e^z$ déborde
+La fonction \rsym{softplus}{softplus} demande elle-même une évaluation protégée, car $e^z$ déborde
 pour un score très positif. La forme employée est
 \[
   \operatorname{softplus}(z)=\log(1+e^z)=\max(z,0)+\log\bigl(1+e^{-|z|}\bigr),
@@ -216,8 +216,7 @@ pour un score très positif. La forme employée est
 dont l'exponentielle porte toujours sur un nombre négatif ou nul.
 
 \begin{resultat}[Contrôle du gradient]
-Avant tout entraînement, comparer le gradient analytique à une différence finie
-centrée sur un cas test de faible dimension :
+Avant tout entraînement, comparer le gradient analytique à une \rsym{diffinie}{différence finie centrée} sur un cas test de faible dimension :
 \[
   \frac{\partial J}{\partial\theta_j}\approx
   \frac{J(\thv+h e_j)-J(\thv-h e_j)}{2h}.

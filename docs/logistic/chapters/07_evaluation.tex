@@ -10,7 +10,7 @@ maisons prédites. Chaque case donne un effectif, et la lecture par ligne ou par
 colonne identifie les classes reconnues et les paires confondues.
 \end{lecture}
 
-Pour un test de taille $m_{\mathrm{te}}$, l'exactitude est
+Pour un test de taille $m_{\mathrm{te}}$, l'\rsym{exactitude}{exactitude} est
 \[
   \operatorname{accuracy}=\frac1{m_{\mathrm{te}}}
   \sum_{i\in\mathcal I_{\mathrm{te}}}\ind[\widehat c_i=c_i].
@@ -26,9 +26,9 @@ $(c_i,\widehat c_i)$ incrémente une case d'une matrice $K\times K$. L'exactitud
 sort de la diagonale, les mesures par classe des sommes de lignes et de colonnes.
 L'opération est un comptage.
 
-La matrice de confusion $M$, définie par $M_{ab}=\#\{i:c_i=a,\widehat c_i=b\}$,
-localise les maisons confondues. Chaque classe reçoit ensuite son rappel, sa
-précision et son score $F_1$. La moyenne macro donne le même poids à chaque
+La \rsym{confusion}{matrice de confusion} $M$, définie par $M_{ab}=\#\{i:c_i=a,\widehat c_i=b\}$,
+localise les maisons confondues. Chaque classe reçoit ensuite son \rsym{rappelprec}{rappel}, sa
+\rsym{rappelprec}{précision} et son \rsym{f1}{score $F_1$}. La \rsym{macro}{moyenne macro} donne le même poids à chaque
 maison, la moyenne pondérée tient compte de leurs effectifs. Les deux accompagnent
 la matrice complète.
 
@@ -135,7 +135,7 @@ Une expérience exploitable doit conserver :
 \end{enumerate}
 
 Deux contrôles situent le résultat. Le premier compare le modèle à une référence
-majoritaire, qui prédit toujours la maison la plus fréquente. Le second permute
+majoritaire, qui prédit toujours la maison la plus fréquente. Le second, le \rsym{permutation}{contrôle par permutation}, mélange
 aléatoirement les étiquettes avant l'entraînement : la performance retombe alors
 au niveau de cette même règle constante, et tout dépassement signale une fuite de
 données ou une erreur de protocole.
@@ -175,7 +175,7 @@ blocs. Répéter l'ensemble du découpage mesure la sensibilité à cette répar
 aléatoire.
 \end{lecture}
 
-Un \emph{pli} désigne un bloc d'observations. Dans une validation croisée
+Un \rsym{cv}{pli} désigne un bloc d'observations. Dans une \rsym{cv}{validation croisée}
 à cinq plis, on découpe les données disponibles pour la sélection du modèle en
 cinq blocs disjoints $B_1,\ldots,B_5$. On entraîne cinq fois le modèle : à chaque
 fois, quatre blocs servent à l'ajustement et le bloc restant sert à la validation.

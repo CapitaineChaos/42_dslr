@@ -230,3 +230,294 @@ Enfin,
 se lit : « la classe prédite en x est l'argument qui maximise, sur les classes k,
 le score thêta indice k transposé x tilde ». Cette formule renvoie le nom de la
 classe gagnante après conversion de l'indice vers le libellé correspondant.
+
+\section{Lois et fonctions}
+\label{sec:lois}
+
+\begin{description}[style=nextline,leftmargin=0pt]
+  \item[\dsym{bernoulli}{Loi de Bernoulli}]
+  Loi d'une variable aléatoire à deux issues, codées $1$ et $0$, de paramètre
+  $p\in[0,1]$ : $\Pp(Y=1)=p$ et $\Pp(Y=0)=1-p$. Les deux cas se réunissent en
+  $\Pp(Y=y)=p^y(1-p)^{1-y}$, puisque l'exposant annule l'un des deux facteurs.
+  C'est la loi d'un lancer de pièce truquée. Le chapitre~\ref{ch:likelihood}
+  l'utilise conditionnellement : chaque élève $i$ reçoit son propre paramètre
+  $p_i$, calculé depuis ses notes.
+
+  \item[\dsym{cotes}{Cotes et log-cotes}]
+  Les cotes d'un événement de probabilité $p$ valent $p/(1-p)$ : le rapport entre
+  sa probabilité et celle de son contraire. Une probabilité de $0{,}75$ donne des
+  cotes de $3$, soit « trois contre un ». Les cotes couvrent
+  $[0,+\infty[$ quand $p$ couvre $[0,1]$. Leur logarithme, ou \emph{log-cotes},
+  couvre $\R$ tout entier, ce qui le rend compatible avec une fonction affine des
+  caractéristiques. Le terme anglais est \emph{odds} et \emph{log-odds}.
+
+  \item[\dsym{logit}{Logit}]
+  Nom de la fonction $p\mapsto\log\!\big(p/(1-p)\big)$, qui envoie $]0,1[$ sur
+  $\R$. Le modèle logistique pose que le logit de la probabilité conditionnelle
+  est une fonction affine des caractéristiques. La sigmoïde est sa réciproque.
+
+  \item[\dsym{sigmoide}{Fonction logistique, ou sigmoïde}]
+  $\sigma(z)=1/(1+e^{-z})$. Elle envoie $\R$ sur $]0,1[$, croît strictement,
+  vaut $1/2$ en $0$ et vérifie $\sigma(-z)=1-\sigma(z)$ ainsi que
+  $\sigma'(z)=\sigma(z)(1-\sigma(z))$. Sa forme en S lui donne son nom. Sa stricte
+  croissance a une conséquence employée au chapitre~\ref{ch:ovr} : comparer des
+  $\sigma(z_k)$ revient à comparer les $z_k$.
+
+  \item[\dsym{softplus}{Softplus}]
+  $\operatorname{softplus}(z)=\log(1+e^z)$, primitive de la sigmoïde. Elle
+  approche $0$ pour $z$ très négatif et $z$ pour $z$ très positif, d'où son nom :
+  une version lissée de $\max(z,0)$. Le chapitre~\ref{ch:optim} l'emploie pour
+  calculer la perte directement depuis le score.
+
+  \item[\dsym{softmax}{Softmax}]
+  Fonction qui transforme $K$ scores réels en $K$ nombres positifs de somme $1$ :
+  $\mathrm{softmax}(z)_k=e^{z_k}/\sum_{r=1}^K e^{z_r}$. Elle généralise la
+  sigmoïde au cas de $K$ classes. Son dénominateur, commun aux $K$ composantes,
+  entraîne
+  \[
+    \frac{e^{z_a}}{\sum_r e^{z_r}}>\frac{e^{z_b}}{\sum_r e^{z_r}}
+    \iff e^{z_a}>e^{z_b}
+    \iff z_a>z_b,
+  \]
+  de sorte que softmax et les scores bruts désignent le même argmax.
+
+  \item[\dsym{categorielle}{Loi catégorielle}]
+  Loi d'une variable à $K$ issues, de paramètres $\pi_1,\ldots,\pi_K$ positifs et
+  de somme $1$. Elle généralise Bernoulli au-delà de deux issues. Une régression
+  logistique multinomiale modélise directement une loi catégorielle par softmax ;
+  les $K$ sorties OvR du chapitre~\ref{ch:ovr} prennent une somme libre.
+
+  \item[\dsym{vraisemblance}{Vraisemblance}]
+  Probabilité des données observées, lue comme fonction des paramètres plutôt que
+  des données. Les observations sont fixées, $\thv$ varie. Estimer par
+  \emph{maximum de vraisemblance} consiste à retenir la valeur de $\thv$ qui rend
+  les étiquettes observées les plus probables. Le logarithme transforme le produit
+  sur les observations en somme, sans déplacer le maximiseur puisque le logarithme
+  croît strictement.
+
+  \item[\dsym{logperte}{Log-perte, ou entropie croisée binaire}]
+  Opposé de la log-vraisemblance moyenne :
+  $-\frac1m\sum_i[y_i\log p_i+(1-y_i)\log(1-p_i)]$. Chaque observation contribue
+  par $-\log$ de la probabilité que le modèle attribuait à l'issue effectivement
+  survenue. Une prédiction correcte et assurée coûte presque $0$ ; une prédiction
+  erronée et assurée coûte arbitrairement cher. Maximiser la vraisemblance et
+  minimiser la log-perte sont le même problème.
+\end{description}
+
+\section{Objets de l'optimisation}
+\label{sec:objets-optim}
+
+\begin{description}[style=nextline,leftmargin=0pt]
+  \item[\dsym{gradient}{Gradient}]
+  Vecteur des dérivées partielles d'une fonction à plusieurs variables :
+  $\nabla J=(\partial J/\partial\theta_0,\ldots,\partial J/\partial\theta_n)$.
+  Chaque composante indique de combien $J$ varie quand un seul coefficient bouge.
+  Le vecteur complet pointe dans la direction de plus forte croissance locale, et
+  son opposé donne la direction de descente employée au chapitre~\ref{ch:optim}.
+
+  \item[\dsym{descente}{Descente de gradient}]
+  Méthode itérative qui répète $\thv\leftarrow\thv-\alpha\nabla J(\thv)$. Le
+  \emph{taux d'apprentissage} $\alpha$ fixe la longueur du pas. La version dite
+  \emph{par lot} calcule le gradient sur toutes les observations à chaque
+  itération.
+
+  \item[\dsym{hessienne}{Hessienne}]
+  Matrice des dérivées secondes, notée $\nabla^2J$, de taille
+  $(n+1)\times(n+1)$. Son terme $(j,l)$ vaut
+  $\partial^2 J/\partial\theta_j\partial\theta_l$. Là où le gradient donne la
+  pente, la Hessienne donne la courbure : elle dit comment la pente elle-même
+  varie.
+
+  \item[\dsym{xtwx}{L'expression $\X^\top W\X$}]
+  Forme prise par la Hessienne de la log-perte logistique, avec
+  $W=\operatorname{diag}(p_i(1-p_i))$ diagonale de taille $m\times m$. Lecture
+  des dimensions : $\X^\top$ est $(n+1)\times m$, $W$ est $m\times m$, $\X$ est
+  $m\times(n+1)$, le produit est donc $(n+1)\times(n+1)$. Chaque observation $i$
+  pèse $p_i(1-p_i)$, quantité maximale en $p_i=1/2$ et proche de $0$ pour une
+  prédiction assurée : les observations dont le modèle hésite portent la
+  courbure. Cette matrice est l'\emph{information observée} au sens de Fisher, à
+  un facteur $1/m$ près.
+
+  \item[\dsym{psd}{Matrice positive semi-définie}]
+  Matrice symétrique $A$ telle que $v^\top Av\geq0$ pour tout vecteur $v$. C'est
+  l'analogue matriciel de « nombre positif ou nul ». Une fonction dont la
+  Hessienne est positive semi-définie en tout point est convexe. Avec
+  $A=\X^\top W\X$, le calcul donne
+  $v^\top Av=\sum_i p_i(1-p_i)(\xt_i^\top v)^2$, somme de termes positifs.
+
+  \item[\dsym{convexite}{Convexité et stricte convexité}]
+  Une fonction est \emph{convexe} lorsque le segment reliant deux points de son
+  graphe passe au-dessus du graphe. Conséquence utile : tout minimum local est
+  global, et une descente locale mène au minimum global. Elle est
+  \emph{strictement convexe} lorsque ce segment passe strictement au-dessus, ce
+  qui rend le minimiseur unique. Une fonction convexe sans stricte convexité
+  possède un fond plat contenant plusieurs minimiseurs équivalents.
+
+  \item[\dsym{stationnaire}{Point stationnaire}]
+  Point où le gradient s'annule. Pour une fonction convexe, un point stationnaire
+  fini est un minimum global. Pour une fonction quelconque, il peut être un
+  minimum, un maximum ou un point d'inflexion.
+
+  \item[\dsym{norme}{Norme euclidienne}]
+  $\|v\|_2=\sqrt{v_1^2+\cdots+v_d^2}$, la longueur du vecteur $v$ au sens
+  ordinaire. Son carré $\|v\|_2^2$ sert de pénalisation au
+  chapitre~\ref{ch:likelihood} et sa valeur mesure l'amplitude d'un gradient dans
+  le critère d'arrêt.
+
+  \item[\dsym{regularisation}{Régularisation $L^2$}]
+  Ajout de $\frac{\lambda}{2m}\sum_{j\geq1}\theta_j^2$ au coût. Le terme croît
+  avec l'amplitude des coefficients, ce qui déplace l'optimum vers des solutions
+  plus petites. La somme démarre à $j=1$ et laisse le biais $\theta_0$ libre. On
+  la rencontre aussi sous les noms de \emph{ridge} ou de \emph{weight decay}.
+
+  \item[\dsym{separation}{Séparation complète}]
+  Situation où un hyperplan classe correctement toutes les observations
+  d'apprentissage. Multiplier les coefficients par un facteur croissant rend alors
+  les probabilités toujours plus extrêmes et la vraisemblance toujours plus
+  grande, ce qui envoie l'optimum à l'infini. La régularisation $L^2$ ramène
+  l'optimum à distance finie.
+
+  \item[\dsym{diffinie}{Différence finie centrée}]
+  Approximation numérique d'une dérivée par
+  $\big(J(\thv+he_j)-J(\thv-he_j)\big)/(2h)$, avec $h$ petit et $e_j$ le vecteur
+  unité de la coordonnée $j$. Comparer cette valeur au gradient analytique teste
+  le code du gradient.
+
+  \item[\dsym{conditionnement}{Conditionnement}]
+  Sensibilité d'un calcul aux directions de l'espace des paramètres. Des colonnes
+  d'échelles très différentes allongent les courbes de niveau du coût, ce qui
+  force un pas court dans une direction pour rester stable dans l'autre. La
+  standardisation ramène les échelles à $1$ et arrondit ces courbes.
+\end{description}
+
+\section{Statistiques descriptives}
+\label{sec:stats-desc}
+
+\begin{description}[style=nextline,leftmargin=0pt]
+  \item[\dsym{mediane}{Médiane}]
+  Valeur qui partage un échantillon trié en deux moitiés de même effectif. Pour
+  $n$ impair, c'est l'élément central ; pour $n$ pair, la moyenne des deux
+  éléments centraux. Elle résiste aux valeurs extrêmes, là où la moyenne se
+  déplace avec elles : sur $\{4,7,9,12,100\}$, la médiane vaut $9$ et la moyenne
+  $26{,}4$.
+
+  \item[\dsym{ecarttype}{Écart-type}]
+  $s=\sqrt{\frac1m\sum_i(r_i-\mu)^2}$, dispersion moyenne autour de la moyenne
+  $\mu$, exprimée dans l'unité des données. Le diviseur $m-1$ donne l'estimateur
+  sans biais de la variance ; l'écart entre les deux conventions décroît comme
+  $1/m$.
+
+  \item[\dsym{standardisation}{Standardisation}]
+  Transformation $x=(r-\mu)/s$, qui donne à chaque colonne une moyenne de $0$ et
+  un écart-type de $1$. La valeur obtenue se lit en nombre d'écarts-types au-dessus
+  ou au-dessous de la moyenne. Elle conserve l'ordre des observations et les
+  rapports d'écarts. On la trouve aussi sous le nom de \emph{score z}.
+
+  \item[\dsym{correlation}{Corrélation linéaire}]
+  Coefficient de Pearson $r\in[-1,1]$, mesurant l'alignement de deux colonnes sur
+  une droite. Une valeur de $+1$ ou $-1$ signale une relation affine exacte ; une
+  valeur proche de $0$ signale l'absence de tendance linéaire. Il se calcule comme
+  la covariance divisée par le produit des écarts-types.
+
+  \item[\dsym{colinearite}{Colinéarité}]
+  Relation affine exacte ou approchée entre colonnes de la matrice de design.
+  Deux colonnes proportionnelles rendent $\X^\top W\X$ singulière : leurs deux
+  coefficients admettent une infinité de valeurs donnant les mêmes scores. Les
+  prédictions restent uniques, les coefficients cessent d'être identifiables
+  séparément.
+
+  \item[\dsym{stratifie}{Échantillonnage stratifié}]
+  Découpage qui applique la proportion voulue à l'intérieur de chaque classe,
+  puis réunit les morceaux. Les effectifs relatifs des classes se retrouvent donc
+  à l'identique dans l'apprentissage et dans le test.
+
+  \item[\dsym{graine}{Graine}]
+  Entier qui initialise un générateur pseudo-aléatoire. Reprendre le même entier
+  reproduit exactement la même suite de tirages, donc le même mélange et le même
+  découpage.
+
+  \item[\dsym{hyperparam}{Hyperparamètre}]
+  Quantité fixée par le protocole avant l'ajustement, par opposition aux
+  paramètres que le gradient estime. $\alpha$, $\lambda$, $\eps$ et le nombre
+  maximal d'itérations sont des hyperparamètres ; les coefficients $\thv$ sont des
+  paramètres.
+\end{description}
+
+\section{Tests et mesures d'évaluation}
+\label{sec:mesures}
+
+\begin{description}[style=nextline,leftmargin=0pt]
+  \item[\dsym{risque}{Risque de généralisation}]
+  $R(f)=\Pp(f(X)\neq C)$, probabilité qu'une règle $f$ se trompe sur une
+  observation tirée de la même loi que les données. La loi étant inconnue, on
+  estime $R(f)$ par la fréquence d'erreur sur un échantillon de test tenu à
+  l'écart de l'ajustement.
+
+  \item[\dsym{confusion}{Matrice de confusion}]
+  Tableau $K\times K$ dont la case $(a,b)$ compte les observations de classe
+  réelle $a$ prédites en $b$. La diagonale porte les décisions correctes. Les
+  sommes de lignes donnent les effectifs réels, les sommes de colonnes les
+  effectifs prédits.
+
+  \item[\dsym{exactitude}{Exactitude}]
+  Proportion de décisions correctes, soit la somme diagonale de la matrice de
+  confusion divisée par l'effectif total. Le terme anglais est \emph{accuracy}.
+
+  \item[\dsym{rappelprec}{Rappel et précision}]
+  Pour une classe $k$, le \emph{rappel} vaut $TP/(TP+FN)$, la part des membres
+  réels de $k$ que le modèle retrouve : c'est la diagonale divisée par la somme de
+  la ligne. La \emph{précision} vaut $TP/(TP+FP)$, la part des prédictions $k$ qui
+  sont justes : la diagonale divisée par la somme de la colonne. Deux
+  dénominateurs, deux questions.
+
+  \item[\dsym{f1}{Score $F_1$ et moyenne harmonique}]
+  $F_1=2PR/(P+R)$, moyenne harmonique de la précision et du rappel. La moyenne
+  harmonique reste proche de la plus petite des deux valeurs, ce qui demande que
+  les deux soient élevées : $P=0{,}80$ et $R=0{,}50$ donnent $F_1\approx0{,}615$,
+  quand la moyenne arithmétique donnerait $0{,}65$.
+
+  \item[\dsym{macro}{Moyenne macro et moyenne pondérée}]
+  La moyenne \emph{macro} attribue le même poids à chaque classe. La moyenne
+  \emph{pondérée} pèse chaque classe par son effectif. L'écart entre les deux
+  mesure la part de la classe majoritaire dans le résultat global.
+
+  \item[\dsym{cv}{Validation croisée et pli}]
+  Un \emph{pli} est un bloc d'observations. La validation croisée à $q$ plis
+  découpe les données en $q$ blocs disjoints, puis ajuste $q$ modèles, chacun
+  laissant un bloc de côté pour la mesure. Chaque observation est ainsi évaluée
+  une fois par un modèle qui ne l'a pas vue.
+
+  \item[\dsym{chi2}{Test du $\chi^2$ d'indépendance}]
+  Test appliqué à un tableau de contingence croisant deux variables
+  qualitatives. Sous l'hypothèse d'indépendance, l'effectif attendu d'une case
+  vaut $E=(\text{total ligne}\times\text{total colonne})/N$. La statistique
+  $\chi^2=\sum(O-E)^2/E$ mesure l'écart global entre observé et attendu ; elle
+  croît avec le désaccord. Le nombre de \emph{degrés de liberté} vaut
+  $(r-1)(c-1)$ pour un tableau à $r$ lignes et $c$ colonnes, et fixe le seuil de
+  comparaison : $7{,}81$ à $3$ degrés de liberté et au niveau $5\,\%$, $25{,}0$ à
+  $15$ degrés de liberté. Une statistique inférieure au seuil laisse les données
+  compatibles avec l'indépendance.
+
+  \item[\dsym{erreurtype}{Erreur type}]
+  Écart-type de la loi d'échantillonnage d'une statistique : de combien elle
+  varierait d'un échantillon à l'autre. Pour une différence de deux moyennes
+  exprimée en écarts-types, elle vaut $\sqrt{1/n_1+1/n_2}$. Un écart observé
+  inférieur à deux erreurs types reste compatible avec un effet nul.
+
+  \item[\dsym{permutation}{Contrôle par permutation}]
+  Réajustement du modèle après mélange aléatoire des étiquettes entre les lignes,
+  les caractéristiques restant en place. Le lien entre variables et réponse étant
+  détruit, la performance retombe au niveau de la meilleure règle constante. Un
+  résultat supérieur signale une fuite de données ou une erreur de protocole.
+
+  \item[\dsym{calibration}{Calibration}]
+  Propriété d'un modèle dont les probabilités annoncées correspondent aux
+  fréquences observées : parmi les cas annoncés à $0{,}8$, environ $80\,\%$
+  appartiennent effectivement à la classe. Elle est plus exigeante que le simple
+  classement correct.
+
+  \item[\dsym{fuite}{Fuite de données}]
+  Passage d'information de l'ensemble de test vers l'apprentissage, par exemple
+  en estimant moyennes, écarts-types ou médianes sur le fichier complet. Elle rend
+  l'évaluation optimiste.
+\end{description}

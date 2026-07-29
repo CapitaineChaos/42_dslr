@@ -136,9 +136,9 @@ $q_k$ estime la probabilité de la cible binaire « classe $k$ contre le reste �
 dans le modèle $k$. Les $K$ modèles étant ajustés séparément, chaque $q_k$ décrit
 sa propre expérience binaire et la somme $\sum_k q_k$ prend une valeur libre. Ces
 nombres servent au classement de l'équation~\eqref{eq:ovr-decision} ; leur usage
-comme vecteur de probabilités multiclasses calibrées demande une recalibration
+comme vecteur de probabilités multiclasses \rsym{calibration}{calibrées} demande une recalibration
 préalable \cite{zadrozny2002}. Une régression logistique multinomiale à fonction
-softmax fournit directement une loi catégorielle lorsque cet objectif
+softmax fournit directement une \rsym{categorielle}{loi catégorielle} lorsque cet objectif
 probabiliste est central \cite{hastie2009}.
 \end{vigilance}
 
@@ -148,7 +148,7 @@ retenir $\Argmax_k z_k$. La section suivante présente softmax comme un modèle
 probabiliste multiclasses distinct, avec sa propre estimation.
 \end{resultat}
 
-Pour être explicite, la fonction softmax mentionnée dans la comparaison est
+La fonction \rsym{softmax}{softmax} mentionnée dans la comparaison est
 \[
   \Pp(C=k\mid\x)
   =\frac{e^{z_k}}{\sum_{r=1}^K e^{z_r}}.

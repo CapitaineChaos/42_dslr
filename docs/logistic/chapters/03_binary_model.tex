@@ -4,7 +4,7 @@
 \begin{lecture}
 Le cas binaire pose une question à deux réponses, par exemple « Ravenclaw ou
 non-Ravenclaw ? ». Les caractéristiques produisent d'abord un score réel, qui
-peut être négatif ou positif. La sigmoïde convertit ce score en un nombre entre
+peut être négatif ou positif. La \rsym{sigmoide}{sigmoïde} convertit ce score en un nombre entre
 $0$ et $1$ interprété comme une probabilité conditionnelle.
 \end{lecture}
 
@@ -27,7 +27,7 @@ varier le seul vecteur $\thv$ ; $\X$ garde sa valeur pendant les itérations.
 \section{Interprétation par les log-cotes}
 
 \begin{lecture}
-Les cotes comparent la probabilité de l'événement à celle de son contraire. Une
+Les \rsym{cotes}{cotes} comparent la probabilité de l'événement à celle de son contraire. Une
 probabilité de $0{,}75$ correspond à des cotes $0{,}75/0{,}25=3$ : l'événement
 est trois fois plus probable que son contraire. Le logarithme transforme les
 multiplications de cotes en additions, compatibles avec un score linéaire.
@@ -38,7 +38,7 @@ La fonction logistique est équivalente au modèle linéaire
   \log\frac{\Pp(Y=1\mid X=\x)}{\Pp(Y=0\mid X=\x)}
   =\thv^\top\xt.
 \]
-Cette égalité est précisément la formulation en log-cotes du modèle logistique
+Cette égalité est la formulation en \rsym{logit}{log-cotes} du modèle logistique
 \cite[équations~4.17--4.18]{hastie2009}.
 
 Le modèle suppose que les log-cotes sont une fonction affine des

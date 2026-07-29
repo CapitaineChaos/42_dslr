@@ -114,13 +114,13 @@ est contrainte de passer par l'origine.}
 
 \begin{lecture}
 Le calcul exige un nombre dans chaque case et des échelles comparables. Imputer
-consiste à définir la valeur utilisée lorsqu'une mesure manque. Standardiser
+consiste à définir la valeur utilisée lorsqu'une mesure manque. \rsym{standardisation}{Standardiser}
 consiste à exprimer ensuite chaque mesure par rapport à la moyenne et à
 l'écart-type calculés sur l'apprentissage.
 \end{lecture}
 
 Les opérations de la régression logistique portent sur des nombres. Chaque case
-vide demande donc une règle explicite, par exemple l'imputation médiane, et la
+vide demande donc une règle explicite, par exemple l'imputation par la \rsym{mediane}{médiane}, et la
 valeur d'imputation de chaque variable rejoint l'état conservé du modèle. La
 suppression d'une ligne relève du même principe : un choix, énoncé et documenté.
 
@@ -162,7 +162,8 @@ Pour une note brute $r_j$, on estime sur l'apprentissage
     (r_{ij}-\mu_j)^2},
   \qquad x_j=\frac{r_j-\mu_j}{s_j}.
 \]
-Le diviseur $m_{\mathrm{tr}}$ ou $m_{\mathrm{tr}}-1$ change le résultat de moins
+Le diviseur de l'\rsym{ecarttype}{écart-type}, $m_{\mathrm{tr}}$ ou
+$m_{\mathrm{tr}}-1$, change le résultat de moins
 d'un pour mille sur $1\,600$ lignes ; le même reste employé à l'entraînement et à
 la prédiction. Un $s_j$ nul signale une colonne constante sur l'apprentissage,
 que le programme retire de la liste des variables.
@@ -172,7 +173,7 @@ linéaires. Elle améliore le conditionnement numérique de l'optimisation et re
 une éventuelle pénalisation comparable entre variables
 \cite[sec.~4.6.3]{hastie2009}.
 
-Le \emph{conditionnement} mesure la sensibilité du calcul aux directions de
+Le \rsym{conditionnement}{conditionnement} mesure la sensibilité du calcul aux directions de
 l'espace des paramètres. Une variable qui varie autour de $10^3$ et une autre
 autour de $10^{-2}$ répondent à un même déplacement de leurs coefficients par des
 variations de score dans un rapport de $10^5$. Les courbes de niveau du coût
@@ -215,7 +216,7 @@ $-180\leftrightarrow-2$, $20\leftrightarrow0$ et $170\leftrightarrow1{,}5$.}
 \label{fig:standardization}
 \end{figure}
 
-\begin{vigilance}[Fuite de données]
+\begin{vigilance}[\rsym{fuite}{Fuite de données}]
 Calculer $\mu_j$, $s_j$, une médiane d'imputation ou choisir des variables à
 partir de l'ensemble complet transmet de l'information du test vers
 l'apprentissage, et rend l'évaluation optimiste. La partition précède donc toute
@@ -254,7 +255,7 @@ Les deux listes vérifient
   \qquad
   \mathcal I_{\mathrm{tr}}\cup\mathcal I_{\mathrm{te}}=\{1,\ldots,m\}.
 \]
-Pour construire une partition stratifiée, on regroupe d'abord les indices par
+Pour construire une partition \rsym{stratifie}{stratifiée}, on regroupe d'abord les indices par
 classe. Dans chaque groupe, on mélange les indices avec une graine fixée, puis on
 affecte la proportion prévue à l'apprentissage et le reste au test. Les morceaux
 obtenus sont enfin réunis dans les deux listes. L'opération porte sur les indices
@@ -296,7 +297,7 @@ $900=720+180$ & \qquad & $100=80+20$
 \label{fig:stratification}
 \end{figure}
 
-Un \emph{hyperparamètre} est une quantité que le protocole fixe avant
+Un \rsym{hyperparam}{hyperparamètre} est une quantité que le protocole fixe avant
 l'ajustement. Les coefficients $\thv$ sont des paramètres appris par le gradient ;
 le taux $\alpha$ et la pénalisation $\lambda$ sont des hyperparamètres. Si trois
 valeurs de $\lambda$ donnent sur validation des exactitudes $0{,}78$, $0{,}83$ et
@@ -314,7 +315,7 @@ validation, le test et toute observation future.
 
 \begin{procedure}{Construire une partition stratifiée}
 \textbf{Entrées :} les numéros de lignes $1,\ldots,m$, leur classe $c_i$, une
-proportion d'apprentissage et une \emph{graine}. La graine est un entier qui
+proportion d'apprentissage et une \rsym{graine}{graine}. La graine est un entier qui
 initialise le générateur pseudo-aléatoire : reprendre le même entier reproduit
 le même mélange. \textbf{Sorties :} deux listes d'indices
 $\mathcal I_{\mathrm{tr}}$ et $\mathcal I_{\mathrm{te}}$.

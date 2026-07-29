@@ -41,12 +41,12 @@ numérique avant d'entrer dans le modèle. Trois mesures décident de leur sort.
 
 La proportion de gauchers varie de $48{,}1\,\%$ chez Ravenclaw à $51{,}4\,\%$
 chez Gryffindor, pour $49{,}4\,\%$ sur l'ensemble. Le tableau de contingence
-$4\times2$ donne un $\chi^2$ de $0{,}94$ à trois degrés de liberté, quand le
+$4\times2$ donne un \rsym{chi2}{$\chi^2$} de $0{,}94$ à trois degrés de liberté, quand le
 seuil à $5\,\%$ vaut $7{,}81$.
 
 L'écart entre la note moyenne des gauchers et celle des droitiers reste sous
 $0{,}10$ écart-type pour les treize cours, avec un maximum de $0{,}095$ pour
-Defense Against the Dark Arts. L'erreur type d'un tel écart vaut
+Defense Against the Dark Arts. L'\rsym{erreurtype}{erreur type} d'un tel écart vaut
 $\sqrt{1/790+1/810}=0{,}050$ écart-type : les treize valeurs tiennent à moins de
 deux erreurs types de zéro. Les maisons, elles, se séparent de $1{,}86$ à
 $2{,}66$ écarts-types sur ces mêmes cours.
@@ -70,9 +70,9 @@ Le jeu de données vérifie
   \text{Astronomy}=-100\times\text{Defense Against the Dark Arts}
 \]
 sur les $1\,537$ lignes où les deux valeurs sont présentes, avec un écart maximal
-de $4{,}5\cdot10^{-13}$ et une corrélation de $-1$ à six décimales. Le
+de $4{,}5\cdot10^{-13}$ et une \rsym{correlation}{corrélation} de $-1$ à six décimales. Le
 chapitre~\ref{ch:likelihood} établit la conséquence : deux colonnes
-proportionnelles rendent $\X^\top W\X$ singulière et laissent la fonction de coût
+\rsym{colinearite}{proportionnelles} rendent \rsym{xtwx}{$\X^\top W\X$} singulière et laissent la fonction de coût
 plate le long d'une direction. Les coefficients dérivent alors librement sur
 cette direction pendant que les scores restent identiques. Astronomy est
 conservée, Defense Against the Dark Arts sert à l'imputation décrite plus bas.
@@ -157,7 +157,7 @@ remplie.
   \item convertir les cases en nombres réels ; une case vide devient une valeur
         manquante ;
   \item remplir les valeurs manquantes d'Astronomy par $-100\,r_{\mathrm{DADA}}$,
-        puis les valeurs manquantes restantes par la médiane d'apprentissage de
+        puis les valeurs manquantes restantes par la \rsym{mediane}{médiane} d'apprentissage de
         leur colonne ;
   \item appliquer $x_{ij}=(r_{ij}-\mu_j)/s_j$ avec les $\mu_j$ et $s_j$
         d'apprentissage ;
@@ -377,15 +377,10 @@ l'équation~\eqref{eq:ovr-decision}. La sigmoïde est croissante et commune aux
 quatre modèles : comparer les $z_k$ donne le même classement que comparer les
 $q_k$.
 
-La remarque s'étend à softmax. Son dénominateur $S=\sum_r e^{z_r}$ prend la même
-valeur pour les quatre classes, donc
-\[
-  \frac{e^{z_a}}{S}>\frac{e^{z_b}}{S}
-  \iff e^{z_a}>e^{z_b}
-  \iff z_a>z_b .
-\]
-Les trois quantités $z_k$, $\sigma(z_k)$ et $\mathrm{softmax}(z)_k$ désignent le
-même argmax, pour tout jeu de scores. Sur les $1\,600$ lignes du fichier
+La remarque s'étend à \rsym{softmax}{softmax}, dont le dénominateur est commun aux
+quatre classes : la section~\ref{sec:lois} en donne l'argument. Les trois
+quantités $z_k$, $\sigma(z_k)$ et $\mathrm{softmax}(z)_k$ désignent le même
+argmax, pour tout jeu de scores. Sur les $1\,600$ lignes du fichier
 d'apprentissage, les trois règles produisent la même maison, avec zéro ex æquo.
 
 Deux mesures situent la difficulté du problème. L'écart entre le meilleur score
@@ -474,7 +469,7 @@ contrôle & valeur attendue \\
 gradient analytique contre différence finie centrée & écart relatif $<10^{-6}$ \\
 sigmoïde et perte évaluées en $z=\pm1000$ & valeurs finies \\
 exactitude d'une prédiction constante sur Hufflepuff & $0{,}331$ \\
-exactitude après permutation aléatoire des étiquettes & $\approx0{,}34$ \\
+exactitude après \rsym{permutation}{permutation} aléatoire des étiquettes & $\approx0{,}34$ \\
 exactitude sur le test interne & $\geq0{,}98$ \\
 lignes de \texttt{houses.csv} & $401$ \\
 \bottomrule

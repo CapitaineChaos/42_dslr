@@ -14,8 +14,7 @@ explicatives et
   Y_i\mid X_i=\x_i\sim
   \operatorname{Bernoulli}(p_i),\qquad p_i=\sigma(\thv^\top\xt_i).
 \]
-Ce modèle de Bernoulli conditionnel et son estimation par maximum de
-vraisemblance sont la construction standard de la régression logistique
+Ce modèle de \rsym{bernoulli}{Bernoulli} conditionnel et son estimation par \rsym{vraisemblance}{maximum de vraisemblance} sont la construction standard de la régression logistique
 \cite[sec.~4.4.1]{hastie2009,cox1958}.
 
 À une valeur donnée de $\thv$ correspondent donc trois objets successifs : le
@@ -24,7 +23,7 @@ $J(\thv)$ qui résume l'accord avec toutes les cibles. L'apprentissage réévalu
 ces objets après chaque modification de $\thv$ ; les observations et leurs
 cibles restent fixes.
 
-La masse de probabilité d'une Bernoulli peut s'écrire sous une forme unique pour
+La masse de probabilité d'une \rsym{bernoulli}{Bernoulli} peut s'écrire sous une forme unique pour
 les deux valeurs possibles de $y_i$ :
 \[
   \Pp(Y_i=y_i\mid X_i=\x_i;\thv)
@@ -60,7 +59,7 @@ Maximiser $L$ équivaut à minimiser la log-perte moyenne
   \tag{1}\label{eq:loss}
 \]
 L'équation~\eqref{eq:loss} est l'opposé de la log-vraisemblance binomiale,
-également appelée log-perte ou entropie croisée binaire
+également appelée \rsym{logperte}{log-perte} ou entropie croisée binaire
 \cite[équations~4.19--4.20]{hastie2009}.
 Cette quantité est l'opposé du logarithme de la probabilité attribuée par le
 modèle aux étiquettes observées.
@@ -151,7 +150,7 @@ complet s'écrit
   \bigl(\sigma(\X\thv)-\y\bigr).\quad}
   \tag{2}\label{eq:gradient}
 \]
-Cette expression est le score de vraisemblance sous forme matricielle
+Cette expression est le \rsym{gradient}{gradient} de la log-perte sous forme matricielle
 \cite[équation~4.21]{hastie2009}.
 Sa dérivation par la règle de chaîne figure à
 l'annexe~\ref{app:gradient-derivation}.
@@ -189,14 +188,14 @@ paramètres équivalents. Avec des classes parfaitement séparées, ce fond s'é
 l'infini.
 \end{lecture}
 
-En notant $W=\operatorname{diag}(p_i(1-p_i))$, la Hessienne vaut
+En notant $W=\operatorname{diag}(p_i(1-p_i))$, la \rsym{hessienne}{Hessienne} vaut
 \[
   \nabla^2J(\thv)=\frac1m\X^\top W\X.
 \]
-Cette Hessienne est la matrice d'information observée, à un facteur de
+Cette matrice \rsym{xtwx}{$\X^\top W\X$} est l'information observée, à un facteur de
 normalisation près \cite[équations~4.22--4.25]{hastie2009}.
 Les coefficients diagonaux $p_i(1-p_i)$ sont positifs ou nuls ; la Hessienne est
-donc positive semi-définie et $J$ est convexe. Tout minimum local est global. La
+donc \rsym{psd}{positive semi-définie} et $J$ est \rsym{convexite}{convexe}. Tout minimum local est global. La
 preuve matricielle est donnée à l'annexe~\ref{app:convexity-proof}. La stricte
 convexité, qui donne l'unicité du minimiseur, demande en plus que $\X$ soit de
 rang plein.
@@ -215,7 +214,7 @@ couples vérifiant $\theta_1+\theta_2=1$ minimisent le coût. Cette seconde
 situation reproduit ce qui se passe lorsque deux colonnes de la matrice de design
 apportent exactement la même information.
 
-\begin{vigilance}[Séparation complète]
+\begin{vigilance}[\rsym{separation}{Séparation complète}]
 Si un hyperplan sépare parfaitement les deux classes, la vraisemblance non
 pénalisée croît continûment quand $\|\thv\|\to\infty$ et atteint sa borne
 supérieure à la limite. La convexité porte sur la forme de $J$ ; l'existence d'un
@@ -277,7 +276,7 @@ du second. Une valeur nulle rend le modèle initial ; une valeur croissante
 contracte les coefficients vers zéro.
 \end{lecture}
 
-Une pénalisation quadratique donne
+Une \rsym{regularisation}{pénalisation quadratique} donne
 \[
   J_\lambda(\thv)=J(\thv)+\frac{\lambda}{2m}\sum_{j=1}^n\theta_j^2,
   \qquad
@@ -288,7 +287,7 @@ quadratique \cite[sec.~4.4.4]{hastie2009}. Le symbole
 \[
   \|\mathbf w\|_2^2=\theta_1^2+\cdots+\theta_n^2
 \]
-est le carré de la norme euclidienne des coefficients hors biais. Ajouter cette
+est le carré de la \rsym{norme}{norme euclidienne} des coefficients hors biais. Ajouter cette
 quantité au coût introduit un second critère de jugement : entre deux solutions
 de log-pertes voisines, l'ajustement retient celle dont les coefficients sont les
 plus petits.
