@@ -134,6 +134,14 @@ $100$. Ce calcul explique l'intérêt possible de la médiane, mais ne démontre
 qu'elle est toujours optimale : l'imputation réduit artificiellement la
 dispersion et peut masquer un mécanisme de données manquantes informatif.
 
+L'ordre retenu dans ce document --- imputer, puis estimer $\mu_j$ et $s_j$ sur la
+colonne complétée --- applique une règle unique à l'apprentissage, à la validation
+et à toute observation future. Il contracte légèrement $s_j$, puisque les valeurs
+imputées sont toutes égales à la médiane. Estimer $\mu_j$ et $s_j$ sur les seules
+valeurs observées est l'autre convention défensible. Ce qui compte n'est pas le
+choix retenu, mais son enregistrement et son application identique à chaque étape
+de la chaîne.
+
 \begin{figure}[htbp]
 \centering
 \begin{tabular}{c@{\hspace{14mm}$\xrightarrow{\text{médiane }=9}$\hspace{14mm}}c}
@@ -262,7 +270,7 @@ sur les lignes désignées par $\mathcal I_{\mathrm{tr}}$. Au moment du test, ce
 mêmes statistiques sont appliquées aux lignes de $\mathcal I_{\mathrm{te}}$ sans
 nouvelle estimation.
 
-\paragraph{Préservation des effectifs par classe.}
+\section{Préservation des effectifs par classe}
 Avec $1\,000$ élèves, dont $900$ majoritaires et $100$ dans la classe étudiée,
 une répartition $80\,\%/20\,\%$ affecte séparément $80\,\%$ de chaque classe à
 l'apprentissage. On obtient ainsi $720+80=800$ lignes d'apprentissage et

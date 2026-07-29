@@ -88,7 +88,7 @@ Dans le problème logistique convexe, un point stationnaire fini est un minimum
 global ; c'est la convexité établie au chapitre précédent qui autorise cette
 conclusion, pas la seule égalité $\nabla J=0$.
 
-\paragraph{Influence du taux d'apprentissage dans le cas scalaire.}
+\section{Influence du taux d'apprentissage dans le cas scalaire}
 La fonction $J(\theta)=(\theta-2)^2$ mesure ici la distance quadratique au
 minimum situé en $\theta=2$. À chaque tour, le programme évalue la pente
 $J'(\theta)=2(\theta-2)$, la multiplie par $\alpha$, puis soustrait cette
@@ -204,11 +204,17 @@ Il est préférable de calculer directement la perte à partir du score,
 \[
   \ell(y,z)=\log(1+e^z)-yz=\operatorname{softplus}(z)-yz,
 \]
-L'identité résulte directement du remplacement
-$p=\sigma(z)$ dans la log-perte et constitue la forme usuelle de la perte
-logistique \cite[sec.~7.1]{murphy2022}.
-avec une primitive stable de type $\log(1+e^z)$, plutôt que de calculer
-$\log(\sigma(z))$ après arrondi de la probabilité à $0$ ou $1$.
+plutôt que de calculer $\log(\sigma(z))$ après arrondi de la probabilité à $0$
+ou $1$. Cette identité résulte du remplacement de $p$ par $\sigma(z)$ dans la
+log-perte et constitue la forme usuelle de la perte logistique
+\cite[sec.~7.1]{murphy2022}.
+
+La fonction softplus demande elle-même une évaluation protégée, car $e^z$ déborde
+pour un score très positif. La forme employée est
+\[
+  \operatorname{softplus}(z)=\log(1+e^z)=\max(z,0)+\log\bigl(1+e^{-|z|}\bigr),
+\]
+dont l'exponentielle porte toujours sur un nombre négatif ou nul.
 
 \begin{resultat}[Contrôle du gradient]
 Avant tout entraînement, comparer le gradient analytique à une différence finie

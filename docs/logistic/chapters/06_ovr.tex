@@ -10,8 +10,8 @@ au score maximal devient la prédiction.
 
 Pour chaque classe $k\in\{1,\ldots,K\}$, on construit la cible binaire
 \[
-  y_{ik}=\ind[c_i=k]
-\].
+  y_{ik}=\ind[c_i=k].
+\]
 Cette réduction est la stratégie one-vs-rest : un classifieur binaire par classe,
 la classe considérée étant positive et toutes les autres négatives
 \cite[sec.~4.1]{rifkin2004}. On ajuste ensuite indépendamment un paramètre
@@ -69,7 +69,7 @@ quatre scores. La somme des sorties vaut ici $1{,}15$, non $1$.}
     \node[anchor=east] at (0,2.5){H};
     \node[anchor=east] at (0,1.5){R};
     \node[anchor=east] at (0,.5){S};
-    \foreach \yy/\v in {3.5/4.5,2.5/3.3,1.5/80.7,.5/11.5}{
+    \foreach \yy/\v in {3.5/5,2.5/3,1.5/82,.5/10}{
       \fill[warning!70] (0,\yy-.22) rectangle (\v,\yy+.22);
       \node[anchor=west] at (\v+1,\yy){\v\,\%};
     }

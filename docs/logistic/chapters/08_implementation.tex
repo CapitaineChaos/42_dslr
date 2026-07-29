@@ -1,0 +1,339 @@
+\chapter{Entraînement et prédiction}
+\label{ch:implementation}
+
+\begin{lecture}
+Deux programmes suffisent à produire le classifieur. Le premier lit les élèves
+étiquetés et écrit les paramètres ; le second lit ces paramètres et attribue une
+maison à chaque nouvel élève. Ce chapitre donne les colonnes qui entrent dans le
+calcul, les dimensions de chaque tableau, les valeurs des hyperparamètres et le
+contenu des fichiers échangés. Les nombres cités proviennent de
+\texttt{dataset\_train.csv}.
+\end{lecture}
+
+\section{Colonnes du fichier}
+\label{sec:features}
+
+Le fichier d'apprentissage contient $1\,600$ lignes et dix-neuf colonnes.
+
+\begin{table}[htbp]
+\centering
+\begin{tabularx}{\textwidth}{>{\ttfamily\footnotesize}l X}
+\toprule
+\textrm{colonne} & \textrm{contenu et emploi} \\
+\midrule
+Index & entier de $0$ à $1\,599$. Recopié dans \texttt{houses.csv} pour apparier chaque prédiction à son élève \\
+Hogwarts House & la réponse $c_i$. Quatre valeurs, d'effectifs $529$, $443$, $327$ et $301$. Source des cibles binaires $y_{ik}$ \\
+First Name, Last Name & identité de l'élève. Écartées \\
+Birthday & date de naissance au format \texttt{AAAA-MM-JJ}, de $1996$ à $2001$. Écartée d'après la section~\ref{sec:hand-birthday} \\
+Best Hand & \texttt{Left} pour $790$ élèves, \texttt{Right} pour $810$. Écartée d'après la section~\ref{sec:hand-birthday} \\
+\textrm{treize colonnes de notes} & nombres réels. Variables candidates \\
+\bottomrule
+\end{tabularx}
+\caption{Composition du fichier d'apprentissage.}
+\label{tab:columns}
+\end{table}
+
+\section{Best Hand et Birthday}
+\label{sec:hand-birthday}
+
+Ces deux colonnes sont remplies sur les $1\,600$ lignes et demandent un codage
+numérique avant d'entrer dans le modèle. Trois mesures décident de leur sort.
+
+La proportion de gauchers varie de $48{,}1\,\%$ chez Ravenclaw à $51{,}4\,\%$
+chez Gryffindor, pour $49{,}4\,\%$ sur l'ensemble. Le tableau de contingence
+$4\times2$ donne un $\chi^2$ de $0{,}94$ à trois degrés de liberté, quand le
+seuil à $5\,\%$ vaut $7{,}81$.
+
+L'écart entre la note moyenne des gauchers et celle des droitiers reste sous
+$0{,}10$ écart-type pour les treize cours, avec un maximum de $0{,}095$ pour
+Defense Against the Dark Arts. L'erreur type d'un tel écart vaut
+$\sqrt{1/790+1/810}=0{,}050$ écart-type : les treize valeurs tiennent à moins de
+deux erreurs types de zéro. Les maisons, elles, se séparent de $1{,}86$ à
+$2{,}66$ écarts-types sur ces mêmes cours.
+
+Le mois de naissance donne un $\chi^2$ de $33{,}4$ à $33$ degrés de liberté.
+L'année donne $28{,}1$ à $15$ degrés de liberté, au-dessus du seuil à $5\,\%$ qui
+vaut $25{,}0$ : une association faible, portée en partie par les $40$ élèves nés
+en $1996$ contre environ $320$ pour chacune des années suivantes.
+
+Le test décisif porte sur l'exactitude. Best Hand codée $\pm1$, puis l'année de
+naissance standardisée, ajoutées chacune comme onzième variable, laissent
+l'exactitude hors échantillon à $0{,}9832$ sur cinq graines de découpage,
+identique aux quatre décimales. Les coefficients de Best Hand s'échelonnent de
+$-0{,}20$ à $+0{,}19$, contre $2{,}39$ pour Astronomy chez Hufflepuff. Les deux
+colonnes restent hors du modèle.
+
+\section{Redondance}
+
+Le jeu de données vérifie
+\[
+  \text{Astronomy}=-100\times\text{Defense Against the Dark Arts}
+\]
+sur les $1\,537$ lignes où les deux valeurs sont présentes, avec un écart maximal
+de $4{,}5\cdot10^{-13}$ et une corrélation de $-1$ à six décimales. Le
+chapitre~\ref{ch:likelihood} établit la conséquence : deux colonnes
+proportionnelles rendent $\X^\top W\X$ singulière et laissent la fonction de coût
+plate le long d'une direction. Les coefficients dérivent alors librement sur
+cette direction pendant que les scores restent identiques. Astronomy est
+conservée, Defense Against the Dark Arts sert à l'imputation décrite plus bas.
+
+\section{Pouvoir discriminant}
+
+Pour la variable $j$, l'étendue des moyennes par maison rapportée à l'écart-type
+global vaut
+\[
+  \delta_j=\frac{\max_k\bar r_{jk}-\min_k\bar r_{jk}}{s_j}.
+\]
+Un $\delta_j$ de $2$ signifie que les maisons extrêmes ont des moyennes séparées
+par deux écarts-types : leurs distributions se chevauchent peu et la variable
+sépare. Un $\delta_j$ de $0{,}07$ place les quatre moyennes à l'intérieur d'un
+quatorzième d'écart-type : les quatre histogrammes se superposent.
+
+\begin{table}[htbp]
+\centering
+\setlength{\tabcolsep}{7pt}
+\begin{tabular}{lrrl}
+\toprule
+variable & $\delta_j$ & manquantes & décision \\
+\midrule
+\cellcolor{warning!14}Arithmancy                & \cellcolor{warning!14}$0{,}068$ & \cellcolor{warning!14}$34$ & \cellcolor{warning!14}écartée : homogène \\
+\cellcolor{warning!14}Care of Magical Creatures & \cellcolor{warning!14}$0{,}147$ & \cellcolor{warning!14}$40$ & \cellcolor{warning!14}écartée : homogène \\
+\midrule
+Ancient Runes                & $1{,}860$ & $35$ & retenue \\
+Herbology                    & $1{,}879$ & $33$ & retenue \\
+\cellcolor{warning!14}Defense Against the Dark Arts & \cellcolor{warning!14}$1{,}909$ & \cellcolor{warning!14}$31$ & \cellcolor{warning!14}écartée : redondante \\
+Astronomy                    & $1{,}911$ & $32$ & retenue \\
+Muggle Studies               & $2{,}038$ & $35$ & retenue \\
+Potions                      & $2{,}076$ & $30$ & retenue \\
+History of Magic             & $2{,}221$ & $43$ & retenue \\
+Transfiguration              & $2{,}284$ & $34$ & retenue \\
+Divination                   & $2{,}368$ & $39$ & retenue \\
+Charms                       & $2{,}466$ & $0$  & retenue \\
+Flying                       & $2{,}657$ & $0$  & retenue \\
+\bottomrule
+\end{tabular}
+\caption{Les treize notes classées par pouvoir discriminant croissant. Arithmancy
+et Care of Magical Creatures sont en dessous des autres d'un facteur douze ; la
+coupure tombe dans un intervalle vide.}
+\label{tab:feature-selection}
+\end{table}
+
+\begin{resultat}[Variables retenues]
+Astronomy, Herbology, Divination, Muggle Studies, Ancient Runes,
+History of Magic, Transfiguration, Potions, Charms, Flying.
+Donc $n=10$, $\X\in\R^{m\times11}$ et chaque $\thv_k\in\R^{11}$.
+\end{resultat}
+
+\section{Valeurs manquantes}
+
+Onze des treize colonnes de notes comportent des cases vides, entre $30$ et $43$
+chacune, réparties sur $349$ lignes distinctes.
+
+Les $1\,600$ lignes possèdent au moins une des deux valeurs Astronomy ou Defense
+Against the Dark Arts. La relation de proportionnalité donne donc les $32$
+valeurs manquantes d'Astronomy à partir de la colonne écartée, au facteur $-100$
+près. Ces $32$ cases reçoivent leur valeur exacte, et Astronomy devient complète.
+
+Restent alors $239$ lignes portant au moins une case vide parmi les dix variables
+retenues, soit $14{,}9\,\%$ de l'échantillon : les supprimer ramènerait
+l'apprentissage à $1\,361$ élèves. L'imputation médiane du
+chapitre~\ref{ch:data} les conserve toutes, et porte sur les sept colonnes encore
+incomplètes. Charms, Flying et Astronomy sont pleines.
+
+\section{Matrice de design}
+
+Le programme applique dans l'ordre : reconstruction d'Astronomy, imputation
+médiane, standardisation, ajout de la colonne de biais.
+
+\begin{procedure}{Construire $\X$}
+\textbf{Entrée :} un fichier de données. \textbf{Sorties :} $\X$, le vecteur des
+identifiants \texttt{Index}, et le vecteur des classes lorsque la colonne est
+remplie.
+\begin{enumerate}
+  \item lire les lignes dans l'ordre du fichier ; cet ordre est celui de
+        \texttt{houses.csv} ;
+  \item extraire les dix colonnes retenues, dans l'ordre fixé par le fichier de
+        poids ;
+  \item convertir les cases en nombres réels ; une case vide devient une valeur
+        manquante ;
+  \item remplir les valeurs manquantes d'Astronomy par $-100\,r_{\mathrm{DADA}}$,
+        puis les valeurs manquantes restantes par la médiane d'apprentissage de
+        leur colonne ;
+  \item appliquer $x_{ij}=(r_{ij}-\mu_j)/s_j$ avec les $\mu_j$ et $s_j$
+        d'apprentissage ;
+  \item préfixer chaque ligne d'une coordonnée égale à $1$, ce qui donne
+        $\X\in\R^{m\times11}$.
+\end{enumerate}
+\end{procedure}
+
+Sur \texttt{dataset\_train.csv}, $m=1\,600$ et $\X$ mesure $1\,600\times11$. Sur
+\texttt{dataset\_test.csv}, $m=400$ et $\X$ mesure $400\times11$. Le découpage
+stratifié $80\,\%/20\,\%$ du chapitre~\ref{ch:evaluation} partage les $1\,600$
+lignes d'apprentissage en $1\,278$ et $322$.
+
+\section{Le programme d'entraînement}
+
+L'entraînement traite les quatre maisons l'une après l'autre. Pour la maison $k$,
+il forme la cible $\y_k\in\{0,1\}^{1600}$ par $y_{ik}=\ind[c_i=k]$, part de
+$\thv_k=\mathbf 0$, puis répète quatre opérations :
+\[
+  \mathbf z=\X\thv_k\;(m),\qquad
+  \mathbf p=\sigma(\mathbf z)\;(m),\qquad
+  \mathbf g=\tfrac1m\X^\top(\mathbf p-\y_k)\;(11),\qquad
+  \thv_k\leftarrow\thv_k-\alpha\mathbf g.
+\]
+Le coût $J$ de l'équation~\eqref{eq:loss} sert au critère d'arrêt, le gradient
+$\mathbf g$ est l'équation~\eqref{eq:gradient}. Le départ à $\thv_k=\mathbf 0$
+donne un résultat reproductible d'une exécution à l'autre, la convexité établie
+au chapitre~\ref{ch:likelihood} garantissant l'unicité de la limite à direction
+plate près.
+
+\begin{procedure}{logreg\_train}
+\textbf{Entrée :} \texttt{dataset\_train.csv}. \textbf{Sortie :} le fichier de
+poids.
+\begin{enumerate}
+  \item calculer médianes, $\mu_j$ et $s_j$ sur les lignes d'apprentissage, puis
+        construire $\X$ ;
+  \item pour $k=1,\ldots,4$, former $\y_k$ et itérer les quatre opérations
+        ci-dessus jusqu'à $|J^{(t+1)}-J^{(t)}|/\max(1,|J^{(t)}|)<\eps$ ou
+        épuisement du plafond d'itérations ;
+  \item relever pour chaque maison le coût initial, le coût final, le nombre
+        d'itérations et $\|\mathbf g\|_2$ ;
+  \item écrire le fichier de poids avec les statistiques de préparation.
+\end{enumerate}
+\end{procedure}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{rrrrr}
+\toprule
+$\alpha$ & $\eps$ & itérations & $\|\nabla J\|_2$ final & exactitude hors échantillon \\
+\midrule
+$0{,}5$ & $10^{-6}$ & $1\,817$ & $1{,}4\cdot10^{-3}$ & $0{,}981$ \\
+$1$     & $10^{-6}$ & $1\,461$ & $1{,}0\cdot10^{-3}$ & $0{,}981$ \\
+$2$     & $10^{-6}$ & $1\,150$ & $7{,}1\cdot10^{-4}$ & $0{,}981$ \\
+$1$     & $10^{-7}$ & $5\,448$ & $3{,}2\cdot10^{-4}$ & $0{,}981$ \\
+\bottomrule
+\end{tabular}
+\caption{Itérations consommées par la maison la plus lente, sur les $1\,278$
+lignes d'apprentissage du découpage stratifié. Diviser $\eps$ par dix multiplie
+les itérations par près de quatre et laisse les $322$ décisions du test interne
+inchangées : la convergence numérique se poursuit après que le classement s'est
+stabilisé.}
+\label{tab:training-defaults}
+\end{table}
+
+\begin{resultat}[Configuration de départ]
+$\alpha=1$, $\eps=10^{-6}$, plafond de $6\,000$ itérations, $\thv_k=\mathbf 0$.
+Cette configuration atteint $0{,}981$ sur un test interne de $322$ élèves, et
+$0{,}983$ en moyenne sur cinq graines de découpage.
+\end{resultat}
+
+\section{Le fichier de poids}
+\label{sec:weights}
+
+La prédiction a besoin de trois choses : l'ordre des dix variables, les
+statistiques qui les transforment, et les quatre vecteurs de paramètres associés
+à leurs libellés. Les statistiques figurent dans le fichier parce qu'elles sont
+estimées sur l'apprentissage ; les recalculer sur \texttt{dataset\_test.csv}
+placerait les scores dans une autre échelle et ferait chuter l'exactitude.
+
+\begin{fichier}[weights.csv]
+feature,median,mu,sigma\\
+Astronomy,262.9,39.0,519.4\\
+Herbology,3.5,1.2,5.2\\
+{[}...{]}\\
+Flying,-2.2,22.3,97.7\\
+class,bias,Astronomy,Herbology,...,Flying\\
+Gryffindor,-3.94,0.69,-2.14,...,2.01\\
+Hufflepuff,-2.39,2.39,1.73,...,-0.40\\
+Ravenclaw,-2.42,-1.31,0.77,...,-0.27\\
+Slytherin,-3.82,-2.13,-0.71,...,-0.61
+\end{fichier}
+
+Ces valeurs sont celles obtenues avec la configuration ci-dessus. L'écart-type
+d'Astronomy vaut $519$ et celui d'Herbology $5{,}2$ : un facteur cent entre deux
+colonnes que le même $\alpha$ doit faire progresser, ce que la standardisation
+ramène à $1$.
+
+L'ordre des colonnes et l'ordre des classes appartiennent au modèle. Un vecteur
+$\thv_k$ s'applique aux variables dans l'ordre où il a été ajusté, et l'indice
+renvoyé par $\Argmax$ se lit dans la liste des libellés enregistrée à côté de
+lui. Les deux ordres figurent explicitement dans le fichier.
+
+\section{Le programme de prédiction}
+
+La prédiction lit les paramètres, construit $\X$ avec les statistiques du fichier
+de poids, calcule quatre scores par ligne et retient le plus grand, selon
+l'équation~\eqref{eq:ovr-decision}. La sigmoïde est croissante et commune aux
+quatre modèles : comparer les $z_k$ donne le même classement que comparer les
+$q_k$.
+
+\begin{procedure}{logreg\_predict}
+\textbf{Entrées :} \texttt{dataset\_test.csv} et le fichier de poids.
+\textbf{Sortie :} \texttt{houses.csv}.
+\begin{enumerate}
+  \item lire l'ordre des variables, les statistiques de préparation, l'ordre des
+        classes et les quatre $\thv_k$ ;
+  \item construire $\X\in\R^{400\times11}$ avec ces statistiques ;
+  \item calculer $\mathbf Z=\X\Theta^\top\in\R^{400\times4}$, où $\Theta$ empile
+        les quatre vecteurs de paramètres ;
+  \item pour chaque ligne, prendre l'indice du maximum et le convertir en
+        libellé ;
+  \item écrire l'en-tête puis $400$ lignes, dans l'ordre du fichier d'entrée.
+\end{enumerate}
+\end{procedure}
+
+\begin{fichier}[houses.csv]
+Index,Hogwarts House\\
+0,Gryffindor\\
+1,Hufflepuff\\
+2,Ravenclaw\\
+3,Hufflepuff\\
+{[}...{]}\\
+399,Gryffindor
+\end{fichier}
+
+Les lignes de \texttt{dataset\_test.csv} dont plusieurs notes manquent reçoivent
+une maison comme les autres : leurs cases vides ont été remplies par les médianes
+d'apprentissage à l'étape~2. Le fichier produit compte $401$ lignes.
+
+\section{Contrôles}
+
+La colonne \texttt{Hogwarts House} de \texttt{dataset\_test.csv} est vide.
+L'exactitude se mesure donc sur un ensemble de test découpé dans
+\texttt{dataset\_train.csv}, selon le protocole du chapitre~\ref{ch:evaluation}.
+Le sujet fixe le seuil d'acceptation à $0{,}98$, mesuré par l'évaluateur sur
+\texttt{dataset\_test.csv}.
+
+\begin{table}[htbp]
+\centering
+\begin{tabularx}{\textwidth}{X r}
+\toprule
+contrôle & valeur attendue \\
+\midrule
+gradient analytique contre différence finie centrée & écart relatif $<10^{-6}$ \\
+sigmoïde et perte évaluées en $z=\pm1000$ & valeurs finies \\
+exactitude d'une prédiction constante sur Hufflepuff & $0{,}331$ \\
+exactitude après permutation aléatoire des étiquettes & $\approx0{,}34$ \\
+exactitude sur le test interne & $\geq0{,}98$ \\
+lignes de \texttt{houses.csv} & $401$ \\
+\bottomrule
+\end{tabularx}
+\caption{Valeurs de référence mesurées sur ce jeu de données.}
+\label{tab:checks}
+\end{table}
+
+Le contrôle par permutation mélange les maisons entre les lignes avant
+l'entraînement. Le chapitre~\ref{ch:evaluation} situe le résultat attendu à
+$0{,}25$ pour quatre classes équilibrées. Les effectifs valent ici $529$, $443$,
+$327$ et $301$ : privé de tout lien entre notes et maison, le modèle converge
+vers la prédiction constante sur la classe majoritaire et atteint $0{,}34$. La
+référence d'un contrôle par permutation est la performance de la meilleure règle
+constante.
+
+\begin{resultat}[Sortie de l'entraînement]
+Quatre vecteurs de onze coefficients, dix médianes, dix moyennes, dix
+écarts-types, la liste ordonnée des variables et celle des maisons. Ces $74$
+nombres et ces deux listes forment l'intégralité de ce que lit la prédiction.
+\end{resultat}
