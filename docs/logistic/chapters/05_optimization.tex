@@ -17,15 +17,15 @@ La descente de gradient simultanée produit la suite
 Cette itération est la descente de gradient par lot appliquée à la
 log-vraisemblance négative \cite[chap.~8]{boyd2004}.
 
-Le gradient indique la direction locale de hausse du coût ; son opposé indique
-donc une direction locale de baisse. Cette propriété résulte du développement
-au premier ordre présenté à l'annexe~\ref{app:descent-direction}. Elle reste
-locale : un pas trop grand peut dépasser la zone où cette approximation décrit
-correctement la fonction.
-Le mot \emph{simultanée} est important : toutes les composantes du nouveau
-vecteur sont calculées à partir du même ancien vecteur. Un taux trop grand peut
-faire augmenter le coût ou provoquer une divergence ; un taux très petit rend
-la convergence inutilement lente.
+Le gradient donne la direction locale de hausse du coût, son opposé la direction
+locale de baisse. Le développement au premier ordre de
+l'annexe~\ref{app:descent-direction} l'établit. La propriété vaut au voisinage du
+point courant, et un pas trop grand sort du domaine où cette approximation décrit
+la fonction.
+
+La mise à jour est \emph{simultanée} : les $n+1$ composantes du nouveau vecteur
+se calculent toutes à partir du même ancien vecteur. Un taux élevé fait remonter
+le coût ou diverger ; un taux très petit allonge la convergence.
 
 \begin{figure}[htbp]
   \centering
@@ -37,9 +37,10 @@ la convergence inutilement lente.
       \addplot[warning,dashed,thick,domain=0:30]{.32+.55*exp(-x/12)+.08*sin(deg(x))};
     \end{axis}
   \end{tikzpicture}
-  \caption{Diagnostic typique du coût : décroissance stable (trait plein) et
-  oscillations dues à un pas trop agressif (pointillé). Cette figure est
-  schématique ; le tracé du coût réel doit être conservé avec l'expérience.}
+  \caption{Deux allures du coût au fil des itérations : décroissance stable en
+  trait plein, oscillations d'un pas trop agressif en pointillé. Courbes
+  construites pour la figure ; le tracé du coût réel rejoint l'archive de
+  l'expérience.}
 \end{figure}
 
 Un arrêt robuste combine un nombre maximal d'itérations avec, par exemple,
@@ -47,7 +48,8 @@ Un arrêt robuste combine un nombre maximal d'itérations avec, par exemple,
   \frac{|J^{(t+1)}-J^{(t)}|}{\max(1,|J^{(t)}|)}<\eps
   \quad\text{ou}\quad \|\nabla J(\thv^{[t]})\|_2<\eps.
 \]
-Un simple nombre fixe d'itérations ne démontre pas la convergence.
+Le plafond d'itérations borne le temps de calcul ; le test sur $J$ ou sur le
+gradient atteste la convergence.
 
 \begin{figure}[htbp]
 \centering
@@ -74,19 +76,17 @@ La standardisation tend à réduire cet effet d'allongement.}
 \label{fig:contours}
 \end{figure}
 
-Il faut distinguer trois diagnostics. Une baisse du coût indique que l'algorithme
-avance ; une petite norme du gradient indique qu'il approche un point
-stationnaire ; une bonne performance de validation indique que ce point produit
-un modèle utile hors échantillon. Aucun de ces faits n'implique automatiquement
-les deux autres.
+Trois diagnostics coexistent, chacun sur sa propre question. Une baisse du coût
+dit que l'algorithme avance. Une petite norme du gradient dit qu'il approche un
+point stationnaire. Une bonne performance de validation dit que ce point produit
+un modèle utile hors échantillon. Chacun se vérifie séparément.
 
-Un \emph{point stationnaire} est un point où le gradient est nul. Pour
-$J(\theta)=\theta^2$, le point $0$ est stationnaire et constitue le minimum. Pour
-$J(\theta)=\theta^3$, le point $0$ est aussi stationnaire, mais la fonction
-continue de décroître à gauche et de croître à droite : ce n'est pas un minimum.
-Dans le problème logistique convexe, un point stationnaire fini est un minimum
-global ; c'est la convexité établie au chapitre précédent qui autorise cette
-conclusion, pas la seule égalité $\nabla J=0$.
+Un \emph{point stationnaire} est un point où le gradient s'annule. Pour
+$J(\theta)=\theta^2$, le point $0$ est stationnaire et donne le minimum. Pour
+$J(\theta)=\theta^3$, le point $0$ est stationnaire alors que la fonction décroît
+à sa gauche et croît à sa droite : c'est un point d'inflexion. Dans le problème
+logistique, la convexité établie au chapitre précédent fait de tout point
+stationnaire fini un minimum global.
 
 \section{Influence du taux d'apprentissage dans le cas scalaire}
 La fonction $J(\theta)=(\theta-2)^2$ mesure ici la distance quadratique au
@@ -130,8 +130,7 @@ l'écart.
 \end{tikzpicture}
 \end{minipage}
 \caption{Valeur du paramètre après chaque mise à jour. Les segments relient deux
-itérations successives ; ils représentent l'ordre des calculs, pas une grandeur
-supplémentaire.}
+itérations successives et marquent l'ordre des calculs.}
 \label{fig:learning-rate-scalar}
 \end{figure}
 
@@ -185,14 +184,14 @@ gradient $\|\mathbf g^{[t]}\|_2$.
 \section{Formules numériquement stables}
 
 \begin{lecture}
-Deux formules mathématiquement égales peuvent se comporter différemment sur un
+Deux formules mathématiquement égales se comportent différemment sur un
 ordinateur, dont les nombres ont une taille et une précision finies. Les formes
-stables évitent de calculer des exponentielles immenses, puis de soustraire ou
-de logarithmer des valeurs arrondies à $0$ ou $1$.
+stables maintiennent les exponentielles dans le domaine représentable et
+travaillent sur le score plutôt que sur une probabilité arrondie à $0$ ou $1$.
 \end{lecture}
 
-Évaluer $e^{-z}$ sans précaution peut déborder pour un score très négatif. Une
-sigmoïde stable utilise deux branches :
+Pour un score très négatif, $e^{-z}$ dépasse la capacité du format flottant. Une
+sigmoïde stable utilise donc deux branches :
 \[
   \sigma(z)=
   \begin{cases}
@@ -223,9 +222,8 @@ centrée sur un cas test de faible dimension :
   \frac{\partial J}{\partial\theta_j}\approx
   \frac{J(\thv+h e_j)-J(\thv-h e_j)}{2h}.
 \]
-Ce test détecte efficacement un signe inversé, un facteur $1/m$ oublié ou un
-problème d'orientation des matrices. Il valide la dérivation, pas l'ensemble du
-modèle.
+Ce test détecte un signe inversé, un facteur $1/m$ oublié ou une transposition
+mal placée. Sa portée s'arrête à la dérivation et au code du gradient.
 \end{resultat}
 
 \begin{figure}[htbp]

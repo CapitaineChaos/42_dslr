@@ -46,8 +46,8 @@ Slytherin  & $-1{,}21$ & $0{,}23$ & $2$ \\
 \bottomrule
 \end{tabular}
 \caption{Décision OvR sur une observation. Ravenclaw maximise à la fois $z_k$ et
-$q_k$, car la même fonction strictement croissante $\sigma$ est appliquée aux
-quatre scores. La somme des sorties vaut ici $1{,}15$, non $1$.}
+$q_k$, la même fonction strictement croissante $\sigma$ étant appliquée aux
+quatre scores. La somme des sorties vaut ici $1{,}15$.}
 \label{tab:ovr-example}
 \end{table}
 
@@ -109,9 +109,8 @@ leurs valeurs n'ont pas la même signification probabiliste.}
     }
   \end{tikzpicture}}
   \caption{Architecture OvR complète pour les quatre maisons. La même
-  observation traverse les quatre modèles binaires ; les quatre scores sont
-  effectivement calculés, puis comparés. Aucun classifieur n'est caché derrière
-  des points de suspension.}
+  observation traverse les quatre modèles binaires, qui produisent quatre scores,
+  ensuite comparés.}
 \label{fig:ovr-architecture}
 \end{figure}
 
@@ -134,22 +133,19 @@ $c_i$. \textbf{État produit :} $K$ vecteurs $\thv_k$ associés à $K$ libellés
 
 \begin{vigilance}[Scores, probabilités binaires et probabilités multiclasses]
 $q_k$ estime la probabilité de la cible binaire « classe $k$ contre le reste »
-dans le modèle $k$. Les $K$ modèles étant ajustés séparément, le vecteur
-$(q_1,\ldots,q_K)$ n'est pas construit comme une loi catégorielle et sa somme
-n'est pas contrainte à valoir $1$. Ces nombres conviennent au classement de
-l'équation~\eqref{eq:ovr-decision}, mais ne doivent pas être présentés sans
-réserve comme un unique vecteur de probabilités multiclasses calibrées
-\cite{zadrozny2002}. Une régression logistique multinomiale à fonction softmax
-est l'alternative cohérente si cet objectif probabiliste est central
-\cite{hastie2009}.
+dans le modèle $k$. Les $K$ modèles étant ajustés séparément, chaque $q_k$ décrit
+sa propre expérience binaire et la somme $\sum_k q_k$ prend une valeur libre. Ces
+nombres servent au classement de l'équation~\eqref{eq:ovr-decision} ; leur usage
+comme vecteur de probabilités multiclasses calibrées demande une recalibration
+préalable \cite{zadrozny2002}. Une régression logistique multinomiale à fonction
+softmax fournit directement une loi catégorielle lorsque cet objectif
+probabiliste est central \cite{hastie2009}.
 \end{vigilance}
 
 \begin{resultat}[Règle de décision OvR]
-Pour classifier avec OvR, on calcule les quatre scores $z_k$ et on retient
-directement $\Argmax_k z_k$. Il ne faut ni appliquer softmax à ces scores, ni
-normaliser les quatre sigmoïdes pour prendre cette décision. La section suivante
-présente softmax uniquement comme un autre modèle probabiliste multiclasses, pas
-comme une étape supplémentaire d'OvR.
+La décision OvR tient en deux opérations : calculer les quatre scores $z_k$, puis
+retenir $\Argmax_k z_k$. La section suivante présente softmax comme un modèle
+probabiliste multiclasses distinct, avec sa propre estimation.
 \end{resultat}
 
 Pour être explicite, la fonction softmax mentionnée dans la comparaison est
@@ -157,15 +153,15 @@ Pour être explicite, la fonction softmax mentionnée dans la comparaison est
   \Pp(C=k\mid\x)
   =\frac{e^{z_k}}{\sum_{r=1}^K e^{z_r}}.
 \]
-Son dénominateur couple les $K$ classes et impose une somme égale à $1$. Dans
-OvR, au contraire, le dénominateur de $q_k=1/(1+e^{-z_k})$ ne contient aucun des
-autres scores. Cette différence algébrique explique la différence conceptuelle ;
-elle ne signifie pas que softmax domine systématiquement OvR en exactitude.
+Son dénominateur $\sum_r e^{z_r}$ couple les $K$ classes et impose une somme
+égale à $1$. Dans OvR, le dénominateur $1+e^{-z_k}$ dépend du seul score $z_k$.
+Cette différence algébrique fonde la différence d'interprétation ; sur
+l'exactitude, les deux méthodes se départagent au cas par cas.
 
-Les négatifs d'un problème OvR sont généralement plus nombreux et plus
-hétérogènes que les positifs. L'exactitude binaire de chaque sous-modèle peut
-donc être trompeuse ; il faut juger en priorité la décision multiclasses finale
-et examiner les performances par maison.
+Les négatifs d'un problème OvR réunissent les trois autres maisons : ils sont
+plus nombreux et plus hétérogènes que les positifs. Chaque sous-modèle affiche
+donc une exactitude binaire élevée par construction. Le jugement porte sur la
+décision multiclasses finale et sur les performances par maison.
 
 \begin{figure}[htbp]
 \centering
@@ -188,31 +184,28 @@ et examiner les performances par maison.
         {observation $\x$\\à classer};
   \draw[-{Latex},ink!70] (obs.south)--(3.02,.75);
 \end{tikzpicture}
-\caption{Régions de décision OvR schématiques dans un espace à deux
-caractéristiques. Chaque point est attribué à la région où un score est le plus
-grand. Les frontières entre deux régions satisfont $z_k(\x)=z_r(\x)$ ; elles sont
-linéaires lorsque les scores le sont.}
+\caption{Régions de décision OvR dans un espace à deux caractéristiques. Chaque
+point rejoint la région dont le score domine. Les frontières entre deux régions
+vérifient $z_k(\x)=z_r(\x)$ et restent linéaires tant que les scores le sont.}
 \label{fig:ovr-regions}
 \end{figure}
 
-Deux situations méritent d'être distinguées. Si tous les scores sont négatifs,
-le modèle choisit tout de même le moins négatif : il ne possède pas spontanément
-de classe « inconnue ». Si plusieurs scores sont fortement positifs, il choisit
-également le maximum, sans signaler explicitement le conflit. Une politique de
-rejet éventuelle doit donc être définie et validée séparément ; elle ne découle
-pas de la règle OvR.
+La règle du maximum s'applique dans deux situations remarquables. Quand les
+quatre scores sont négatifs, elle retient le moins négatif. Quand plusieurs
+scores sont fortement positifs, elle retient le plus grand. Dans les deux cas
+elle produit une maison. Une politique de rejet forme une décision
+supplémentaire, définie et validée à part.
 
-Exemple de rejet : on pourrait décider de ne produire aucune maison si le meilleur
-score est inférieur à $-2$, ou si l'écart entre les deux meilleurs scores est
-inférieur à $0{,}1$. Ces seuils ne sont pas fournis par la régression logistique.
-Ils créent une nouvelle décision avec ses propres erreurs : davantage de rejets
-peut réduire les mauvaises attributions, mais laisse davantage d'élèves sans
-réponse. Les seuils doivent donc être choisis sur validation en fonction du coût
-réel d'un rejet et d'une erreur, puis évalués sur test.
+Exemple de rejet : laisser la maison vide si le meilleur score descend sous $-2$,
+ou si l'écart entre les deux meilleurs scores reste sous $0{,}1$. Ces seuils
+viennent du protocole et introduisent leur propre arbitrage : davantage de rejets
+réduit les mauvaises attributions et laisse davantage d'élèves sans réponse. Ils
+se choisissent sur validation d'après le coût respectif d'un rejet et d'une
+erreur, puis s'évaluent sur test.
 
 \begin{resultat}[État conservé par le modèle OvR]
 Avec $K$ classes, l'apprentissage conserve $K$ vecteurs de paramètres et l'ordre
-qui associe chaque vecteur à son libellé de classe. Une prédiction produit un
-vecteur de $K$ scores dans ce même ordre. L'indice du score maximal est ensuite
-converti en libellé ; cette correspondance fait partie du modèle entraîné.
+qui associe chaque vecteur à son libellé. Une prédiction produit un vecteur de
+$K$ scores dans ce même ordre, dont l'indice du maximum se convertit en libellé.
+Cette correspondance appartient au modèle entraîné.
 \end{resultat}

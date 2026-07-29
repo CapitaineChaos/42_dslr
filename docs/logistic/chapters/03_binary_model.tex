@@ -19,11 +19,10 @@ Considérons provisoirement des étiquettes $y_i\in\{0,1\}$. On pose
 Cette paramétrisation définit la régression logistique binaire
 \cite[sec.~4.4]{hastie2009,cox1958}.
 
-Pour un ensemble de $m$ observations, le même calcul est effectué simultanément :
+Pour un ensemble de $m$ observations, le même calcul s'écrit en une opération :
 $\X\thv$ produit un vecteur de $m$ scores, puis la sigmoïde appliquée composante
-par composante produit un vecteur de $m$ probabilités. Le vecteur $\thv$ contient
-les seules quantités ajustées par l'apprentissage ; $\X$ reste fixé pendant les
-itérations.
+par composante produit un vecteur de $m$ probabilités. L'apprentissage fait
+varier le seul vecteur $\thv$ ; $\X$ garde sa valeur pendant les itérations.
 
 \section{Interprétation par les log-cotes}
 
@@ -50,18 +49,17 @@ caractéristiques. La transformation inverse est
 Le calcul reçoit donc un score réel $z=\thv^\top\xt$ et produit une probabilité
 comprise entre $0$ et $1$. Les étapes algébriques de l'inversion sont données à
 l'annexe~\ref{app:logit-inversion}.
-Ainsi, à caractéristiques égales par ailleurs, augmenter $x_j$ d'une unité
-multiplie les \emph{cotes} de la classe positive par $e^{\theta_j}$. Après
-standardisation, cette unité correspond à un écart-type de la variable brute.
-Cette interprétation porte sur les cotes conditionnelles, non sur une variation
-constante de probabilité.
+À caractéristiques égales par ailleurs, augmenter $x_j$ d'une unité multiplie les
+\emph{cotes} de la classe positive par $e^{\theta_j}$. Après standardisation,
+cette unité vaut un écart-type de la variable brute. Le facteur constant
+$e^{\theta_j}$ porte sur les cotes conditionnelles ; l'effet correspondant sur la
+probabilité dépend du niveau de départ.
 
-Par exemple, $\theta_j=\log 2\approx0{,}693$ signifie qu'une augmentation d'une
-unité de $x_j$ double les cotes, puisque $e^{\theta_j}=2$. Si la probabilité
-initiale vaut $0{,}20$, les cotes valent $0{,}20/0{,}80=0{,}25$ ; après
-doublement, elles valent $0{,}50$, soit une probabilité
-$0{,}50/(1+0{,}50)=1/3$. La probabilité n'a donc pas doublé : c'est bien le
-rapport de chances qui a été multiplié par deux.
+Prenons $\theta_j=\log 2\approx0{,}693$, donc $e^{\theta_j}=2$ : une unité de
+$x_j$ double les cotes. Partant d'une probabilité de $0{,}20$, les cotes valent
+$0{,}20/0{,}80=0{,}25$, passent à $0{,}50$, et donnent une probabilité
+$0{,}50/(1+0{,}50)=1/3$. Le rapport de chances a doublé, la probabilité est
+passée de $0{,}20$ à $0{,}33$.
 
 \begin{figure}[htbp]
 \centering
@@ -82,8 +80,7 @@ rapport de chances qui a été multiplié par deux.
   \draw[warning,very thick,-{Latex}] (l1)--node[right]{${}+\log2$}(l2);
 \end{tikzpicture}
 \caption{Passage entre probabilité, cotes et log-cotes. Ajouter $\log2$ au score
-double les cotes, mais transforme ici la probabilité de $0{,}20$ en $1/3$, pas
-en $0{,}40$.}
+double les cotes et porte ici la probabilité de $0{,}20$ à $1/3$.}
 \label{fig:odds-map}
 \end{figure}
 
@@ -117,9 +114,9 @@ en $0{,}40$.}
   \addlegendentry{décision $\ind[z\geq0]$}
 \end{axis}
 \end{tikzpicture}
-\caption{La probabilité et la décision ne sont pas le même objet. La sigmoïde
-exprime une transition continue et conserve le degré de confiance ; le seuil
-produit seulement une étiquette binaire discontinue.}
+\caption{Deux sorties du même score. La sigmoïde décrit une transition continue et
+conserve le degré de confiance ; le seuil produit une étiquette binaire, constante
+de part et d'autre de $z=0$.}
 \label{fig:sigmoid-threshold}
 \end{figure}
 
@@ -137,10 +134,10 @@ $\thv\in\R^{n+1}$. \textbf{Sorties :} un score réel $z$ et une probabilité $p$
 \section{Frontière de décision}
 
 \begin{lecture}
-La probabilité varie continûment, mais la décision exige une classe. Avec un
-seuil de $0{,}5$, la frontière réunit les observations pour lesquelles le modèle
-hésite exactement entre les deux réponses. Dans deux dimensions, cette frontière
-est une droite ; dans davantage de dimensions, c'est un hyperplan.
+La probabilité varie continûment, la décision demande une classe. Avec un seuil
+de $0{,}5$, la frontière réunit les observations placées à égale probabilité
+entre les deux réponses. En deux dimensions elle est une droite, au-delà un
+hyperplan.
 \end{lecture}
 
 Avec des coûts d'erreur symétriques, la règle de Bayes estimée est
@@ -152,8 +149,8 @@ La règle générale consiste à choisir la classe de probabilité conditionnell
 maximale ; le seuil $1/2$ en est le cas binaire à coûts symétriques
 \cite[sec.~2.4]{hastie2009}.
 La frontière $\{\x:\thv^\top\xt=0\}$ est un hyperplan. La transformation
-logistique rend la sortie bornée, mais n'introduit aucune non-linéarité dans la
-géométrie de la frontière exprimée dans les variables fournies au modèle.
+logistique borne la sortie entre $0$ et $1$ et laisse la frontière linéaire dans
+les variables fournies au modèle.
 
 \begin{figure}[htbp]
 \centering
@@ -174,9 +171,9 @@ géométrie de la frontière exprimée dans les variables fournies au modèle.
 \end{axis}
 \end{tikzpicture}
 \caption{Exemple à deux caractéristiques. La droite pleine est la frontière
-$p=0{,}5$ ; les droites pointillées sont des lignes d'égale probabilité. Elles
-sont parallèles parce que le score est affine. Les points sont illustratifs et
-ne représentent pas les données complètes du projet.}
+$p=0{,}5$ ; les droites pointillées sont des lignes d'égale probabilité. Le score
+étant affine, elles restent parallèles. Les points sont construits pour la
+figure.}
 \label{fig:boundary}
 \end{figure}
 
@@ -193,8 +190,8 @@ ne représentent pas les données complètes du projet.}
 \end{procedure}
 
 \begin{resultat}[Quantités produites par un modèle binaire]
-Une ligne préparée $\xt$ et un vecteur de paramètres $\thv$ produisent d'abord
-un score $z=\thv^\top\xt$, puis une probabilité $p=\sigma(z)$, puis une décision
-binaire après comparaison au seuil. L'apprentissage modifie $\thv$ ; la
-prédiction utilise ensuite ce vecteur sans le réestimer.
+Une ligne préparée $\xt$ et un vecteur de paramètres $\thv$ produisent un score
+$z=\thv^\top\xt$, puis une probabilité $p=\sigma(z)$, puis une décision binaire
+par comparaison au seuil. L'apprentissage fixe $\thv$ ; la prédiction le lit et
+l'applique.
 \end{resultat}

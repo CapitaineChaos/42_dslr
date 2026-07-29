@@ -2,26 +2,23 @@
 \label{ch:notations}
 
 \begin{lecture}
-Une formule se lit d'abord comme une phrase : quels objets entrent dans le
-calcul, quelle opération les relie et quel objet en sort ? Les tableaux de ce
-chapitre donnent pour chaque symbole sa nature, sa lecture orale professionnelle
-et son rôle dans le modèle.
+Chaque formule met en jeu des objets d'une nature précise et une opération qui
+les relie. Les tableaux de ce chapitre donnent pour chaque symbole sa nature, sa
+lecture orale et son rôle dans le modèle.
 \end{lecture}
 
-Ce chapitre fixe non seulement le sens des symboles, mais aussi la manière de les
-nommer à l'oral. Une notation ne peut être comprise indépendamment de sa nature :
-un scalaire, un vecteur, une matrice, une fonction et un ensemble ne se manipulent
-pas de la même façon. Les vecteurs sont écrits en gras, les ensembles en lettres
-calligraphiques et les paramètres grecs en gras lorsqu'ils forment un vecteur.
+Ce chapitre fixe le sens des symboles et la manière de les nommer à l'oral. La
+nature d'une notation gouverne les opérations qu'elle admet : un scalaire, un
+vecteur, une matrice, une fonction et un ensemble se manipulent selon des règles
+propres. La typographie du document la signale — vecteurs en gras, ensembles en
+lettres calligraphiques, paramètres grecs en gras lorsqu'ils forment un vecteur.
 
-Le document adopte la convention statistique suivante : l'indice d'observation
-est placé en bas. Ainsi, $\x_i$ est le vecteur de l'élève $i$, $x_{ij}$ sa
-caractéristique $j$ et $c_i$ sa classe. Certains cours de machine learning
-écrivent $\x^{(i)}$ afin de distinguer le numéro d'exemple d'une puissance ; cette
-convention est légitime, mais elle est moins naturelle à l'oral et entre en conflit
-avec l'usage matriciel $x_{ij}$. Elle n'est donc pas retenue ici. Les crochets en
-exposant, comme $\thv^{[t]}$, sont réservés au numéro d'itération et ne désignent
-jamais une puissance.
+Le document place l'indice d'observation en bas, selon la convention statistique :
+$\x_i$ est le vecteur de l'élève $i$, $x_{ij}$ sa caractéristique $j$ et $c_i$ sa
+classe. Certains cours de machine learning écrivent $\x^{(i)}$ pour séparer le
+numéro d'exemple d'une puissance ; l'écriture $x_{ij}$ retenue ici s'accorde
+directement avec l'usage matriciel et se dicte plus simplement. Les crochets en
+exposant, comme $\thv^{[t]}$, portent le numéro d'itération.
 
 \begin{figure}[htbp]
 \centering
@@ -40,8 +37,9 @@ jamais une puissance.
   \draw[a] (z)--node[above,scale=.78]{$\sigma$}(q);
   \draw[a] (q)--node[above,scale=.78]{$\Argmax_k$}(c);
 \end{tikzpicture}}
-\caption{Nature des objets successifs. Ce schéma empêche notamment de confondre
-une caractéristique, un score, une sortie logistique et une classe.}
+\caption{Nature des objets successifs et transformation qui mène de l'un à
+l'autre : une valeur brute, un vecteur préparé, un score réel, une sortie
+logistique, une classe.}
 \label{fig:notation-chain}
 \end{figure}
 
@@ -93,7 +91,7 @@ X_i & « la variable aléatoire X indice i » & vecteur aléatoire représentant
 \bottomrule
 \end{tabularx}
 \caption{Les minuscules désignent une observation ou une composante ; la
-majuscule grasse $\X$ désigne l'ensemble des observations sous forme matricielle.}
+majuscule grasse $\X$ réunit toutes les observations sous forme matricielle.}
 \end{table}
 
 La formule
@@ -121,8 +119,9 @@ y_{ik} & « y indice i k » & cible binaire du classifieur $k$ pour l'observatio
 \ind[A] & « l'indicatrice de l'événement A » & vaut $1$ lorsque la proposition $A$ est vraie et $0$ sinon. \\
 \bottomrule
 \end{tabularx}
-\caption{Une classe observée $c_i$ ne doit pas être confondue avec la cible
-binaire $y_{ik}$ fabriquée pour le sous-problème OvR numéro $k$.}
+\caption{La classe observée $c_i$ prend ses valeurs dans $\mathcal C$ ; la cible
+binaire $y_{ik}$, construite pour le sous-problème OvR numéro $k$, vaut $0$ ou
+$1$.}
 \end{table}
 
 L'écriture $y_{ik}=\ind[c_i=k]$ se lit : « y indice i k est l'indicatrice de
@@ -141,15 +140,16 @@ l'événement c indice i égale k » ; en contexte, on dira plus naturellement :
 \theta_0 & « thêta zéro » & biais ou constante du modèle ; il multiplie la coordonnée ajoutée $x_0=1$. \\
 \thv & « thêta » ou « le vecteur des paramètres thêta » & vecteur colonne de tous les paramètres $(\theta_0,\ldots,\theta_n)^\top\in\R^{n+1}$. On ne dit « vecteur » que lorsque sa nature doit être soulignée. \\
 \thv_k & « thêta indice k » & vecteur des paramètres du classifieur binaire « classe $k$ contre le reste ». \\
-z_{\thv}(\x) & « le score z, paramétré par thêta, évalué en x » ; souvent « le score en x » & score linéaire réel $\thv^\top\xt$. Il n'est ni une classe ni une probabilité. \\
+z_{\thv}(\x) & « le score z, paramétré par thêta, évalué en x » ; souvent « le score en x » & score linéaire réel $\thv^\top\xt$, à valeurs dans $\R$ tout entier. \\
 \sigma & « sigma » & fonction logistique $z\mapsto(1+e^{-z})^{-1}$, qui transforme un score réel en nombre strictement compris entre $0$ et $1$. \\
 p_{\thv}(\x) & « p paramétré par thêta, évalué en x » ; souvent « la probabilité prédite en x » & probabilité conditionnelle modélisée de la classe binaire positive : $\Pp(Y=1\mid X=\x)$. \\
-q_k(\x) & « q indice k évalué en x » & sortie du classifieur binaire $k$, égale à $\sigma(\thv_k^\top\xt)$. Les $q_k$ OvR ne sont pas contraints de sommer à $1$. \\
+q_k(\x) & « q indice k évalué en x » & sortie du classifieur binaire $k$, égale à $\sigma(\thv_k^\top\xt)$. La somme des $K$ valeurs OvR prend une valeur libre. \\
 \Theta & « thêta majuscule » ou « la matrice des paramètres » & matrice regroupant les $K$ vecteurs de paramètres, un par classifieur OvR. \\
 \bottomrule
 \end{tabularx}
-\caption{Le score $z$, la probabilité binaire $p$ et la décision $\widehat y$ sont
-trois objets distincts produits successivement par le modèle.}
+\caption{Le modèle produit successivement trois objets : le score $z$ dans $\R$,
+la probabilité binaire $p$ dans $]0,1[$, la décision $\widehat y$ dans
+$\{0,1\}$.}
 \end{table}
 
 Le produit $\thv^\top\xt$ se lit « thêta transposé x tilde », ou « le produit
@@ -172,8 +172,8 @@ L(\thv) & « la vraisemblance évaluée en thêta » & vraisemblance : probabili
 \log L(\thv) & « la log-vraisemblance en thêta » & logarithme de la vraisemblance ; il remplace les produits par des sommes sans changer le maximiseur. \\
 \ell_i(\thv) & « ell indice i évaluée en thêta » ou « la perte de l'observation i » & opposé de la contribution de l'observation $i$ à la log-vraisemblance. \\
 J(\thv) & « J évaluée en thêta » ou « le coût en thêta » & fonction objectif : moyenne des pertes sur l'échantillon d'apprentissage. \\
-\nabla J(\thv) & « le gradient de J en thêta » & vecteur des $n+1$ dérivées partielles de $J$ ; il pointe dans la direction locale de plus forte augmentation. « Nabla J » sert surtout à dicter la formule. \\
-\nabla^2J(\thv) & « la Hessienne de J en thêta » & matrice des dérivées secondes ; elle décrit la courbure locale de la fonction objectif. « Nabla carré J » décrit la notation, moins bien l'objet. \\
+\nabla J(\thv) & « le gradient de J en thêta » & vecteur des $n+1$ dérivées partielles de $J$ ; il pointe dans la direction locale de plus forte augmentation. « Nabla J » sert à dicter la formule. \\
+\nabla^2J(\thv) & « la Hessienne de J en thêta » & matrice $(n+1)\times(n+1)$ des dérivées secondes ; elle décrit la courbure locale de la fonction objectif. « Nabla carré J » nomme la notation, « Hessienne » nomme l'objet. \\
 W & « la matrice W » & matrice diagonale dont le terme $i$ vaut $p_i(1-p_i)$ ; elle intervient dans la Hessienne. \\
 \alpha & « alpha » & taux d'apprentissage, c'est-à-dire longueur multiplicative du pas de descente de gradient. \\
 \lambda & « lambda » & intensité de la pénalisation quadratique ; $\lambda=0$ signifie absence de régularisation. \\
@@ -197,8 +197,8 @@ La mise à jour
   \thv^{[t+1]}=\thv^{[t]}-\alpha\nabla J(\thv^{[t]})
 \]
 se lit : « à l'itération t plus un, thêta vaut sa valeur à l'itération t moins
-alpha fois le gradient évalué en cette valeur ». Les crochets $[t]$ repèrent une
-itération ; ils ne désignent pas une puissance.
+alpha fois le gradient évalué en cette valeur ». Les crochets $[t]$ repèrent le
+numéro d'itération.
 
 \section{Probabilités et opérateurs}
 
@@ -213,7 +213,7 @@ itération ; ils ne désignent pas une puissance.
 Y\mid X=\x & « la loi de Y conditionnellement à X égal x » & loi conditionnelle de la réponse pour une observation dont les caractéristiques valent $\x$. \\
 \sum_{i=1}^m & « somme sur i, de un à m » & addition de l'expression située à droite pour toutes les observations. \\
 \prod_{i=1}^m & « produit sur i, de un à m » & multiplication de l'expression située à droite pour toutes les observations. \\
-\Argmax_k a_k & « l'argument du maximum sur k de a indice k » & valeur de l'indice $k$ pour laquelle $a_k$ est maximal ; le résultat est un indice, pas la valeur maximale elle-même. Dans l'usage, « arg max » est également courant. \\
+\Argmax_k a_k & « l'argument du maximum sur k de a indice k » & indice $k$ pour lequel $a_k$ atteint son maximum ; le résultat est cet indice, quand $\max_k a_k$ désigne la valeur atteinte. Dans l'usage, « arg max » est également courant. \\
 \|v\|_2 & « norme euclidienne de v » ou « norme deux de v » & longueur euclidienne du vecteur $v$. \\
 \operatorname{diag}(a_i) & « la matrice diagonale de termes a indice i » & matrice dont la diagonale contient les $a_i$ et dont les autres termes sont nuls. \\
 \partial J/\partial\theta_j & « dérivée partielle de J par rapport à thêta indice j » & variation locale de $J$ lorsque seul $\theta_j$ varie, les autres paramètres étant maintenus fixes. \\

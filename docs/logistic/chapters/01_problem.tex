@@ -3,9 +3,9 @@
 
 \begin{lecture}
 Le fichier fournit des élèves dont la maison est connue. Le modèle cherche des
-régularités reliant leurs notes à leur maison, puis applique ces régularités à
-un élève absent du fichier d'apprentissage. Toute l'analyse porte sur l'écart
-entre réussir sur les élèves déjà vus et réussir sur de nouveaux élèves.
+régularités reliant leurs notes à leur maison, puis les applique à un élève
+absent du fichier. Toute l'analyse porte sur l'écart entre la réussite sur les
+élèves déjà vus et la réussite sur de nouveaux élèves.
 \end{lecture}
 
 On observe $m$ élèves. L'élève d'indice $i$ est décrit par $n$ variables numériques
@@ -14,18 +14,17 @@ $\x_i\in\R^n$ et par une maison $c_i$ appartenant à
   \mathcal C=\{\text{Gryffindor},\text{Hufflepuff},
   \text{Ravenclaw},\text{Slytherin}\},\qquad K=|\mathcal C|=4.
 \]
-L'objectif n'est pas d'expliquer parfaitement l'échantillon observé, mais de
-construire une règle $f:\R^n\to\mathcal C$ dont l'erreur reste faible sur des
-élèves nouveaux, issus du même mécanisme de génération des données.
+Le but est une règle $f:\R^n\to\mathcal C$ dont l'erreur reste faible sur des
+élèves nouveaux, issus du même mécanisme de génération des données. La
+performance sur l'échantillon observé sert d'indicateur intermédiaire.
 
-Le terme \emph{régression} décrit ici la modélisation d'un log-rapport de chances
-par une fonction affine. La variable réponse demeure qualitative : il s'agit
-donc bien d'un problème de classification \cite[chap.~4]{hastie2009}.
+Le terme \emph{régression} désigne ici la modélisation d'un log-rapport de chances
+par une fonction affine. La variable réponse reste qualitative, ce qui range le
+problème dans la classification \cite[chap.~4]{hastie2009}.
 
-Un échantillon d'apprentissage peut être représenté comme dans la
-table~\ref{tab:sample}. Les valeurs numériques ne sont pas encore les entrées du
-modèle : elles devront être imputées si nécessaire, puis standardisées. La
-colonne House, au contraire, est la réponse à prédire.
+La table~\ref{tab:sample} montre quatre lignes du fichier. Ces valeurs passent par
+l'imputation et la standardisation du chapitre~\ref{ch:data} avant d'entrer dans
+le modèle. La colonne House porte la réponse à prédire.
 
 \begin{table}[htbp]
 \centering
@@ -39,9 +38,8 @@ $3$ & $-366{,}1$ & $ 7{,}7$ & $-227{,}3$ & $ 30{,}4$  & Ravenclaw \\
 $4$ & $ 697{,}7$ & $-6{,}5$ & $-256{,}8$ & $200{,}6$  & Gryffindor \\
 \bottomrule
 \end{tabular}
-\caption{Extrait schématique du jeu d'entraînement. Chaque ligne représente une
-observation ; les quatre colonnes numériques illustrent un sous-ensemble des
-caractéristiques disponibles.}
+\caption{Quatre lignes du jeu d'entraînement, réduites à quatre colonnes de notes
+sur les treize disponibles. Une ligne représente une observation.}
 \label{tab:sample}
 \end{table}
 
@@ -61,9 +59,8 @@ caractéristiques disponibles.}
     \draw[arr] (raw)--(split); \draw[arr] (split)--(prep);
     \draw[arr] (prep)--(fit); \draw[arr] (fit)--(eval);
   \end{tikzpicture}}
-  \caption{Chaîne de traitement. Les statistiques de préparation sont estimées
-  exclusivement sur l'ensemble d'apprentissage, puis réutilisées sans les
-  recalculer sur les données de test.}
+  \caption{Chaîne de traitement. Les statistiques de préparation sont estimées sur
+  l'ensemble d'apprentissage, puis appliquées telles quelles aux données de test.}
 \label{fig:pipeline}
 \end{figure}
 
@@ -80,8 +77,8 @@ caractéristiques disponibles.}
   \item \textbf{Ajuster une configuration.} Pour chaque classe, initialiser
         $\thv_k$, puis répéter scores, probabilités, gradient et mise à jour
         jusqu'au critère d'arrêt.
-  \item \textbf{Comparer les configurations.} Utiliser uniquement la validation
-        pour choisir $\alpha$, $\lambda$, le seuil ou tout autre hyperparamètre.
+  \item \textbf{Comparer les configurations.} Choisir $\alpha$, $\lambda$, le
+        seuil et les autres hyperparamètres sur la seule validation.
   \item \textbf{Figer le modèle.} Conserver la préparation, l'ordre des
         caractéristiques, les $K$ vecteurs $\thv_k$ et l'ordre des classes.
   \item \textbf{Prédire le test.} Appliquer la préparation conservée, calculer
@@ -93,45 +90,40 @@ caractéristiques disponibles.}
 \end{enumerate}
 \end{workflow}
 
-Les cadres intitulés « sous-procédure » détaillent une opération appelée par cet
-ordre global. Ils ne forment pas une seconde séquence à exécuter de haut en bas :
-certains décrivent un calcul interne, d'autres un contrôle ou une méthode de
-sélection.
+Chaque cadre « sous-procédure » du document développe une opération appelée par
+cet ordre global : un calcul interne, un contrôle ou une méthode de sélection.
 
 \begin{resultat}[Risque de généralisation]
 La quantité pertinente est le risque de généralisation
-$R(f)=\Pp(f(X)\neq C)$. Comme la loi jointe de $(X,C)$ est inconnue, on estime ce
-risque sur un ensemble de test qui n'a participé ni au choix des variables, ni à
-l'estimation des transformations, ni à l'ajustement des paramètres.
+$R(f)=\Pp(f(X)\neq C)$. La loi jointe de $(X,C)$ étant inconnue, on l'estime sur
+un ensemble de test tenu à l'écart du choix des variables, de l'estimation des
+transformations et de l'ajustement des paramètres.
 \end{resultat}
 
-Concrètement, si un test indépendant contient $200$ élèves et que $160$ sont
-correctement classés, l'erreur test observée vaut $40/200=0{,}20$. Elle sert
-d'estimation du risque de généralisation : on estime qu'environ $20\,\%$ des
-futurs élèves comparables seraient mal classés. Ce nombre n'est ni la valeur
-exacte de $R(f)$ ni une garantie individuelle ; un autre échantillon de $200$
-élèves donnerait vraisemblablement un résultat légèrement différent.
+Sur un test indépendant de $200$ élèves dont $160$ sont correctement classés,
+l'erreur observée vaut $40/200=0{,}20$. Elle estime le risque de généralisation :
+environ $20\,\%$ des futurs élèves comparables seraient mal classés. L'estimation
+porte sa propre variabilité, un autre échantillon de $200$ élèves donnant un
+résultat voisin et différent.
 
 \section{Décision et calibration probabiliste}
-Attribuer une maison à un nouvel élève est une tâche de \emph{décision}. Estimer
-une probabilité d'appartenance bien calibrée est une tâche plus exigeante : parmi
-les élèves auxquels on attribue une probabilité proche de $0{,}8$, environ
-$80\,\%$ devraient effectivement appartenir à la classe. OvR répond directement
-à la première question ; la seconde exige les précautions discutées au
-chapitre~\ref{ch:ovr}.
 
-Par exemple, supposons que le modèle attribue une probabilité comprise entre
-$0{,}75$ et $0{,}85$ à Ravenclaw pour $50$ élèves. Si $39$ d'entre eux sont
-réellement Ravenclaw, la fréquence observée vaut $39/50=0{,}78$, proche des
-probabilités annoncées. Si seulement $20$ le sont, la fréquence vaut $0{,}40$ :
-le modèle peut encore classer correctement certains élèves par maximum des
-scores, mais ses nombres ne doivent pas être interprétés comme des probabilités
-bien calibrées.
+Attribuer une maison à un nouvel élève est une décision. Estimer une probabilité
+d'appartenance calibrée est une tâche plus exigeante : parmi les élèves auxquels
+le modèle attribue une probabilité proche de $0{,}8$, environ $80\,\%$
+appartiennent effectivement à la classe. OvR répond à la première question ; la
+seconde demande les précautions du chapitre~\ref{ch:ovr}.
+
+Supposons que le modèle attribue une probabilité comprise entre $0{,}75$ et
+$0{,}85$ à Ravenclaw pour $50$ élèves. Si $39$ sont réellement Ravenclaw, la
+fréquence observée vaut $39/50=0{,}78$ et confirme l'annonce. Si $20$ le sont,
+elle tombe à $0{,}40$ : le classement par maximum des scores reste utilisable, et
+la lecture probabiliste de ces nombres demande une recalibration préalable.
 
 \begin{resultat}[Objets définis par le problème]
 Le jeu étiqueté fournit une matrice de caractéristiques et un vecteur de maisons.
-L'apprentissage produira des paramètres ; la prédiction transformera une nouvelle
-ligne de caractéristiques en une maison ; l'évaluation comparera le vecteur des
-maisons prédites au vecteur des maisons réelles. Ces objets restent distincts
-pendant toute la chaîne de traitement.
+L'apprentissage produit des paramètres. La prédiction transforme une ligne de
+caractéristiques en une maison. L'évaluation compare le vecteur des maisons
+prédites au vecteur des maisons réelles. Ces objets gardent des rôles séparés
+dans toute la chaîne.
 \end{resultat}

@@ -4,10 +4,9 @@
 \section{Matrice de design}
 
 \begin{lecture}
-Une matrice de design est le tableau numérique effectivement reçu par le modèle.
-Chaque ligne décrit un élève ; chaque colonne décrit une caractéristique. Une
-colonne supplémentaire remplie de $1$ permet d'ajouter le même terme constant au
-score de tous les élèves.
+Une matrice de design est le tableau numérique reçu par le modèle. Chaque ligne
+décrit un élève, chaque colonne une caractéristique. Une colonne supplémentaire
+remplie de $1$ ajoute le même terme constant au score de tous les élèves.
 \end{lecture}
 
 Après préparation, on ajoute une coordonnée constante à chaque observation :
@@ -84,13 +83,11 @@ $\X\in\R^{m\times(n+1)}$.
 \end{procedure}
 
 Avec deux caractéristiques, le rôle de la constante apparaît dans l'équation de
-la frontière.
-Sans première coordonnée égale à $1$, le score serait
-$\theta_1x_1+\theta_2x_2$ et la frontière passerait nécessairement par l'origine.
-Avec $\theta_0$, elle devient
-$\theta_0+\theta_1x_1+\theta_2x_2=0$ et peut se déplacer parallèlement à
-elle-même. Le biais est un paramètre du modèle qui règle cette translation de la
-frontière.
+la frontière. Le score $\theta_1x_1+\theta_2x_2$ place la frontière sur une
+droite passant par l'origine. Le score $\theta_0+\theta_1x_1+\theta_2x_2$ la
+place sur $\theta_0+\theta_1x_1+\theta_2x_2=0$, qui se déplace parallèlement à
+elle-même quand $\theta_0$ varie. Le biais est le paramètre qui règle cette
+translation.
 
 \begin{figure}[htbp]
 \centering
@@ -122,25 +119,23 @@ consiste à exprimer ensuite chaque mesure par rapport à la moyenne et à
 l'écart-type calculés sur l'apprentissage.
 \end{lecture}
 
-Une régression logistique ne définit aucune opération sur une valeur manquante.
-Il faut donc choisir explicitement une règle, par exemple l'imputation médiane,
-et conserver pour chaque variable la valeur d'imputation utilisée. Une ligne ne
-doit être supprimée que si ce choix est justifié et documenté.
+Les opérations de la régression logistique portent sur des nombres. Chaque case
+vide demande donc une règle explicite, par exemple l'imputation médiane, et la
+valeur d'imputation de chaque variable rejoint l'état conservé du modèle. La
+suppression d'une ligne relève du même principe : un choix, énoncé et documenté.
 
-Exemple : les valeurs d'apprentissage d'un cours sont
-$\{4,7,9,12,100\}$. La médiane vaut $9$ ; une note manquante est donc remplacée
-par $9$. La moyenne vaudrait $26{,}4$ et serait fortement déplacée par la valeur
-$100$. Ce calcul explique l'intérêt possible de la médiane, mais ne démontre pas
-qu'elle est toujours optimale : l'imputation réduit artificiellement la
-dispersion et peut masquer un mécanisme de données manquantes informatif.
+Exemple : les valeurs d'apprentissage d'un cours sont $\{4,7,9,12,100\}$. La
+médiane vaut $9$ et remplace une note manquante. La moyenne vaudrait $26{,}4$,
+tirée vers le haut par la seule valeur $100$. La médiane offre donc ici une
+robustesse aux valeurs extrêmes ; en contrepartie, l'imputation contracte la
+dispersion et absorbe un éventuel mécanisme informatif derrière l'absence.
 
 L'ordre retenu dans ce document --- imputer, puis estimer $\mu_j$ et $s_j$ sur la
 colonne complétée --- applique une règle unique à l'apprentissage, à la validation
-et à toute observation future. Il contracte légèrement $s_j$, puisque les valeurs
-imputées sont toutes égales à la médiane. Estimer $\mu_j$ et $s_j$ sur les seules
-valeurs observées est l'autre convention défensible. Ce qui compte n'est pas le
-choix retenu, mais son enregistrement et son application identique à chaque étape
-de la chaîne.
+et à toute observation future. Il contracte $s_j$ d'autant que la proportion
+d'imputations est grande. Estimer $\mu_j$ et $s_j$ sur les seules valeurs
+observées est l'autre convention défensible. Le point déterminant est
+l'enregistrement du choix et son application identique à chaque étape.
 
 \begin{figure}[htbp]
 \centering
@@ -153,9 +148,9 @@ $4$\\$7$\\\cellcolor{warning!25}\textcolor{warning}{manquante}\\$12$\\$100$\\\bo
 $4$\\$7$\\\cellcolor{warning!25}$9$\\$12$\\$100$\\\bottomrule
 \end{tabular}
 \end{tabular}
-\caption{Imputation médiane sur une variable. La valeur ajoutée est mise en
-évidence : elle n'a pas été observée et ne doit pas être confondue avec une
-mesure réelle. La médiane est calculée sur l'apprentissage seulement.}
+\caption{Imputation médiane sur une variable. La case colorée porte une valeur
+calculée, d'un statut distinct des quatre mesures qui l'entourent. La médiane
+provient des seules lignes d'apprentissage.}
 \label{fig:median-imputation}
 \end{figure}
 
@@ -167,32 +162,32 @@ Pour une note brute $r_j$, on estime sur l'apprentissage
     (r_{ij}-\mu_j)^2},
   \qquad x_j=\frac{r_j-\mu_j}{s_j}.
 \]
-Le choix du diviseur ($m_{\mathrm{tr}}$ ou $m_{\mathrm{tr}}-1$) a peu d'effet
-ici, mais doit rester identique entre entraînement et prédiction. Si $s_j=0$, la
-variable est constante sur l'apprentissage et doit être retirée.
+Le diviseur $m_{\mathrm{tr}}$ ou $m_{\mathrm{tr}}-1$ change le résultat de moins
+d'un pour mille sur $1\,600$ lignes ; le même reste employé à l'entraînement et à
+la prédiction. Un $s_j$ nul signale une colonne constante sur l'apprentissage,
+que le programme retire de la liste des variables.
 
-La standardisation ne modifie pas la famille des frontières linéaires : elle
-reparamètre le modèle. Elle améliore en revanche le conditionnement numérique de
-l'optimisation et rend une éventuelle pénalisation comparable entre variables
+La standardisation reparamètre le modèle et conserve la famille des frontières
+linéaires. Elle améliore le conditionnement numérique de l'optimisation et rend
+une éventuelle pénalisation comparable entre variables
 \cite[sec.~4.6.3]{hastie2009}.
 
-Le \emph{conditionnement} décrit ici la sensibilité du calcul aux différentes
-directions de l'espace des paramètres. Si une variable varie autour de $10^3$ et
-une autre autour de $10^{-2}$, un même déplacement numérique de leurs
-coefficients ne modifie pas le score dans des proportions comparables. Les
-courbes de niveau du coût deviennent très allongées : la descente zigzague ou
-nécessite un petit pas. La figure~\ref{fig:contours} en donne la représentation
-géométrique ; la standardisation rapproche les échelles sans modifier
-l'information portée par l'ordre des observations.
+Le \emph{conditionnement} mesure la sensibilité du calcul aux directions de
+l'espace des paramètres. Une variable qui varie autour de $10^3$ et une autre
+autour de $10^{-2}$ répondent à un même déplacement de leurs coefficients par des
+variations de score dans un rapport de $10^5$. Les courbes de niveau du coût
+s'allongent d'autant, et la descente zigzague ou progresse par pas très courts.
+La figure~\ref{fig:contours} en donne la représentation géométrique. La
+standardisation ramène les échelles à $1$ et conserve l'ordre des observations
+dans chaque colonne.
 
 \begin{resultat}[Exemple de standardisation]
 Supposons que la note Astronomy ait, sur l'apprentissage, une moyenne
 $\mu=20$ et un écart-type $s=100$. Les notes brutes $-180$, $20$ et $170$
 deviennent respectivement $-2$, $0$ et $1{,}5$. La transformation conserve leur
-ordre et leurs positions relatives, mais fixe une origine et une échelle
-communes. Une valeur standardisée de $1{,}5$ signifie « un écart-type et demi
-au-dessus de la moyenne d'apprentissage » ; elle ne signifie ni $150\,\%$ ni une
-probabilité de $1{,}5$.
+ordre et leurs positions relatives, et fixe une origine et une échelle communes.
+Une valeur standardisée de $1{,}5$ se lit « un écart-type et demi au-dessus de la
+moyenne d'apprentissage », dans l'unité propre à cette colonne.
 \end{resultat}
 
 \begin{figure}[htbp]
@@ -223,8 +218,8 @@ $-180\leftrightarrow-2$, $20\leftrightarrow0$ et $170\leftrightarrow1{,}5$.}
 \begin{vigilance}[Fuite de données]
 Calculer $\mu_j$, $s_j$, une médiane d'imputation ou choisir des variables à
 partir de l'ensemble complet transmet de l'information du test vers
-l'apprentissage. L'évaluation devient alors optimiste. La partition doit
-précéder toute transformation apprise des données.
+l'apprentissage, et rend l'évaluation optimiste. La partition précède donc toute
+transformation apprise des données.
 \end{vigilance}
 
 \begin{procedure}{Préparer une caractéristique numérique}
@@ -237,7 +232,8 @@ et les valeurs transformées $x_{ij}$.
   \item calculer ensuite $\mu_j$ et $s_j$ sur cette colonne d'apprentissage complétée ;
   \item transformer chaque valeur par $x_{ij}=(r_{ij}-\mu_j)/s_j$ ; par exemple,
         $r=170$, $\mu=20$, $s=100$ donnent $x=1{,}5$ ;
-  \item conserver médiane, $\mu_j$ et $s_j$, puis les réutiliser sans les recalculer ;
+  \item conserver médiane, $\mu_j$ et $s_j$, et les réappliquer telles quelles à
+        la validation, au test et à toute observation future ;
   \item si $s_j=0$, signaler une colonne constante et la retirer du calcul.
 \end{enumerate}
 \end{procedure}
@@ -261,21 +257,21 @@ Les deux listes vérifient
 Pour construire une partition stratifiée, on regroupe d'abord les indices par
 classe. Dans chaque groupe, on mélange les indices avec une graine fixée, puis on
 affecte la proportion prévue à l'apprentissage et le reste au test. Les morceaux
-obtenus sont enfin réunis dans les deux listes. Les données numériques restent
-inchangées : seuls leurs indices sont répartis.
+obtenus sont enfin réunis dans les deux listes. L'opération porte sur les indices
+et laisse les données numériques en place.
 
-Les objets à conserver sont donc la graine et les deux listes d'indices. Les
-moyennes, écarts-types et valeurs d'imputation sont ensuite calculés uniquement
-sur les lignes désignées par $\mathcal I_{\mathrm{tr}}$. Au moment du test, ces
-mêmes statistiques sont appliquées aux lignes de $\mathcal I_{\mathrm{te}}$ sans
-nouvelle estimation.
+L'état à conserver tient donc en trois objets : la graine et les deux listes
+d'indices. Moyennes, écarts-types et valeurs d'imputation viennent ensuite des
+seules lignes désignées par $\mathcal I_{\mathrm{tr}}$, puis s'appliquent telles
+quelles aux lignes de $\mathcal I_{\mathrm{te}}$.
 
 \section{Préservation des effectifs par classe}
+
 Avec $1\,000$ élèves, dont $900$ majoritaires et $100$ dans la classe étudiée,
 une répartition $80\,\%/20\,\%$ affecte séparément $80\,\%$ de chaque classe à
-l'apprentissage. On obtient ainsi $720+80=800$ lignes d'apprentissage et
-$180+20=200$ lignes de test. La stratification ne modifie pas le déséquilibre
-$90\,\%/10\,\%$ ; elle le reproduit dans les deux sous-ensembles.
+l'apprentissage. On obtient $720+80=800$ lignes d'apprentissage et
+$180+20=200$ lignes de test. Le déséquilibre $90\,\%/10\,\%$ se retrouve à
+l'identique dans les deux sous-ensembles.
 
 \begin{figure}[htbp]
 \centering
@@ -300,14 +296,13 @@ $900=720+180$ & \qquad & $100=80+20$
 \label{fig:stratification}
 \end{figure}
 
-Un \emph{hyperparamètre} est fixé par le protocole et non estimé directement par
-le gradient. Par exemple, les coefficients $\thv$ sont des paramètres appris ;
+Un \emph{hyperparamètre} est une quantité que le protocole fixe avant
+l'ajustement. Les coefficients $\thv$ sont des paramètres appris par le gradient ;
 le taux $\alpha$ et la pénalisation $\lambda$ sont des hyperparamètres. Si trois
 valeurs de $\lambda$ donnent sur validation des exactitudes $0{,}78$, $0{,}83$ et
-$0{,}80$, on retient la deuxième avant d'évaluer une seule fois le modèle sur le
-test. La validation croisée, construite explicitement au
-chapitre~\ref{ch:evaluation}, généralise ce principe lorsque l'on ne souhaite pas
-réserver un unique ensemble de validation.
+$0{,}80$, la deuxième est retenue, puis le test intervient une seule fois. La
+validation croisée du chapitre~\ref{ch:evaluation} étend ce principe en faisant
+tourner le rôle de validation sur plusieurs blocs.
 
 \begin{resultat}[Quantités fixées après la préparation]
 La préparation produit les listes d'indices d'apprentissage et de test, une

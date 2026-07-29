@@ -240,26 +240,134 @@ placerait les scores dans une autre échelle et ferait chuter l'exactitude.
 
 \begin{fichier}[weights.csv]
 feature,median,mu,sigma\\
-Astronomy,262.9,39.0,519.4\\
+Astronomy,258.1,38.6,520.8\\
 Herbology,3.5,1.2,5.2\\
 {[}...{]}\\
-Flying,-2.2,22.3,97.7\\
+Flying,-2.5,22.0,97.6\\
 class,bias,Astronomy,Herbology,...,Flying\\
-Gryffindor,-3.94,0.69,-2.14,...,2.01\\
-Hufflepuff,-2.39,2.39,1.73,...,-0.40\\
-Ravenclaw,-2.42,-1.31,0.77,...,-0.27\\
-Slytherin,-3.82,-2.13,-0.71,...,-0.61
+Gryffindor,-3.54,0.50,-1.81,...,1.61\\
+Hufflepuff,-2.36,2.48,1.63,...,-0.48\\
+Ravenclaw,-2.56,-1.37,0.74,...,-0.17\\
+Slytherin,-3.77,-2.02,-0.70,...,-0.59
 \end{fichier}
 
-Ces valeurs sont celles obtenues avec la configuration ci-dessus. L'écart-type
-d'Astronomy vaut $519$ et celui d'Herbology $5{,}2$ : un facteur cent entre deux
-colonnes que le même $\alpha$ doit faire progresser, ce que la standardisation
-ramène à $1$.
+Ces valeurs sont celles produites par le programme de la
+section~\ref{sec:pseudo-train} sur les $1\,600$ lignes du fichier
+d'apprentissage. L'écart-type d'Astronomy vaut $521$ et celui d'Herbology
+$5{,}2$ : un facteur cent entre deux colonnes que le même $\alpha$ doit faire
+progresser, ce que la standardisation ramène à $1$.
 
 L'ordre des colonnes et l'ordre des classes appartiennent au modèle. Un vecteur
 $\thv_k$ s'applique aux variables dans l'ordre où il a été ajusté, et l'indice
 renvoyé par $\Argmax$ se lit dans la liste des libellés enregistrée à côté de
 lui. Les deux ordres figurent explicitement dans le fichier.
+
+\section{Primitives à écrire}
+
+Le sujet écarte les fonctions toutes faites de statistique descriptive. Cinq
+primitives suffisent, toutes en une passe ou deux sur un tableau.
+
+\begin{pseudo}[primitives]
+fonction moyenne(v) :\\
+\hspace*{2em}s $\leftarrow$ 0\\
+\hspace*{2em}pour x dans v : s $\leftarrow$ s + x\\
+\hspace*{2em}retourner s / longueur(v)\\
+\\
+fonction ecart\_type(v) :\\
+\hspace*{2em}m $\leftarrow$ moyenne(v) ; s $\leftarrow$ 0\\
+\hspace*{2em}pour x dans v : s $\leftarrow$ s + (x - m)$^2$\\
+\hspace*{2em}retourner racine(s / longueur(v))\\
+\\
+fonction mediane(v) :\\
+\hspace*{2em}t $\leftarrow$ trier(v) ; n $\leftarrow$ longueur(t)\\
+\hspace*{2em}si n impair : retourner t[n // 2]\\
+\hspace*{2em}retourner (t[n // 2 - 1] + t[n // 2]) / 2\\
+\\
+fonction sigmoide(z) :\\
+\hspace*{2em}si z $\geq$ 0 : retourner 1 / (1 + exp(-z))\\
+\hspace*{2em}retourner exp(z) / (1 + exp(z))\\
+\\
+fonction softplus(z) :\\
+\hspace*{2em}retourner max(z, 0) + log(1 + exp(-abs(z)))
+\end{pseudo}
+
+Les deux dernières viennent du chapitre~\ref{ch:optim} : leur exponentielle porte
+toujours sur un nombre négatif ou nul, ce qui les garde finies pour
+$z=\pm1000$.
+
+\section{Pseudo-code de logreg\_train}
+\label{sec:pseudo-train}
+
+Le tableau \texttt{X} a $m$ lignes et $11$ colonnes, \texttt{theta[k]} $11$
+composantes, \texttt{y} $m$ composantes. Les indices de colonne vont de $0$ à
+$10$, la colonne $0$ portant le biais.
+
+\begin{pseudo}[logreg\_train dataset\_train.csv]
+VARIABLES $\leftarrow$ [Astronomy, Herbology, Divination, Muggle Studies,\\
+\hspace*{5em}Ancient Runes, History of Magic, Transfiguration,\\
+\hspace*{5em}Potions, Charms, Flying]\\
+MAISONS $\leftarrow$ [Gryffindor, Hufflepuff, Ravenclaw, Slytherin]\\
+ALPHA $\leftarrow$ 1.0 ; EPS $\leftarrow$ 1e-6 ; MAX\_ITER $\leftarrow$ 6000\\
+\\
+lignes $\leftarrow$ lire\_csv(argv[1])\\
+\\
+pour i dans lignes :\\
+\hspace*{2em}si lignes[i][Astronomy] est vide et lignes[i][DADA] est rempli :\\
+\hspace*{4em}lignes[i][Astronomy] $\leftarrow$ -100 * lignes[i][DADA]\\
+\\
+pour f dans VARIABLES :\\
+\hspace*{2em}presentes $\leftarrow$ [lignes[i][f] pour i tel que lignes[i][f] rempli]\\
+\hspace*{2em}med[f] $\leftarrow$ mediane(presentes)\\
+\hspace*{2em}pour i dans lignes :\\
+\hspace*{4em}si lignes[i][f] est vide : lignes[i][f] $\leftarrow$ med[f]\\
+\hspace*{2em}mu[f] $\leftarrow$ moyenne(colonne f)\\
+\hspace*{2em}sd[f] $\leftarrow$ ecart\_type(colonne f)\\
+\hspace*{2em}si sd[f] = 0 : erreur("colonne constante", f)\\
+\\
+X $\leftarrow$ tableau[m][11]\\
+pour i de 0 a m-1 :\\
+\hspace*{2em}X[i][0] $\leftarrow$ 1.0\\
+\hspace*{2em}pour j de 0 a 9 :\\
+\hspace*{4em}f $\leftarrow$ VARIABLES[j]\\
+\hspace*{4em}X[i][j+1] $\leftarrow$ (lignes[i][f] - mu[f]) / sd[f]\\
+\\
+pour k de 0 a 3 :\\
+\hspace*{2em}y $\leftarrow$ [1 si lignes[i][House] = MAISONS[k] sinon 0]\\
+\hspace*{2em}th $\leftarrow$ [0.0] * 11\\
+\hspace*{2em}J\_prec $\leftarrow$ indefini\\
+\hspace*{2em}pour t de 1 a MAX\_ITER :\\
+\hspace*{4em}J $\leftarrow$ 0 ; g $\leftarrow$ [0.0] * 11\\
+\hspace*{4em}pour i de 0 a m-1 :\\
+\hspace*{6em}z $\leftarrow$ 0\\
+\hspace*{6em}pour j de 0 a 10 : z $\leftarrow$ z + th[j] * X[i][j]\\
+\hspace*{6em}J $\leftarrow$ J + softplus(z) - y[i] * z\\
+\hspace*{6em}e $\leftarrow$ sigmoide(z) - y[i]\\
+\hspace*{6em}pour j de 0 a 10 : g[j] $\leftarrow$ g[j] + e * X[i][j]\\
+\hspace*{4em}J $\leftarrow$ J / m\\
+\hspace*{4em}pour j de 0 a 10 : g[j] $\leftarrow$ g[j] / m\\
+\hspace*{4em}si J\_prec defini et abs(J\_prec - J) / max(1, abs(J)) < EPS :\\
+\hspace*{6em}sortir de la boucle\\
+\hspace*{4em}J\_prec $\leftarrow$ J\\
+\hspace*{4em}pour j de 0 a 10 : th[j] $\leftarrow$ th[j] - ALPHA * g[j]\\
+\hspace*{2em}theta[k] $\leftarrow$ th\\
+\\
+ecrire\_poids("weights.csv", VARIABLES, med, mu, sd, MAISONS, theta)
+\end{pseudo}
+
+La boucle sur $j$ dans le calcul de \texttt{z} et de \texttt{g} correspond au
+produit $\X\thv_k$ et au produit $\X^\top(\mathbf p-\y_k)$. Une bibliothèque de
+calcul matriciel remplace les deux boucles internes par
+\texttt{z = X @ th} et \texttt{g = X.T @ (p - y) / m}, avec le même résultat.
+
+L'ordre des opérations compte sur deux points. La division de \texttt{g} par $m$
+arrive avant la mise à jour, et \texttt{th[j]} est modifié après le calcul
+complet de \texttt{g} : les onze composantes descendent depuis le même vecteur.
+
+Exécuté sur les $1\,600$ lignes, ce programme consomme $436$ itérations pour
+Hufflepuff, $460$ pour Ravenclaw, $836$ pour Slytherin et $1\,069$ pour
+Gryffindor, sous le plafond de $6\,000$. Les coûts finaux vont de $0{,}044$ à
+$0{,}069$, et le modèle reclasse correctement $0{,}982$ de son propre ensemble
+d'apprentissage.
 
 \section{Le programme de prédiction}
 
@@ -268,6 +376,27 @@ de poids, calcule quatre scores par ligne et retient le plus grand, selon
 l'équation~\eqref{eq:ovr-decision}. La sigmoïde est croissante et commune aux
 quatre modèles : comparer les $z_k$ donne le même classement que comparer les
 $q_k$.
+
+La remarque s'étend à softmax. Son dénominateur $S=\sum_r e^{z_r}$ prend la même
+valeur pour les quatre classes, donc
+\[
+  \frac{e^{z_a}}{S}>\frac{e^{z_b}}{S}
+  \iff e^{z_a}>e^{z_b}
+  \iff z_a>z_b .
+\]
+Les trois quantités $z_k$, $\sigma(z_k)$ et $\mathrm{softmax}(z)_k$ désignent le
+même argmax, pour tout jeu de scores. Sur les $1\,600$ lignes du fichier
+d'apprentissage, les trois règles produisent la même maison, avec zéro ex æquo.
+
+Deux mesures situent la difficulté du problème. L'écart entre le meilleur score
+et le second vaut $2{,}05$ au minimum et $8{,}69$ en médiane. Le maximum des
+quatre scores est positif sur chaque ligne, et une seule classe y dépasse $2$.
+Les quatre maisons occupent donc des régions franchement séparées, ce qui éclaire
+le résultat suivant : une régression softmax multinomiale, ajustée conjointement
+sur les mêmes découpages, produit les $322$ mêmes prédictions que OvR à chaque
+graine, pour une exactitude moyenne identique de $0{,}983$. Sur ce jeu de
+données, le choix entre les deux modèles porte sur l'interprétation des sorties,
+traitée au chapitre~\ref{ch:ovr}.
 
 \begin{procedure}{logreg\_predict}
 \textbf{Entrées :} \texttt{dataset\_test.csv} et le fichier de poids.
@@ -284,6 +413,31 @@ $q_k$.
 \end{enumerate}
 \end{procedure}
 
+\begin{pseudo}[logreg\_predict dataset\_test.csv weights.csv]
+VARIABLES, med, mu, sd, MAISONS, theta $\leftarrow$ lire\_poids(argv[2])\\
+lignes $\leftarrow$ lire\_csv(argv[1])\\
+\\
+pour i dans lignes :\\
+\hspace*{2em}si lignes[i][Astronomy] est vide et lignes[i][DADA] est rempli :\\
+\hspace*{4em}lignes[i][Astronomy] $\leftarrow$ -100 * lignes[i][DADA]\\
+\hspace*{2em}pour f dans VARIABLES :\\
+\hspace*{4em}si lignes[i][f] est vide : lignes[i][f] $\leftarrow$ med[f]\\
+\\
+ouvrir sortie "houses.csv"\\
+ecrire "Index,Hogwarts House"\\
+\\
+pour i dans lignes :\\
+\hspace*{2em}x $\leftarrow$ [1.0]\\
+\hspace*{2em}pour f dans VARIABLES :\\
+\hspace*{4em}ajouter (lignes[i][f] - mu[f]) / sd[f] a x\\
+\hspace*{2em}meilleur $\leftarrow$ 0 ; z\_max $\leftarrow$ -infini\\
+\hspace*{2em}pour k de 0 a 3 :\\
+\hspace*{4em}z $\leftarrow$ 0\\
+\hspace*{4em}pour j de 0 a 10 : z $\leftarrow$ z + theta[k][j] * x[j]\\
+\hspace*{4em}si z > z\_max : z\_max $\leftarrow$ z ; meilleur $\leftarrow$ k\\
+\hspace*{2em}ecrire lignes[i][Index] + "," + MAISONS[meilleur]
+\end{pseudo}
+
 \begin{fichier}[houses.csv]
 Index,Hogwarts House\\
 0,Gryffindor\\
@@ -293,6 +447,11 @@ Index,Hogwarts House\\
 {[}...{]}\\
 399,Gryffindor
 \end{fichier}
+
+La boucle sur \texttt{k} réalise l'argmax de l'équation~\eqref{eq:ovr-decision}
+en une passe, sans stocker les quatre scores. L'initialisation de \texttt{z\_max}
+à $-\infty$ garantit qu'une maison est retenue dès le premier tour, y compris
+quand les quatre scores sont négatifs.
 
 Les lignes de \texttt{dataset\_test.csv} dont plusieurs notes manquent reçoivent
 une maison comme les autres : leurs cases vides ont été remplies par les médianes

@@ -4,8 +4,8 @@
 \begin{lecture}
 L'apprentissage compare les probabilités annoncées aux réponses observées. Un
 paramétrage reçoit une vraisemblance élevée lorsqu'il attribue une forte
-probabilité aux étiquettes effectivement présentes dans le fichier. La
-log-perte est la même comparaison écrite sous la forme d'un coût à minimiser.
+probabilité aux étiquettes présentes dans le fichier. La log-perte est cette même
+comparaison écrite comme un coût à minimiser.
 \end{lecture}
 
 On suppose les observations indépendantes conditionnellement à leurs variables
@@ -30,11 +30,10 @@ les deux valeurs possibles de $y_i$ :
   \Pp(Y_i=y_i\mid X_i=\x_i;\thv)
   =p_i^{y_i}(1-p_i)^{1-y_i}.
 \]
-Si $y_i=1$, cette expression devient $p_i$ ; si $y_i=0$, elle devient $1-p_i$.
-Sous l'hypothèse d'indépendance conditionnelle des observations, la probabilité
-jointe des réponses observées est le produit de ces contributions. C'est ce
-passage --- et non une analogie avec les moindres carrés --- qui produit la
-vraisemblance suivante.
+Si $y_i=1$, cette expression vaut $p_i$ ; si $y_i=0$, elle vaut $1-p_i$. Sous
+l'hypothèse d'indépendance conditionnelle des observations, la probabilité jointe
+des réponses observées est le produit de ces contributions. Ce passage produit la
+vraisemblance ci-dessous.
 
 Cette indépendance concerne les élèves une fois leurs caractéristiques fixées.
 Elle permet d'écrire, pour deux observations,
@@ -43,10 +42,10 @@ Elle permet d'écrire, pour deux observations,
   &\qquad=\Pp(Y_1=y_1\mid X_1=\x_1;\thv)
    \Pp(Y_2=y_2\mid X_2=\x_2;\thv).
 \end{align*}
-Elle serait douteuse si plusieurs lignes correspondaient au même élève ou à des
-jumeaux dont les réponses restent liées après prise en compte des variables. Le
-produit de vraisemblance n'est donc pas une identité universelle : il traduit une
-hypothèse sur la manière dont les données ont été recueillies.
+Des lignes dupliquées pour un même élève, ou des jumeaux dont les réponses restent
+liées une fois les variables connues, la mettraient en défaut. Le produit de
+vraisemblance traduit donc une hypothèse sur la manière dont les données ont été
+recueillies.
 La vraisemblance et sa log-vraisemblance sont
 \begin{align*}
   L(\thv)&=\prod_{i=1}^m p_i^{y_i}(1-p_i)^{1-y_i},\\
@@ -184,10 +183,10 @@ composante indique la correction associée à un coefficient.
 \section{Convexité, unicité et séparabilité}
 
 \begin{lecture}
-Une fonction convexe a la géométrie générale d'une cuvette : descendre localement
-ne conduit pas vers un faux minimum isolé. Une cuvette peut toutefois posséder un
-fond plat, donc plusieurs paramètres équivalents. Avec des classes parfaitement
-séparées, le minimum non pénalisé peut même être repoussé à l'infini.
+Une fonction convexe a la géométrie d'une cuvette : toute descente locale mène au
+minimum global. Une cuvette peut posséder un fond plat, et donc plusieurs jeux de
+paramètres équivalents. Avec des classes parfaitement séparées, ce fond s'étend à
+l'infini.
 \end{lecture}
 
 En notant $W=\operatorname{diag}(p_i(1-p_i))$, la Hessienne vaut
@@ -199,15 +198,15 @@ normalisation près \cite[équations~4.22--4.25]{hastie2009}.
 Les coefficients diagonaux $p_i(1-p_i)$ sont positifs ou nuls ; la Hessienne est
 donc positive semi-définie et $J$ est convexe. Tout minimum local est global. La
 preuve matricielle est donnée à l'annexe~\ref{app:convexity-proof}. La stricte
-convexité, et donc l'unicité du minimiseur, exige toutefois des conditions de rang
-et l'absence de directions dégénérées.
+convexité, qui donne l'unicité du minimiseur, demande en plus que $\X$ soit de
+rang plein.
 
-La distinction entre convexité et stricte convexité est importante. Une fonction
-convexe ne possède pas de minimum local trompeur, mais elle peut présenter un
-fond plat contenant plusieurs minimiseurs. Si deux colonnes de $\X$ sont
-identiques, par exemple, certains changements opposés de leurs coefficients
-laissent les scores inchangés. La prédiction peut alors être unique tandis que
-le vecteur de paramètres ne l'est pas.
+Convexité et stricte convexité se séparent ici. Une fonction convexe garantit que
+toute descente atteint le minimum global ; son fond peut néanmoins contenir
+plusieurs minimiseurs. Avec deux colonnes identiques dans $\X$, des variations
+opposées de leurs deux coefficients laissent tous les scores intacts : les
+prédictions sont uniques et le vecteur de paramètres appartient à une droite de
+solutions.
 
 En une dimension, $J(\theta)=(\theta-1)^2$ est strictement convexe : sa courbure
 $J''(\theta)=2$ est positive et son unique minimum est $\theta=1$. La fonction
@@ -218,18 +217,18 @@ apportent exactement la même information.
 
 \begin{vigilance}[Séparation complète]
 Si un hyperplan sépare parfaitement les deux classes, la vraisemblance non
-pénalisée peut croître lorsque $\|\thv\|\to\infty$ sans atteindre de maximiseur
-fini. La convexité seule n'assure donc pas l'existence d'un minimiseur fini. Une
-pénalisation $L^2$, ou une autre méthode adaptée, rétablit en
-général un problème bien posé \cite{albert1984}.
+pénalisée croît continûment quand $\|\thv\|\to\infty$ et atteint sa borne
+supérieure à la limite. La convexité porte sur la forme de $J$ ; l'existence d'un
+minimiseur fini est une propriété distincte, que la pénalisation $L^2$ rétablit
+\cite{albert1984}.
 \end{vigilance}
 
 Exemple : sur une caractéristique $x$, supposons que tous les négatifs vérifient
 $x<0$ et tous les positifs $x>0$. Le score $z=10x$ classe déjà les observations
-avec assurance ; $z=100x$ rend les probabilités encore plus proches de $0$ ou de
-$1$ et augmente encore la vraisemblance. Aucun coefficient fini n'est désigné
-comme optimum : le modèle pousse le coefficient vers $+\infty$. La pénalisation
-ajoute un coût croissant avec ce coefficient et empêche cette fuite.
+avec assurance ; $z=100x$ rapproche les probabilités de $0$ et de $1$ et augmente
+encore la vraisemblance. Chaque coefficient trouve donc un successeur meilleur,
+et la suite part vers $+\infty$. La pénalisation ajoute un coût croissant avec ce
+coefficient, ce qui ramène l'optimum à distance finie.
 
 \begin{figure}[htbp]
 \centering
@@ -272,10 +271,10 @@ des colonnes ou séparation complète.
 \section{Régularisation facultative}
 
 \begin{lecture}
-La régularisation compare deux objectifs : bien reproduire les observations et
-éviter des coefficients excessivement grands. Le paramètre $\lambda$ fixe le
-poids du second objectif. Une valeur nulle conserve le modèle initial ; une
-valeur croissante contracte progressivement les coefficients vers zéro.
+La régularisation arbitre entre deux objectifs : reproduire les observations et
+garder des coefficients de faible amplitude. Le paramètre $\lambda$ fixe le poids
+du second. Une valeur nulle rend le modèle initial ; une valeur croissante
+contracte les coefficients vers zéro.
 \end{lecture}
 
 Une pénalisation quadratique donne
@@ -290,24 +289,22 @@ quadratique \cite[sec.~4.4.4]{hastie2009}. Le symbole
   \|\mathbf w\|_2^2=\theta_1^2+\cdots+\theta_n^2
 \]
 est le carré de la norme euclidienne des coefficients hors biais. Ajouter cette
-quantité au coût signifie qu'un ajustement n'est plus jugé uniquement sur son
-accord aux données : entre deux solutions de log-pertes voisines, on préfère
-celle dont les coefficients sont moins grands.
+quantité au coût introduit un second critère de jugement : entre deux solutions
+de log-pertes voisines, l'ajustement retient celle dont les coefficients sont les
+plus petits.
 
-Le paramètre $\lambda$ règle le compromis. Lorsque $\lambda=0$, on retrouve le
-maximum de vraisemblance non pénalisé. Quand $\lambda$ augmente, les coefficients
-sont progressivement ramenés vers zéro. À la limite, le modèle dépend de moins en
-moins des caractéristiques et tend vers une prédiction principalement gouvernée
-par le biais. Le biais n'est conventionnellement pas pénalisé : même si toutes
-les caractéristiques deviennent sans effet, le modèle doit encore pouvoir
-représenter la fréquence moyenne de la classe positive.
+Le paramètre $\lambda$ règle ce compromis. À $\lambda=0$, le coût redevient le
+maximum de vraisemblance simple. Quand $\lambda$ augmente, les coefficients
+convergent vers zéro et la prédiction se rapproche d'une constante gouvernée par
+le biais. La somme pénalisée court de $j=1$ à $n$ et laisse $\theta_0$ libre :
+le modèle conserve ainsi la capacité de représenter la fréquence moyenne de la
+classe positive à toute intensité de pénalisation.
 
-La réduction de variance signifie ici que de petites
-modifications de l'échantillon d'apprentissage provoquent généralement de moins
-grandes modifications des coefficients et des prédictions. Cette stabilité est
-achetée au prix d'un biais statistique supplémentaire : le modèle pénalisé
-n'essaie volontairement pas d'ajuster aussi étroitement les données observées.
-Le meilleur compromis n'est pas connu à l'avance.
+La réduction de variance signifie ici qu'une petite modification de l'échantillon
+d'apprentissage produit une petite modification des coefficients et des
+prédictions. Cette stabilité s'achète par un biais statistique supplémentaire :
+le modèle pénalisé s'ajuste volontairement moins étroitement aux données
+observées. Le meilleur compromis se détermine sur validation.
 
 \begin{figure}[htbp]
 \centering
@@ -332,10 +329,10 @@ décroît lorsque $\lambda$ augmente.}
 \end{figure}
 \FloatBarrier
 
-On compare donc plusieurs valeurs de $\lambda$ sur un ensemble de validation ou
-par validation croisée. Choisir $\lambda$ sur le test reviendrait à adapter le
-modèle aux réponses du test ; celui-ci ne fournirait alors plus une évaluation
-indépendante. La figure~\ref{fig:lambda-validation} résume cette logique.
+Plusieurs valeurs de $\lambda$ sont donc comparées sur un ensemble de validation
+ou par validation croisée. Choisir $\lambda$ d'après le test adapterait le modèle
+aux réponses du test, qui perdrait alors son statut d'évaluation indépendante. La
+figure~\ref{fig:lambda-validation} résume cette logique.
 
 \begin{figure}[htbp]
 \centering
