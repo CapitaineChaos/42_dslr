@@ -36,6 +36,7 @@ class LogisticRegression:
         self.report = {}
         self.dataset = dataset
 
+    # https://web.stanford.edu/class/archive/cs/cs109/cs109.1264/lectures/20-LogisticRegression/20-LogisticRegression.pdf
     def gd(self, X):
         if not X:
             raise ModelError("no student to train on")
@@ -54,13 +55,23 @@ class LogisticRegression:
                 slope = [0.0] * len(weights)
                 for x, expected in zip(X, targets):
                     score = 0.0
+
+                    # ================ z = Σ wᵢ xᵢ 
                     for col in range(len(weights)):
                         score += weights[col] * x[col]
+                    
+                    # ================ h = σ(z)
+                    # ================ J(θ) = -1/m Σ y·log(h) + (1-y)·log(1-h)
                     cost += softplus(score) - expected * score
+
+                    # ================ ∂J/∂θⱼ = 1/m Σ (h(xⁱ) - yⁱ)·xⱼⁱ
                     delta = sigmoid(score) - expected
                     for col in range(len(weights)):
                         slope[col] += delta * x[col]
+
+                # ================ J(θ) = -1/m Σ y·log(h) + (1-y)·log(1-h)
                 cost /= len(targets)
+
                 if cost != cost or cost == float('inf'):
                     raise ModelError(f"{house}: cost is not finite after {iteration} iterations, lower ALPHA")
                 for col in range(len(weights)):
@@ -69,9 +80,14 @@ class LogisticRegression:
                 if abs(prev_cost - cost) / max(1, abs(cost)) < self.EPSILON:
                     break
                 prev_cost = cost
+
+                # Update weights
                 for col in range(len(weights)):
                     weights[col] -= self.ALPHA * slope[col]
+
+            # Store the weights
             self.weights[house] = weights
+            # Store the cost and number of iterations for reporting
             self.report[house] = (cost, iteration)
 
     # Everything logreg_predict needs: column order, preparation statistics, class order, weights

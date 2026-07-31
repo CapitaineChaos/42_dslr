@@ -23,6 +23,7 @@
 \usepackage[margin=2.45cm]{geometry}
 \usepackage[backend=biber,style=numeric,sorting=none,defernumbers=true]{biblatex}
 \addbibresource{references.bib}
+\AtEveryBibitem{\clearfield{urldate}}
 \DeclareBibliographyCategory{reading}
 \addtocategory{reading}{bishop2006,ng2018cs229,murphy2022,
   james2023,openintro2024,stanfordcs109,psustat504}
