@@ -4,14 +4,18 @@
 \begin{lecture}
 Deux programmes suffisent à produire le classifieur. Le premier lit les élèves
 étiquetés et écrit les paramètres ; le second lit ces paramètres et attribue une
-maison à chaque nouvel élève. Ce chapitre donne les colonnes qui entrent dans le
-calcul, les dimensions de chaque tableau, les valeurs des hyperparamètres et le
-contenu des fichiers échangés. Les nombres cités proviennent de
+maison à chaque nouvel élève. Les nombres cités proviennent de
 \texttt{dataset\_train.csv}.
 \end{lecture}
 
 \section{Colonnes du fichier}
 \label{sec:features}
+
+\begin{lecture}
+Dix-neuf colonnes : un identifiant, la maison, quatre champs d'état civil et
+treize notes. Les notes seules se mesurent sur une échelle numérique, et toutes
+ne séparent pas les maisons.
+\end{lecture}
 
 Le fichier d'apprentissage contient $1\,600$ lignes et dix-neuf colonnes.
 
@@ -35,6 +39,14 @@ Best Hand & \texttt{Left} pour $790$ élèves, \texttt{Right} pour $810$. Écart
 
 \section{Best Hand et Birthday}
 \label{sec:hand-birthday}
+
+\begin{lecture}
+La main dominante et la date de naissance sont disponibles sur toutes les lignes
+et se codent facilement en nombres. Reste à savoir si elles apprennent quoi que
+ce soit sur la maison. Trois mesures en décident : la proportion de gauchers
+maison par maison, l'écart de notes entre gauchers et droitiers, et l'exactitude
+du modèle avec puis sans ces colonnes.
+\end{lecture}
 
 Ces deux colonnes sont remplies sur les $1\,600$ lignes et demandent un codage
 numérique avant d'entrer dans le modèle. Trois mesures décident de leur sort.
@@ -64,6 +76,7 @@ $-0{,}20$ à $+0{,}19$, contre $2{,}39$ pour Astronomy chez Hufflepuff. Les deux
 colonnes restent hors du modèle.
 
 \section{Redondance}
+\label{sec:redondance}
 
 \begin{lecture}
 Deux colonnes qui portent la même information gênent le calcul. Le modèle peut
@@ -85,6 +98,7 @@ cette direction pendant que les scores restent identiques. Astronomy est
 conservée, Defense Against the Dark Arts sert à l'imputation décrite plus bas.
 
 \section{Pouvoir discriminant}
+\label{sec:discriminant}
 
 \begin{lecture}
 Une note aide à reconnaître une maison lorsque les quatre maisons y obtiennent
@@ -141,6 +155,12 @@ Donc $n=10$, $\X\in\R^{m\times11}$ et chaque $\thv_k\in\R^{11}$.
 
 \section{Valeurs manquantes}
 
+\begin{lecture}
+Une case vide arrête le calcul : le modèle ne sait rien faire d'une note absente.
+Deux réponses existent, supprimer la ligne ou lui attribuer une valeur. Le choix
+se joue ici sur le nombre d'élèves que la première ferait perdre.
+\end{lecture}
+
 Onze des treize colonnes de notes comportent des cases vides, entre $30$ et $43$
 chacune, réparties sur $349$ lignes distinctes.
 
@@ -157,8 +177,10 @@ incomplètes. Charms, Flying et Astronomy sont pleines.
 
 \section{Matrice de design}
 
-Le programme applique dans l'ordre : reconstruction d'Astronomy, imputation
-médiane, standardisation, ajout de la colonne de biais.
+Une seule fonction, appelée par les deux programmes, transforme un fichier en
+tableau de nombres. Elle applique dans l'ordre : reconstruction d'Astronomy,
+imputation médiane, standardisation, ajout de la colonne de biais --- la
+sous-procédure du chapitre~\ref{ch:data} sur les dix colonnes retenues.
 
 \begin{procedure}{Construire $\X$}
 \textbf{Entrée :} un fichier de données. \textbf{Sorties :} $\X$, le vecteur des
@@ -171,9 +193,9 @@ remplie.
         poids ;
   \item convertir les cases en nombres réels ; une case vide devient une valeur
         manquante ;
-  \item remplir les valeurs manquantes d'Astronomy par $-100\,r_{\mathrm{DADA}}$,
-        puis les valeurs manquantes restantes par la \rsym{mediane}{médiane} d'apprentissage de
-        leur colonne ;
+  \item remplir les valeurs manquantes d'Astronomy par $-100$ fois la note de
+        Defense Against the Dark Arts, puis les valeurs manquantes restantes par
+        la \rsym{mediane}{médiane} d'apprentissage de leur colonne ;
   \item appliquer $x_{ij}=(r_{ij}-\mu_j)/s_j$ avec les $\mu_j$ et $s_j$
         d'apprentissage ;
   \item préfixer chaque ligne d'une coordonnée égale à $1$, ce qui donne
@@ -254,6 +276,12 @@ $0{,}983$ en moyenne sur cinq graines de découpage.
 \section{Le fichier de poids}
 \label{sec:weights}
 
+\begin{lecture}
+L'entraînement et la prédiction sont deux programmes distincts, lancés à des
+moments différents et sans mémoire commune. Tout ce que le premier a appris
+passe au second par un fichier ; ce qui n'y figure pas est perdu.
+\end{lecture}
+
 La prédiction a besoin de trois choses : l'ordre des dix variables, les
 statistiques qui les transforment, et les quatre vecteurs de paramètres associés
 à leurs libellés. Les statistiques figurent dans le fichier parce qu'elles sont
@@ -287,103 +315,190 @@ lui. Les deux ordres figurent explicitement dans le fichier.
 \section{Primitives à écrire}
 
 Le sujet écarte les fonctions toutes faites de statistique descriptive. Cinq
-primitives suffisent, toutes en une passe ou deux sur un tableau.
+suffisent, toutes en une passe ou deux sur un tableau. \texttt{mediane} fournit
+les valeurs d'imputation, \texttt{moyenne} et \texttt{ecart\_type} les $\mu_j$
+et $s_j$ de la standardisation. \texttt{sigmoide} et \texttt{softplus} tirent
+la probabilité et la perte du score, sous les formes à deux branches du
+chapitre~\ref{ch:optim} : l'exponentielle y porte toujours sur $-|z|$. Écrites
+naïvement, elles évaluent $e^{-z}$ et $e^{z}$, qui débordent à $|z|\approx710$
+en double précision ; les formes ci-dessous rendent $0$ et $|z|$.
 
 \begin{pseudo}[primitives]
-fonction moyenne(v) :\\
-\hspace*{2em}s $\leftarrow$ 0\\
-\hspace*{2em}pour x dans v : s $\leftarrow$ s + x\\
-\hspace*{2em}retourner s / longueur(v)\\
+fonction moyenne(valeurs) :\\
+\hspace*{2em}somme $\leftarrow$ 0\\
+\hspace*{2em}pour valeur dans valeurs :\\
+\hspace*{4em}somme $\leftarrow$ somme + valeur\\
+\hspace*{2em}retourner somme / longueur(valeurs)\\
 \\
-fonction ecart\_type(v) :\\
-\hspace*{2em}m $\leftarrow$ moyenne(v) ; s $\leftarrow$ 0\\
-\hspace*{2em}pour x dans v : s $\leftarrow$ s + (x - m)$^2$\\
-\hspace*{2em}retourner racine(s / longueur(v))\\
+fonction ecart\_type(valeurs) :\\
+\hspace*{2em}centre $\leftarrow$ moyenne(valeurs) ; somme $\leftarrow$ 0\\
+\hspace*{2em}pour valeur dans valeurs :\\
+\hspace*{4em}somme $\leftarrow$ somme + (valeur - centre)$^2$\\
+\hspace*{2em}retourner racine(somme / longueur(valeurs))\\
 \\
-fonction mediane(v) :\\
-\hspace*{2em}t $\leftarrow$ trier(v) ; n $\leftarrow$ longueur(t)\\
-\hspace*{2em}si n impair : retourner t[n // 2]\\
-\hspace*{2em}retourner (t[n // 2 - 1] + t[n // 2]) / 2\\
+fonction mediane(valeurs) :\\
+\hspace*{2em}triees $\leftarrow$ trier(valeurs)\\
+\hspace*{2em}nb $\leftarrow$ longueur(triees)\\
+\hspace*{2em}si nb impair :\\
+\hspace*{4em}retourner triees[nb // 2]\\
+\hspace*{2em}retourner (triees[nb // 2 - 1] + triees[nb // 2]) / 2\\
 \\
-fonction sigmoide(z) :\\
-\hspace*{2em}si z $\geq$ 0 : retourner 1 / (1 + exp(-z))\\
-\hspace*{2em}retourner exp(z) / (1 + exp(z))\\
+fonction sigmoide(score) :\\
+\hspace*{2em}si score $\geq$ 0 :\\
+\hspace*{4em}retourner 1 / (1 + exp(-score))\\
+\hspace*{2em}retourner exp(score) / (1 + exp(score))\\
 \\
-fonction softplus(z) :\\
-\hspace*{2em}retourner max(z, 0) + log(1 + exp(-abs(z)))
+fonction softplus(score) :\\
+\hspace*{2em}retourner max(score, 0) + log(1 + exp(-abs(score)))
 \end{pseudo}
-
-Les deux dernières viennent du chapitre~\ref{ch:optim} : leur exponentielle porte
-toujours sur un nombre négatif ou nul, ce qui les garde finies pour
-$z=\pm1000$.
 
 \section{Pseudo-code de logreg\_train}
 \label{sec:pseudo-train}
 
-Le tableau \texttt{X} a $m$ lignes et $11$ colonnes, \texttt{theta[k]} $11$
-composantes, \texttt{y} $m$ composantes. Les indices de colonne vont de $0$ à
-$10$, la colonne $0$ portant le biais.
+\texttt{X} compte une ligne par élève et onze colonnes : le biais, puis les dix
+notes dans l'ordre de \texttt{MATIERES}.
 
-\begin{pseudo}[logreg\_train dataset\_train.csv]
-VARIABLES $\leftarrow$ [Astronomy, Herbology, Divination, Muggle Studies,\\
+\subsection{Constantes}
+
+L'ordre des dix matières vient de la section~\ref{sec:discriminant}, celui des
+quatre maisons est arbitraire mais définitif : tous deux partent dans
+\texttt{weights.csv}, la prédiction n'ayant aucun autre moyen de rattacher un
+vecteur de coefficients à une maison. \texttt{MAX\_ITER} borne le temps de
+calcul si le critère d'arrêt tarde ; les trois constantes valent ce que fixe la
+table~\ref{tab:training-defaults}.
+
+\begin{pseudo}[constantes et lecture]
+MATIERES $\leftarrow$ [Astronomy, Herbology, Divination, Muggle Studies,\\
 \hspace*{5em}Ancient Runes, History of Magic, Transfiguration,\\
 \hspace*{5em}Potions, Charms, Flying]\\
 MAISONS $\leftarrow$ [Gryffindor, Hufflepuff, Ravenclaw, Slytherin]\\
+DEFENSE $\leftarrow$ "Defense Against the Dark Arts"\\
 ALPHA $\leftarrow$ 1.0 ; EPS $\leftarrow$ 1e-6 ; MAX\_ITER $\leftarrow$ 6000\\
 \\
-lignes $\leftarrow$ lire\_csv(argv[1])\\
-\\
-pour i dans lignes :\\
-\hspace*{2em}si lignes[i][Astronomy] est vide et lignes[i][DADA] est rempli :\\
-\hspace*{4em}lignes[i][Astronomy] $\leftarrow$ -100 * lignes[i][DADA]\\
-\\
-pour f dans VARIABLES :\\
-\hspace*{2em}presentes $\leftarrow$ [lignes[i][f] pour i tel que lignes[i][f] rempli]\\
-\hspace*{2em}med[f] $\leftarrow$ mediane(presentes)\\
-\hspace*{2em}pour i dans lignes :\\
-\hspace*{4em}si lignes[i][f] est vide : lignes[i][f] $\leftarrow$ med[f]\\
-\hspace*{2em}mu[f] $\leftarrow$ moyenne(colonne f)\\
-\hspace*{2em}sd[f] $\leftarrow$ ecart\_type(colonne f)\\
-\hspace*{2em}si sd[f] = 0 : erreur("colonne constante", f)\\
-\\
-X $\leftarrow$ tableau[m][11]\\
-pour i de 0 a m-1 :\\
-\hspace*{2em}X[i][0] $\leftarrow$ 1.0\\
-\hspace*{2em}pour j de 0 a 9 :\\
-\hspace*{4em}f $\leftarrow$ VARIABLES[j]\\
-\hspace*{4em}X[i][j+1] $\leftarrow$ (lignes[i][f] - mu[f]) / sd[f]\\
-\\
-pour k de 0 a 3 :\\
-\hspace*{2em}y $\leftarrow$ [1 si lignes[i][House] = MAISONS[k] sinon 0]\\
-\hspace*{2em}th $\leftarrow$ [0.0] * 11\\
-\hspace*{2em}J\_prec $\leftarrow$ indefini\\
-\hspace*{2em}pour t de 1 a MAX\_ITER :\\
-\hspace*{4em}J $\leftarrow$ 0 ; g $\leftarrow$ [0.0] * 11\\
-\hspace*{4em}pour i de 0 a m-1 :\\
-\hspace*{6em}z $\leftarrow$ 0\\
-\hspace*{6em}pour j de 0 a 10 : z $\leftarrow$ z + th[j] * X[i][j]\\
-\hspace*{6em}J $\leftarrow$ J + softplus(z) - y[i] * z\\
-\hspace*{6em}e $\leftarrow$ sigmoide(z) - y[i]\\
-\hspace*{6em}pour j de 0 a 10 : g[j] $\leftarrow$ g[j] + e * X[i][j]\\
-\hspace*{4em}J $\leftarrow$ J / m\\
-\hspace*{4em}pour j de 0 a 10 : g[j] $\leftarrow$ g[j] / m\\
-\hspace*{4em}si J\_prec defini et abs(J\_prec - J) / max(1, abs(J)) < EPS :\\
-\hspace*{6em}sortir de la boucle\\
-\hspace*{4em}J\_prec $\leftarrow$ J\\
-\hspace*{4em}pour j de 0 a 10 : th[j] $\leftarrow$ th[j] - ALPHA * g[j]\\
-\hspace*{2em}theta[k] $\leftarrow$ th\\
-\\
-ecrire\_poids("weights.csv", VARIABLES, med, mu, sd, MAISONS, theta)
+eleves $\leftarrow$ lire\_csv(argv[1])
 \end{pseudo}
 
-La boucle sur $j$ dans le calcul de \texttt{z} et de \texttt{g} correspond au
-produit $\X\thv_k$ et au produit $\X^\top(\mathbf p-\y_k)$. Une bibliothèque de
-calcul matriciel remplace les deux boucles internes par
-\texttt{z = X @ th} et \texttt{g = X.T @ (p - y) / m}, avec le même résultat.
+\subsection{Imputation et statistiques de colonne}
 
-L'ordre des opérations compte sur deux points. La division de \texttt{g} par $m$
-arrive avant la mise à jour, et \texttt{th[j]} est modifié après le calcul
-complet de \texttt{g} : les onze composantes descendent depuis le même vecteur.
+La première boucle est propre à ce jeu de données : la proportionnalité de la
+section~\ref{sec:redondance} reconstitue les $32$ valeurs manquantes d'Astronomy
+depuis la colonne écartée. La seconde suit l'ordre du chapitre~\ref{ch:data},
+imputer puis mesurer : \texttt{mu} et \texttt{sd} portent sur la colonne
+complétée, non sur les seules valeurs présentes. Ces trois quantités par matière
+sont estimées ici et nulle part ailleurs, faute de quoi le test recevrait une
+préparation différente de l'apprentissage. Un écart-type nul arrête le
+programme : la colonne est constante, elle ne se divise pas et ne distingue
+personne.
+
+\begin{pseudo}[imputation et statistiques de colonne]
+pour chaque eleve :\\
+\hspace*{2em}si eleve[Astronomy] est vide et eleve[DEFENSE] est rempli :\\
+\hspace*{4em}eleve[Astronomy] $\leftarrow$ -100 * eleve[DEFENSE]\\
+\\
+pour matiere dans MATIERES :\\
+\hspace*{2em}notes $\leftarrow$ [eleve[matiere] pour chaque eleve, si rempli]\\
+\hspace*{2em}med[matiere] $\leftarrow$ mediane(notes)\\
+\\
+\hspace*{2em}pour chaque eleve :\\
+\hspace*{4em}si eleve[matiere] est vide :\\
+\hspace*{6em}eleve[matiere] $\leftarrow$ med[matiere]\\
+\\
+\hspace*{2em}notes $\leftarrow$ [eleve[matiere] pour chaque eleve]\\
+\hspace*{2em}mu[matiere] $\leftarrow$ moyenne(notes)\\
+\hspace*{2em}sd[matiere] $\leftarrow$ ecart\_type(notes)\\
+\hspace*{2em}si sd[matiere] = 0 :\\
+\hspace*{4em}erreur("colonne constante", matiere)
+\end{pseudo}
+
+\subsection{Construction de \texorpdfstring{$\X$}{X}}
+
+La première colonne, constante, porte $\theta_0$ : sans elle, la frontière
+serait contrainte de passer par l'origine, comme le montre la
+figure~\ref{fig:bias-geometry}. Les dix autres reçoivent les notes
+standardisées. Passé cette boucle, aucune note brute n'intervient plus.
+
+\begin{pseudo}[matrice de design]
+X $\leftarrow$ []\\
+pour chaque eleve :\\
+\hspace*{2em}x $\leftarrow$ [1.0]\\
+\hspace*{2em}pour matiere dans MATIERES :\\
+\hspace*{4em}ajouter (eleve[matiere] - mu[matiere]) / sd[matiere] a x\\
+\hspace*{2em}ajouter x a X
+\end{pseudo}
+
+\subsection{Descente de gradient, maison par maison}
+
+\texttt{cible} vaut $1$ pour les élèves de la maison traitée et $0$ pour les
+trois autres maisons réunies : c'est $y_{ik}=\ind[c_i=k]$, la construction
+un-contre-tous du chapitre~\ref{ch:ovr}. Le départ à $\thv_k=\mathbf 0$ ne
+détermine pas le point d'arrivée, la convexité du chapitre~\ref{ch:likelihood}
+s'en chargeant ; il rend l'exécution reproductible.
+
+\begin{pseudo}[descente de gradient]
+pour maison dans MAISONS :\\
+\hspace*{2em}cible $\leftarrow$ [1 si eleve[House] = maison sinon 0, par eleve]\\
+\hspace*{2em}poids $\leftarrow$ [0.0] * 11\\
+\hspace*{2em}cout\_prec $\leftarrow$ +infini\\
+\\
+\hspace*{2em}repeter MAX\_ITER fois :\\
+\hspace*{4em}cout $\leftarrow$ 0 ; pente $\leftarrow$ [0.0] * 11\\
+\\
+\hspace*{4em}pour chaque eleve, sa ligne x et sa cible attendue :\\
+\hspace*{6em}score $\leftarrow$ 0\\
+\hspace*{6em}pour chaque colonne :\\
+\hspace*{8em}score $\leftarrow$ score + poids[colonne] * x[colonne]\\
+\\
+\hspace*{6em}cout $\leftarrow$ cout + softplus(score) - attendue * score\\
+\hspace*{6em}ecart $\leftarrow$ sigmoide(score) - attendue\\
+\hspace*{6em}pour chaque colonne :\\
+\hspace*{8em}pente[colonne] $\leftarrow$ pente[colonne] + ecart * x[colonne]\\
+\\
+\hspace*{4em}cout $\leftarrow$ cout / m\\
+\hspace*{4em}pour chaque colonne :\\
+\hspace*{6em}pente[colonne] $\leftarrow$ pente[colonne] / m\\
+\\
+\hspace*{4em}si abs(cout\_prec - cout) / max(1, abs(cout)) < EPS :\\
+\hspace*{6em}sortir de la boucle\\
+\hspace*{4em}cout\_prec $\leftarrow$ cout\\
+\\
+\hspace*{4em}pour chaque colonne :\\
+\hspace*{6em}poids[colonne] $\leftarrow$ poids[colonne] - ALPHA * pente[colonne]\\
+\\
+\hspace*{2em}theta[maison] $\leftarrow$ poids
+\end{pseudo}
+
+Les deux boucles sur les colonnes sont les deux produits matriciels du cycle
+représenté figure~\ref{fig:training-cycle} : la première accumule
+$z_i=\thv_k^\top\xt_i$, la seconde $\sum_i(p_i-y_i)x_{ij}$, soit $\X\thv_k$ et
+$\X^\top(\mathbf p-\y_k)$. Une bibliothèque de calcul matriciel les remplace par
+\texttt{z = X @ poids} et \texttt{pente = X.T @ (p - cible) / m}. Développées,
+elles laissent voir ce que la notation compacte : chaque élève pèse sur le
+gradient à proportion de son erreur et de ses propres notes.
+
+L'accumulation de \texttt{cout} est l'équation~\eqref{eq:loss} sous la forme
+$\ell(y,z)=\operatorname{softplus}(z)-yz$, qui court-circuite la probabilité.
+Au-delà de $z=37$, $\sigma(z)$ s'arrondit à $1$ en double précision : la forme
+directe donnerait $\log(1-p)=-\infty$ pour un élève d'une autre maison que le
+modèle place ici avec assurance, et le coût cesserait d'être exploitable au
+moment où il signale une erreur grave. \texttt{ecart} est le résidu $p_i-y_i$ :
+$-0{,}9$ pour un Hufflepuff auquel le modèle n'accorde encore que $0{,}1$,
+$-0{,}01$ pour un Hufflepuff déjà reconnu à $0{,}99$. La division de
+\texttt{pente} par $m$ achève l'équation~\eqref{eq:gradient}.
+
+L'ordre des trois dernières instructions n'est pas libre. Le critère d'arrêt
+compare deux coûts calculés avant toute modification des poids ; il porterait
+sinon sur deux vecteurs différents. Et \texttt{pente} est complète avant la
+première affectation à \texttt{poids}, si bien que les onze composantes
+descendent depuis le même ancien vecteur : c'est la mise à jour simultanée du
+chapitre~\ref{ch:optim}.
+
+L'appel final enregistre l'ordre des matières, les trois statistiques par
+colonne, l'ordre des maisons et les quatre vecteurs de coefficients, au format
+de la section~\ref{sec:weights}.
+
+\begin{pseudo}[écriture du modèle]
+ecrire\_poids("weights.csv", MATIERES, med, mu, sd, MAISONS, theta)
+\end{pseudo}
 
 Exécuté sur les $1\,600$ lignes, ce programme consomme $436$ itérations pour
 Hufflepuff, $460$ pour Ravenclaw, $836$ pour Slytherin et $1\,069$ pour
@@ -393,9 +508,18 @@ d'apprentissage.
 
 \section{Le programme de prédiction}
 
+\begin{lecture}
+Le second programme n'apprend rien. Il relit les nombres écrits par le premier,
+leur applique la même préparation qu'à l'entraînement, calcule quatre scores par
+élève et retient la maison du plus grand. Aucune moyenne, aucune médiane et
+aucun écart-type n'y est recalculé.
+\end{lecture}
+
 La prédiction lit les paramètres, construit $\X$ avec les statistiques du fichier
 de poids, calcule quatre scores par ligne et retient le plus grand, selon
-l'équation~\eqref{eq:ovr-decision}. La sigmoïde est croissante et commune aux
+l'équation~\eqref{eq:ovr-decision}. C'est l'architecture de la
+figure~\ref{fig:ovr-architecture}, appliquée aux $400$ lignes du fichier de test.
+La sigmoïde est croissante et commune aux
 quatre modèles : comparer les $z_k$ donne le même classement que comparer les
 $q_k$.
 
@@ -430,30 +554,56 @@ traitée au chapitre~\ref{ch:ovr}.
 \end{enumerate}
 \end{procedure}
 
-\begin{pseudo}[logreg\_predict dataset\_test.csv weights.csv]
-VARIABLES, med, mu, sd, MAISONS, theta $\leftarrow$ lire\_poids(argv[2])\\
-lignes $\leftarrow$ lire\_csv(argv[1])\\
+Les valeurs d'imputation \texttt{med} viennent du fichier de poids, donc des
+lignes d'apprentissage. Prendre la médiane des $400$ lignes de test à la place
+ferait dépendre la maison d'un élève des autres élèves du même envoi, et
+changerait ses notes complétées d'un fichier de test à l'autre.
+
+\begin{pseudo}[relecture du modèle et complétion des notes]
+DEFENSE $\leftarrow$ "Defense Against the Dark Arts"\\
+MATIERES, med, mu, sd, MAISONS, theta $\leftarrow$ lire\_poids(argv[2])\\
+eleves $\leftarrow$ lire\_csv(argv[1])\\
 \\
-pour i dans lignes :\\
-\hspace*{2em}si lignes[i][Astronomy] est vide et lignes[i][DADA] est rempli :\\
-\hspace*{4em}lignes[i][Astronomy] $\leftarrow$ -100 * lignes[i][DADA]\\
-\hspace*{2em}pour f dans VARIABLES :\\
-\hspace*{4em}si lignes[i][f] est vide : lignes[i][f] $\leftarrow$ med[f]\\
+pour chaque eleve :\\
+\hspace*{2em}si eleve[Astronomy] est vide et eleve[DEFENSE] est rempli :\\
+\hspace*{4em}eleve[Astronomy] $\leftarrow$ -100 * eleve[DEFENSE]\\
 \\
+\hspace*{2em}pour matiere dans MATIERES :\\
+\hspace*{4em}si eleve[matiere] est vide :\\
+\hspace*{6em}eleve[matiere] $\leftarrow$ med[matiere]
+\end{pseudo}
+
+Chaque élève est standardisé avec les \texttt{mu} et \texttt{sd} du fichier,
+précédé de la coordonnée $1$ du biais, puis multiplié par les quatre vecteurs de
+coefficients. La boucle sur \texttt{k} évalue l'$\Argmax$ de
+l'équation~\eqref{eq:ovr-decision} en une passe, sans conserver les quatre
+scores. L'initialisation de \texttt{score\_max} à $-\infty$ couvre le cas où les
+quatre sont négatifs : la règle retient alors le moins négatif, et une maison
+sort dans tous les cas.
+
+\begin{pseudo}[décision élève par élève]
 ouvrir sortie "houses.csv"\\
 ecrire "Index,Hogwarts House"\\
 \\
-pour i dans lignes :\\
+pour chaque eleve :\\
 \hspace*{2em}x $\leftarrow$ [1.0]\\
-\hspace*{2em}pour f dans VARIABLES :\\
-\hspace*{4em}ajouter (lignes[i][f] - mu[f]) / sd[f] a x\\
-\hspace*{2em}meilleur $\leftarrow$ 0 ; z\_max $\leftarrow$ -infini\\
-\hspace*{2em}pour k de 0 a 3 :\\
-\hspace*{4em}z $\leftarrow$ 0\\
-\hspace*{4em}pour j de 0 a 10 : z $\leftarrow$ z + theta[k][j] * x[j]\\
-\hspace*{4em}si z > z\_max : z\_max $\leftarrow$ z ; meilleur $\leftarrow$ k\\
-\hspace*{2em}ecrire lignes[i][Index] + "," + MAISONS[meilleur]
+\hspace*{2em}pour matiere dans MATIERES :\\
+\hspace*{4em}ajouter (eleve[matiere] - mu[matiere]) / sd[matiere] a x\\
+\\
+\hspace*{2em}meilleure $\leftarrow$ indefinie ; score\_max $\leftarrow$ -infini\\
+\hspace*{2em}pour maison dans MAISONS :\\
+\hspace*{4em}score $\leftarrow$ 0\\
+\hspace*{4em}pour chaque colonne :\\
+\hspace*{6em}score $\leftarrow$ score + theta[maison][colonne] * x[colonne]\\
+\hspace*{4em}si score > score\_max :\\
+\hspace*{6em}score\_max $\leftarrow$ score ; meilleure $\leftarrow$ maison\\
+\\
+\hspace*{2em}ecrire eleve[Index] + "," + meilleure
 \end{pseudo}
+
+\texttt{theta} est indexé par les libellés relus en tête de programme. Un
+fichier de poids écrit sans cette liste, ou dans un autre ordre que celui de
+l'ajustement, donnerait des scores justes et des maisons fausses.
 
 \begin{fichier}[houses.csv]
 Index,Hogwarts House\\
@@ -465,16 +615,17 @@ Index,Hogwarts House\\
 399,Gryffindor
 \end{fichier}
 
-La boucle sur \texttt{k} réalise l'argmax de l'équation~\eqref{eq:ovr-decision}
-en une passe, sans stocker les quatre scores. L'initialisation de \texttt{z\_max}
-à $-\infty$ garantit qu'une maison est retenue dès le premier tour, y compris
-quand les quatre scores sont négatifs.
-
 Les lignes de \texttt{dataset\_test.csv} dont plusieurs notes manquent reçoivent
 une maison comme les autres : leurs cases vides ont été remplies par les médianes
-d'apprentissage à l'étape~2. Le fichier produit compte $401$ lignes.
+d'apprentissage à la lecture. Le fichier produit compte $401$ lignes,
+l'en-tête et une par élève.
 
 \section{Contrôles}
+
+\begin{lecture}
+Un programme qui rend un résultat plausible peut être faux. Chacun des contrôles
+ci-dessous vise une erreur précise et a une valeur attendue connue d'avance.
+\end{lecture}
 
 La colonne \texttt{Hogwarts House} de \texttt{dataset\_test.csv} est vide.
 L'exactitude se mesure donc sur un ensemble de test découpé dans
@@ -484,19 +635,26 @@ Le sujet fixe le seuil d'acceptation à $0{,}98$, mesuré par l'évaluateur sur
 
 \begin{table}[htbp]
 \centering
-\begin{tabularx}{\textwidth}{X r}
+\begin{tabularx}{\textwidth}{@{}X r >{\raggedright\arraybackslash}p{0.21\textwidth}@{}}
 \toprule
-contrôle & valeur attendue \\
+contrôle & valeur attendue & ce qu'il vérifie \\
 \midrule
-gradient analytique contre différence finie centrée & écart relatif $<10^{-6}$ \\
-sigmoïde et perte évaluées en $z=\pm1000$ & valeurs finies \\
-exactitude d'une prédiction constante sur Hufflepuff & $0{,}331$ \\
-exactitude après \rsym{permutation}{permutation} aléatoire des étiquettes & $\approx0{,}34$ \\
-exactitude sur le test interne & $\geq0{,}98$ \\
-lignes de \texttt{houses.csv} & $401$ \\
+gradient analytique contre différence finie centrée & écart relatif $<10^{-6}$ &
+  l'équation~\eqref{eq:gradient} et son code \\
+sigmoïde et perte évaluées en $z=\pm1000$ & valeurs finies &
+  les formes stables du chapitre~\ref{ch:optim} \\
+exactitude d'une prédiction constante sur Hufflepuff & $0{,}331$ &
+  le niveau que le modèle doit dépasser \\
+exactitude après \rsym{permutation}{permutation} aléatoire des étiquettes & $\approx0{,}34$ &
+  l'absence de fuite de données \\
+exactitude sur le test interne & $\geq0{,}98$ &
+  le protocole du chapitre~\ref{ch:evaluation} \\
+lignes de \texttt{houses.csv} & $401$ &
+  le format attendu par l'évaluateur \\
 \bottomrule
 \end{tabularx}
-\caption{Valeurs de référence mesurées sur ce jeu de données.}
+\caption{Valeurs de référence mesurées sur ce jeu de données. La colonne de
+droite indique l'erreur que chaque contrôle intercepte.}
 \label{tab:checks}
 \end{table}
 

@@ -1,78 +1,35 @@
 #!/usr/bin/env python3
 
 import argparse
-from functools import reduce
+import os
+import sys
 import tkinter as tk
 from tkinter import ttk
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'V.0_Common'))
 
-def get_count(array):
-    sum_ = 0
-    count = 0
-    for x in array:
-        if x is not None:
-            count += 1
-            sum_ += x
-    return count, sum_
-
-def percentile(sorted_array, q):
-    if not sorted_array:
-        return None
-    pos = q * (len(sorted_array) - 1)
-    low = int(pos)
-    high = min(low + 1, len(sorted_array) - 1)
-    frac = pos - low
-    return sorted_array[low] + frac * (sorted_array[high] - sorted_array[low])
+from csvfile import read_table
+from errors import DataError
+from stats import Stats
 
 
-def get_full_description(array):
-    _count, _sum = get_count(array)
-    _mean = _sum / _count if array else None
-    _std = (reduce(lambda acc, val: acc + (val - _mean) ** 2, array, 0) / _count) ** 0.5 if array else None
-    _sorted = sorted(array)
-    _min = _sorted[0] if array else None
-    _max = _sorted[-1] if array else None
-    _25p = percentile(_sorted, 0.25) if array else None
-    _50p = percentile(_sorted, 0.50) if array else None
-    _75p = percentile(_sorted, 0.75) if array else None
-    return {
-        "count": _count,
-        "std":   _std,
-        "mean":  _mean,
-        "min":   _min,
-        "25%":   _25p,
-        "50%":   _50p,
-        "75%":   _75p,
-        "max":   _max,
-    }
-
-def get_shifted_data(line, shift):
-    features = line.strip().split(',')
-    return features[shift:]
-
-# Read lines one by one and collect basics statistics
+# Collect basic statistics on every column past the identity ones
 def read_lines(file_path):
-    # lines = 0
-    # Features that are not counted, columns count
     shift = 6
-    with open(file_path, 'r') as file:
-        # Header line is not counted
-        features = get_shifted_data(file.readline(), shift)
-        if not features:
-            raise ValueError("empty file or no describable columns")
-        data = [[] for _ in features]
-        descriptions = {feature: {} for feature in features}
-        for line in file:
-            if line.strip():
-                for i, feature in enumerate(get_shifted_data(line, shift)):
-                    # if the feature is a number, add it to the sum and count, otherwise ignore it
-                    try:
-                        data[i].append(float(feature))
-                    except:
-                        pass
-        for i, feature in enumerate(features):
-            descriptions[feature] = get_full_description(data[i])
-    return descriptions
+    header, rows = read_table(file_path)
+    features = header[shift:]
+    if not features:
+        raise DataError(f"{file_path}: no describable column")
+
+    data = [[] for _ in features]
+    for fields in rows:
+        for i, value in enumerate(fields[shift:]):
+            # a non numeric cell is left out of its column, as pandas does
+            try:
+                data[i].append(float(value))
+            except ValueError:
+                pass
+    return {feature: Stats(data[i]).describe() for i, feature in enumerate(features)}
 
 
 def fmt(value, stat):
@@ -84,7 +41,7 @@ def fmt(value, stat):
 
 
 def disp_data(descriptions):
-    stats = ("count", "std", "mean", "min", "25%", "50%", "75%", "max")
+    stats = Stats.KEYS
 
     root = tk.Tk()
     root.title("Describe")
@@ -94,7 +51,7 @@ def disp_data(descriptions):
 
     for col in columns:
         tree.heading(col, text=col.capitalize())
-        # Texte a gauche, chiffres a droite
+        # Texte à gauche, chiffres à droite
         anchor = "w" if col == "feature" else "e"
         width = 200 if col == "feature" else 110
         tree.column(col, width=width, anchor=anchor)
@@ -142,18 +99,6 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\nInterrupted")
         exit(130)
-    except FileNotFoundError:
-        print(f"Error: file not found: {args.file_path}")
-        exit(1)
-    except PermissionError:
-        print(f"Error: permission denied: {args.file_path}")
-        exit(1)
-    except IsADirectoryError:
-        print(f"Error: is a directory: {args.file_path}")
-        exit(1)
-    except (ValueError, UnicodeDecodeError) as e:
-        print(f"Error: invalid file '{args.file_path}': {e}")
-        exit(1)
-    except Exception as e:
-        print(f"Error: {e}")
+    except DataError as err:
+        print(f"Error: {err}", file=sys.stderr)
         exit(1)
