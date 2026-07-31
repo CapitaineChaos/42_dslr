@@ -89,6 +89,14 @@ logistique, la convexité établie au chapitre précédent fait de tout point
 stationnaire fini un minimum global.
 
 \section{Influence du taux d'apprentissage dans le cas scalaire}
+
+\begin{lecture}
+Une fonction d'une seule variable suffit à montrer ce que règle $\alpha$ : la
+longueur du pas. Trop court, il exige un grand nombre de tours ; trop long, il
+fait sauter le paramètre par-dessus le minimum, d'un côté puis de l'autre, sans
+jamais s'en rapprocher.
+\end{lecture}
+
 La fonction $J(\theta)=(\theta-2)^2$ mesure ici la distance quadratique au
 minimum situé en $\theta=2$. À chaque tour, le programme évalue la pente
 $J'(\theta)=2(\theta-2)$, la multiplie par $\alpha$, puis soustrait cette

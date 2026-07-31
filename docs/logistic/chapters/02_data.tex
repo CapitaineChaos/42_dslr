@@ -1,6 +1,15 @@
 \chapter{Données, préparation et protocole expérimental}
 \label{ch:data}
 
+\begin{lecture}
+Les notes du fichier ne sont pas utilisables telles quelles : des cases sont
+vides, et deux colonnes voisines se mesurent parfois sur des échelles sans
+rapport l'une avec l'autre. Trois opérations les rendent calculables --- boucher
+les trous, ramener les colonnes à une échelle commune, ajouter une colonne
+constante --- sous une règle unique : chacune s'apprend sur les seules lignes
+d'apprentissage, puis s'applique inchangée à toutes les autres.
+\end{lecture}
+
 \section{Matrice de design}
 
 \begin{lecture}
@@ -216,7 +225,7 @@ $-180\leftrightarrow-2$, $20\leftrightarrow0$ et $170\leftrightarrow1{,}5$.}
 \label{fig:standardization}
 \end{figure}
 
-\begin{vigilance}[\rsym{fuite}{Fuite de données}]
+\begin{vigilance}[\rsymt{fuite}{Fuite de données}]
 Calculer $\mu_j$, $s_j$, une médiane d'imputation ou choisir des variables à
 partir de l'ensemble complet transmet de l'information du test vers
 l'apprentissage, et rend l'évaluation optimiste. La partition précède donc toute
@@ -267,6 +276,12 @@ seules lignes désignées par $\mathcal I_{\mathrm{tr}}$, puis s'appliquent tell
 quelles aux lignes de $\mathcal I_{\mathrm{te}}$.
 
 \section{Préservation des effectifs par classe}
+
+\begin{lecture}
+Un tirage au sort global peut vider une classe rare de l'un des deux
+sous-ensembles. Stratifier consiste à tirer séparément à l'intérieur de chaque
+classe : les proportions d'origine se retrouvent alors des deux côtés.
+\end{lecture}
 
 Avec $1\,000$ élèves, dont $900$ majoritaires et $100$ dans la classe étudiée,
 une répartition $80\,\%/20\,\%$ affecte séparément $80\,\%$ de chaque classe à

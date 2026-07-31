@@ -7,8 +7,18 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from parse import load_rows
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'V.0_Common'))
+from dataset import Data
+from errors import DataError
+
+
+def load_rows(file_path):
+    try:
+        data = Data(file_path)
+    except DataError as err:
+        print(f"Error: {err}", file=sys.stderr)
+        exit(1)
+    return data.features(), data.courses, data.houses
 
 
 HOUSE_COLORS = {
