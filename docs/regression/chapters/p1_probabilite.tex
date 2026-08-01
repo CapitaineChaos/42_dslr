@@ -1,0 +1,328 @@
+\chapter{Du score à la probabilité}
+\label{ch:probabilite}
+
+\begin{lecture}
+Le score indique de quel côté de la frontière de décision se situe un élève. Il faut en tirer une probabilité. La fonction qui
+opère ce passage est la fonction logistique (ch.~\ref{ch:logit}).
+\end{lecture}
+
+\section{Fonction logistique}
+
+\[
+  \sigma(z)=\frac{1}{1+e^{-z}},
+  \qquad
+  \ann{accent}{z}{\annl{score}\\ \annl{parcourt $\R$}}
+  \;\longmapsto\;
+  \ann{warning}{\sigma(z)}{\annl{probabilité}\\ \annl{dans $\,]0,1[$}}
+\]
+
+Elle prend n'importe quel nombre et rend une valeur strictement comprise entre
+$0$ et $1$. Un score très négatif donne une probabilité proche de zéro, un score
+très positif une probabilité proche de un, et le score nul donne exactement
+$0{,}5$ : sur la frontière, le modèle ne départage pas les deux réponses.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[courseplot,height=6.4cm,axis lines=middle,
+  xlabel={score $z$},ylabel={probabilité $\sigma(z)$},
+  xmin=-6.5,xmax=6.5,ymin=-.12,ymax=1.15,ytick={0,.25,.5,.75,1},
+  samples=200,domain=-6.5:6.5]
+  \addplot[gridgray,thick,dashed,domain=-6.5:6.5]{1};
+  \addplot[accent,very thick]{1/(1+exp(-x))};
+  \addplot[only marks,mark=*,warning,mark size=2.6pt]
+    coordinates {(0,0.5) (1.339,0.7922) (4.706,0.9910) (-4.154,0.0155)};
+  \node[warning,anchor=west,font=\small] at (axis cs:1.6,.74){$0{,}79$};
+  \node[warning,anchor=west,font=\small] at (axis cs:4.9,.93){$0{,}99$};
+  \node[warning,anchor=east,font=\small] at (axis cs:-4.4,.12){$0{,}02$};
+\end{axis}
+\end{tikzpicture}
+\caption{Les trois points marqués sont trois élèves réels du fichier, dont les
+scores sont calculés ci-dessous.}
+\label{fig:sigmoide-emploi}
+\end{figure}
+
+Deux propriétés servent constamment par la suite. La fonction est croissante,
+donc un score plus grand donne toujours une probabilité plus grande : classer par
+score ou par probabilité revient au même. Elle est symétrique autour de $0{,}5$,
+puisque $\sigma(-z)$ vaut exactement $1-\sigma(z)$, si bien que les deux réponses
+jouent des rôles symétriques.
+
+\section{Calcul de la probabilité}
+
+Trois opérations séparent la note brute de la probabilité, et les nombres
+qu'elles emploient viennent de trois endroits différents.
+
+\textbf{Standardiser.} Chaque note est replacée dans l'échelle commune du
+chapitre~\ref{ch:standardisation}, $(v-\mu)/\sigma$. La moyenne et l'écart-type
+sont ceux de sa colonne, mesurés une fois sur le fichier d'entraînement.
+
+\textbf{Calculer le score.} Les deux notes standardisées sont combinées en un
+seul nombre, $z=w_0+w_1x_1+w_2x_2$. Les trois coefficients de cette combinaison
+sont ceux que la descente détermine (ch.~\ref{ch:descente}) ; ils portent tout ce
+que le modèle a appris.
+
+\textbf{Passer par la logistique.} Le score parcourt $\R$, la probabilité tient
+dans $]0,1[$ : $p=\sigma(z)$ opère ce passage. Cette étape est la même pour tous
+les modèles et tous les fichiers, $\sigma$ étant une fonction fixe.
+
+\begin{chiffres}[Constantes du modèle]
+\begin{center}
+\begin{tabular}{lrrl}
+\toprule
+ & \Herb & \Runes & origine \\
+\midrule
+moyenne $\mu$      & $1{,}189$   & $495{,}052$  & le fichier \\
+écart-type $\sigma$ & $5{,}175$   & $105{,}186$  & le fichier \\
+\addlinespace
+coefficient $w_j$  & $-3{,}454$  & $+3{,}469$   & l'entraînement \\
+biais $w_0$        & \multicolumn{2}{c}{$-4{,}745$} & l'entraînement \\
+\bottomrule
+\end{tabular}
+\end{center}
+Les deux coefficients sont de signes opposés et de tailles voisines : une note
+basse en \Herb et une note haute en \Runes poussent toutes deux le score vers
+le haut.
+\end{chiffres}
+
+\begin{figure}[htbp]
+\centering
+\makebox[\textwidth][c]{%
+\begin{tikzpicture}[
+  box/.style={draw=ink!45,rounded corners=2pt,align=center,font=\small,
+    inner sep=6pt,minimum height=13mm,text width=26mm},
+  lab/.style={font=\scriptsize,ink!70,align=center},
+  arr/.style={-{Latex[length=2.2mm]},thick,ink!70}]
+  \node[box,fill=white] (brut) {\Herb $-6{,}497$\\Runes $523{,}982$};
+  \node[box,fill=gridgray!15,right=16mm of brut] (std)
+    {$x_1=-1{,}485$\\$x_2=+0{,}275$};
+  \node[box,fill=accentlight,right=16mm of std] (score) {$z=+1{,}34$};
+  \node[box,fill=accent!25,right=16mm of score] (proba) {$p=0{,}79$};
+  \draw[arr] (brut)--node[lab,above=1mm]{retrancher\\la moyenne,\\diviser par\\l'écart-type}(std);
+  \draw[arr] (std)--node[lab,above=1mm]{multiplier\\par les\\coefficients,\\additionner}(score);
+  \draw[arr] (score)--node[lab,above=1mm]{appliquer\\$\sigma$}(proba);
+  \node[lab,below=2mm of brut]{notes du fichier};
+  \node[lab,below=2mm of std]{notes standardisées};
+  \node[lab,below=2mm of score]{score};
+  \node[lab,below=2mm of proba]{probabilité};
+\end{tikzpicture}}
+\caption{Le trajet complet pour l'élève $3$. Les deux premières étapes dépendent du fichier, la troisième des coefficients
+appris, la quatrième est la même fonction pour tous.}
+\label{fig:trajet}
+\end{figure}
+\FloatBarrier
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{llrrrrrr}
+\toprule
+élève & maison réelle & \textcolor{herbo}{Herbo.} & $x_1$ & \textcolor{runes}{A.\ Runes} & $x_2$ & $z$ & $p$ \\
+\midrule
+$3$ & \Gryf & $-6{,}497$ & $-1{,}485$ & $523{,}982$ & $+0{,}275$ & $+1{,}34$ & $0{,}792$ \\
+$4$ & \Gryf & $-7{,}82$ & $-1{,}741$ & $599{,}33$ & $+0{,}991$ & $+4{,}71$ & $0{,}991$ \\
+$1$ & \Slyth  & $-5{,}99$ & $-1{,}387$ & $367{,}76$ & $-1{,}210$ & $-4{,}15$ & $0{,}016$ \\
+$0$ & \Rav  & $+5{,}73$ & $+0{,}877$ & $532{,}48$ & $+0{,}356$ & $-6{,}54$ & $0{,}001$ \\
+\bottomrule
+\end{tabular}
+\caption{Quatre élèves du fichier, de la note brute à la probabilité d'être
+\Gryf.}
+\label{tab:trois-eleves}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[font=\small,x=0.85cm]
+% Contributions signees au score de l'eleve 3, 1 unite = 1 cm.
+\draw[ink!30] (0,-0.5) -- (0,3.6);
+\node[font=\scriptsize,text=ink!70,anchor=south] at (0,3.62) {$0$};
+\foreach \y/\lab/\val/\col in {%
+  3.0/{$w_0\cdot 1=-4{,}745$}/-4.745/warning,
+  2.0/{$w_1x_1=+5{,}129$}/5.129/accent,
+  1.0/{$w_2x_2=+0{,}954$}/0.954/accent}{
+  \fill[\col!65] (0,\y-0.22) rectangle (\val,\y+0.22);
+  \node[font=\footnotesize,text=ink,anchor=west] at (5.6,\y) {\lab};
+}
+\draw[ink!30,dashed] (0,0.6) -- (0,0.2);
+\fill[ink] (0,0.2) rectangle (1.338,-0.2);
+\node[font=\footnotesize,text=ink,anchor=west] at (5.6,0) {$z=+1{,}34$};
+\foreach \x in {-6,-4,-2,2,4}{
+  \draw[ink!25] (\x,-0.45) -- (\x,-0.55);
+  \node[font=\scriptsize,text=ink!70,anchor=north] at (\x,-0.55) {$\x$};
+}
+\draw[ink!40] (-6.4,-0.5) -- (5.4,-0.5);
+\end{tikzpicture}
+\caption{Les trois termes du score de l'élève $3$, à l'échelle. Le biais tire
+vers les autres maisons, les deux notes tirent vers \Gryf, et la somme reste
+faible : $+1{,}34$ pour des contributions individuelles de l'ordre de $5$.}
+\label{fig:contributions}
+\end{figure}
+\FloatBarrier
+
+\begin{releve}
+Ses notes standardisées valent $x_1=-1{,}485$ et $x_2=+0{,}275$, d'où
+\[
+  z=-4{,}745+(-3{,}454)\times(-1{,}485)+3{,}469\times0{,}275=+1{,}34,
+  \qquad
+  p=\frac{1}{1+e^{-1{,}34}}=0{,}792 .
+\]
+\end{releve}
+
+Chaque terme du score est un produit de deux nombres signés, et son signe fixe le
+sens de sa contribution : un terme positif rapproche l'élève de \Gryf, un terme
+négatif l'en éloigne. Le signe du coefficient est une propriété
+de la matière, fixée par l'entraînement pour tous les élèves ; celui de la note
+standardisée dit seulement si cet élève-ci est au-dessus ou en dessous de la
+moyenne de sa promotion. La règle des signes combine les deux.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[font=\small,
+  box/.style={draw=ink!25,minimum width=44mm,minimum height=13mm,
+    align=center,font=\footnotesize,rounded corners=1pt},
+  head/.style={font=\footnotesize\bfseries,text=ink,align=center}]
+\node[head] at (0,1.15) {note sous la moyenne\\[-1pt] \normalfont$x<0$};
+\node[head] at (4.8,1.15) {note au-dessus\\[-1pt] \normalfont$x>0$};
+\node[head,anchor=east,align=right] at (-2.55,0)
+  {coefficient\\[-1pt] négatif\\[-1pt] \normalfont$w<0$};
+\node[head,anchor=east,align=right] at (-2.55,-1.75)
+  {coefficient\\[-1pt] positif\\[-1pt] \normalfont$w>0$};
+
+\node[box,fill=gryff!10,text=gryff] at (0,0)
+  {$w\,x>0$\\[1pt] contribue vers \Gryf};
+\node[box,fill=huffle!8,text=huffle] at (4.8,0)
+  {$w\,x<0$\\[1pt] contribue vers les autres};
+\node[box,fill=huffle!8,text=huffle] at (0,-1.75)
+  {$w\,x<0$\\[1pt] contribue vers les autres};
+\node[box,fill=gryff!10,text=gryff] at (4.8,-1.75)
+  {$w\,x>0$\\[1pt] contribue vers \Gryf};
+
+\node[font=\scriptsize,text=herbo,anchor=west] at (2.75,0)
+  {\Herb};
+\node[font=\scriptsize,text=runes,anchor=west] at (2.75,-1.75)
+  {\Runes};
+\end{tikzpicture}
+\caption{Le sens de la contribution d'une matière, selon le signe de son
+coefficient et la position de la note. Sur ce modèle, \Herb a un coefficient
+négatif et \Runes un coefficient positif : la première ligne décrit donc le
+comportement d'\Herb, la seconde celui d'\Runes.}
+\label{fig:regle-signes}
+\end{figure}
+\FloatBarrier
+
+Le biais entre dans le score tel quel, sans facteur : sa contribution est la même
+pour tous les élèves, ici vers les autres maisons. Un
+élève est donc classé \Gryf lorsque les poussées de ses deux notes l'emportent
+sur celle du biais.
+
+L'élève $3$ illustre la première ligne du tableau : sa note d'\Herb est basse, le
+coefficient est négatif, leur produit contribue en faveur de \Gryf. Sa note
+d'\Runes, légèrement au-dessus de la moyenne, contribue dans le même sens par la
+seconde ligne. Les deux contributions l'emportent de peu sur le biais, d'où un
+score de $+1{,}34$ et une probabilité de $0{,}79$ : l'élève se tient du côté
+attendu, près de la frontière. L'élève $4$ cumule une note d'\Herb très basse et une note
+d'\Runes élevée : les mêmes deux lignes jouent, avec des notes plus marquées, et
+le score atteint $+4{,}71$ pour une probabilité de $0{,}99$.
+
+\section{Règle de décision}
+
+La sigmoïde rend une probabilité, et annoncer une maison demande une réponse. Un
+\emph{seuil} fait la conversion : au-dessus, le modèle annonce \Gryf ; en
+dessous, une autre maison. On adopte ici $s=0{,}5$, ce qui revient à compter les
+deux erreurs au même prix.
+
+Le seuil se fixe après l'entraînement, qui détermine les coefficients et avec eux
+les probabilités. Or les mêmes probabilités, lues avec deux seuils, donnent deux
+classements.
+
+Sur $0{,}5$, la comparaison se ramène au signe du score,
+\[
+  p\geq0{,}5 \iff z\geq0 \iff \text{l'élève est du côté \Gryf de la frontière},
+\]
+les trois formulations étant équivalentes puisque $\sigma$ est croissante et vaut
+$0{,}5$ en zéro. Le programme peut donc s'en tenir aux scores lorsque seule la
+maison intéresse, et calculer les probabilités uniquement pour les afficher.
+
+Déplacer le seuil échange une erreur contre l'autre, car les deux erreurs
+possibles portent sur des élèves distincts. Un \Gryf dont la probabilité tombe
+sous le seuil est manqué. Un élève d'une autre maison dont la probabilité le
+dépasse est désigné à tort. Monter le seuil rend la désignation plus exigeante :
+les élèves désignés à tort se raréfient, les \Gryf manqués se multiplient. Le
+descendre produit l'effet inverse. Toute position en laisse des deux sortes, et
+choisir un seuil revient à choisir laquelle des deux on préfère commettre.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/seuil.png}
+\caption{Les deux panneaux partagent le même axe horizontal, si bien qu'une position de
+seuil se lit sur l'un et sur l'autre. En haut, les probabilités
+rendues par le modèle, séparées selon la maison réelle ; l'échelle verticale est
+logarithmique, les deux groupes étant de tailles très inégales, et les barres hachurées sont les élèves qu'un seuil de $0{,}5$ classe mal. En bas, ce que
+devient chaque erreur quand le seuil se déplace : les deux courbes vont en sens
+contraire et leur somme passe par un minimum, marqué d'un cercle.}
+\label{fig:seuil}
+\end{figure}
+\FloatBarrier
+
+Un seuil $s$ quelconque revient de même à comparer le score au logit de $s$, donc
+à tracer la droite $z=\operatorname{logit}(s)$, parallèle à celle de $0{,}5$.
+Changer le seuil translate la frontière sans la faire pivoter, ce qui revient à
+déplacer le seul biais $w_0$ (ch.~\ref{ch:nuage}).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/seuil_plan.png}
+\caption{Les mêmes élèves qu'au chapitre~\ref{ch:standardisation}, avec les trois
+droites correspondant aux seuils $0{,}3$, $0{,}5$ et $0{,}7$. Elles ont la même
+direction et se suivent de près : l'agrandissement montre les quelques élèves qui
+changent de réponse d'une droite à l'autre.}
+\label{fig:seuil-plan}
+\end{figure}
+\FloatBarrier
+
+\begin{releve}
+Les trois seuils reviennent aux biais $-3{,}898$, $-4{,}745$ et $-5{,}593$, soit
+des droites distantes de $0{,}17$ écart-type.
+\end{releve}
+
+\begin{chiffres}[Erreurs selon le seuil]
+\begin{center}
+\begin{tabular}{crrrl}
+\toprule
+seuil & \Gryf manqués & désignés à tort & total & \\
+\midrule
+$0{,}30$ & $22$ & $33$ & $55$ & \\
+$0{,}50$ & $24$ & $12$ & $36$ & seuil retenu \\
+$0{,}58$ & $24$ & $7$  & $31$ & minimum sur ce fichier \\
+$0{,}70$ & $27$ & $4$  & $31$ & \\
+\bottomrule
+\end{tabular}
+\end{center}
+Le minimum tombe un peu au-dessus de $0{,}5$ parce que les deux groupes sont de
+tailles inégales : $327$ \Gryf contre $1\,273$ autres élèves. Une même
+proportion du grand groupe qui franchit le seuil fournit davantage d'erreurs que
+la même proportion du petit, si bien qu'un seuil un peu plus exigeant réduit le
+total. Le programme garde $0{,}5$. Cette valeur vient d'une décision, la même pour tout
+fichier ; $0{,}58$ est mesuré sur celui-ci et changerait avec lui.
+\end{chiffres}
+
+
+Un seuil franchement différent se justifie lorsque les deux erreurs coûtent des
+prix différents. Recenser tous les \Gryf quitte à en désigner quelques-uns de
+trop conduit à l'abaisser ; ne désigner que des cas sûrs conduit à l'élever. Ce
+choix relève de l'usage fait des prédictions, que les données seules laissent
+ouvert.
+
+Un seuil tranche entre deux réponses. Le classifieur à quatre maisons compare
+quatre scores et retient le plus grand, l'ordre suffisant à trancher
+(ch.~\ref{ch:classifieur}). La valeur $0{,}5$ garde en revanche partout son autre
+rôle, celui de la probabilité que rend $\sigma$ en zéro, qui situe la frontière
+et donne le coût de départ.
+
+\begin{resultat}[Apport de la probabilité]
+Deux élèves rangés dans la même maison peuvent l'être avec des assurances très
+différentes. La probabilité chiffre cette assurance là où la décision les
+confond, et c'est cette quantité continue qui permettra, au chapitre suivant, de
+mesurer de combien la frontière est mal placée.
+\end{resultat}

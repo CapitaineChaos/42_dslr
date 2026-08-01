@@ -1,0 +1,317 @@
+\chapter{Coût, mesure de l'erreur}
+\label{ch:erreur}
+
+\begin{lecture}
+Déplacer la frontière par le calcul suppose de savoir si elle est mal placée, et de
+combien. Un seul nombre doit résumer les mille six cents prédictions. Ce nombre
+est le coût, et il ne dépend que d'une quantité : la probabilité que le modèle
+accordait à la réponse observée.
+\end{lecture}
+
+\section{Coût d'un élève}
+
+Le fichier donne l'élève $3$ pour \Gryf, et le modèle lui accordait
+$0{,}79$. Cette probabilité est la quantité à évaluer : plus elle est proche de
+$1$, plus la prédiction est correcte.
+
+L'élève $1$ est \Slyth, et le modèle annonçait $0{,}016$ de probabilité
+d'être \Gryf, donc $0{,}984$ de ne pas l'être. C'est cette seconde valeur
+qui entre dans le calcul.
+
+Le coût d'un élève est l'opposé du logarithme de cette probabilité. La fonction ainsi obtenue s'appelle l'\emph{entropie croisée binaire} : elle
+croise deux distributions sur les deux réponses possibles, celle qu'observe le
+fichier et celle qu'annonce le modèle, et mesure ce que la seconde coûte lorsque
+la première est vraie. Son autre nom, log-vraisemblance négative, vient de sa
+construction (ch.~\ref{ch:cout}).
+\[
+  \ell=-\log(\text{probabilité accordée à la bonne réponse}).
+\]
+Le logarithme transforme un produit en somme, ce qui est nécessaire pour agréger
+mille six cents élèves : le produit d'autant de facteurs inférieurs à $1$ passe
+sous le plus petit flottant représentable.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{llrrr}
+\toprule
+élève & maison réelle & $p$ (\Gryf) & prob.\ de la vérité & coût \\
+\midrule
+$3$ & \Gryf & $0{,}792$ & $0{,}792$ & $0{,}233$ \\
+$4$ & \Gryf & $0{,}991$ & $0{,}991$ & $0{,}009$ \\
+$1$ & \Slyth  & $0{,}016$ & $0{,}984$ & $0{,}016$ \\
+$0$ & \Rav  & $0{,}001$ & $0{,}999$ & $0{,}001$ \\
+\bottomrule
+\end{tabular}
+\caption{Les quatre élèves du chapitre précédent. Aucun n'est mal classé, donc
+tous les coûts sont faibles ; le plus élevé est celui de l'élève $3$, le cas
+limite.}
+\label{tab:cout-eleves}
+\end{table}
+
+Une prédiction correcte assortie d'une probabilité élevée coûte presque zéro. Une prédiction fausse assortie de la
+même probabilité coûte d'autant plus que celle-ci est élevée, et sans borne
+supérieure : le modèle ne peut donc pas maintenir une prédiction fausse avec une
+forte probabilité.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[courseplot,height=6cm,axis lines=left,
+  xlabel={probabilité accordée à la bonne réponse},ylabel={coût},
+  xmin=0,xmax=1,ymin=0,ymax=5,samples=250,domain=.008:1]
+  \addplot[accent,very thick]{-ln(x)};
+  \addplot[only marks,mark=*,warning,mark size=2.4pt]
+    coordinates {(0.792,0.233) (0.5,0.693) (0.1,2.303)};
+  \node[warning,anchor=south west,font=\small] at (axis cs:.5,.78){$\log 2=0{,}693$};
+  \node[warning,anchor=west,font=\small] at (axis cs:.1,2.5){$p=0{,}1$};
+\end{axis}
+\end{tikzpicture}
+\caption{Le coût d'un seul élève. Il vaut $\log 2$ en $0{,}5$, tend vers zéro à
+droite et croît sans borne à gauche.}
+\label{fig:cout-un}
+\end{figure}
+\FloatBarrier
+
+\section{Coût moyen sur le fichier}
+
+Le coût précédent juge une prédiction. Placer la frontière demande de juger un
+modèle, c'est-à-dire les mille six cents prédictions qu'il produit, et de le
+comparer à un autre modèle. Mille six cents coûts individuels ne se comparent pas : déplacer la frontière
+améliore en effet les uns et dégrade les autres, et deux modèles se retrouvent
+meilleurs chacun sur une partie du fichier. Le calcul a
+besoin d'une quantité unique, qui tranche.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[font=\footnotesize,
+  row/.style={anchor=base,font=\footnotesize},
+  val/.style={anchor=base east,font=\footnotesize}]
+\node[row,font=\scriptsize\bfseries] at (0,0.75) {élève};
+\node[val,font=\scriptsize\bfseries] at (2.5,0.75) {$y_i$};
+\node[val,font=\scriptsize\bfseries] at (4.0,0.75) {$p_i$};
+\node[val,font=\scriptsize\bfseries] at (6.0,0.75) {coût $\ell_i$};
+\draw[ink!30] (-0.3,0.55) -- (6.2,0.55);
+\foreach \k/\e/\y/\p/\c in {0/3/1/0{,}792/0{,}233, 1/4/1/0{,}991/0{,}009,
+                            2/1/0/0{,}016/0{,}016, 3/0/0/0{,}001/0{,}001}{
+  \node[row] at (0,-0.52*\k) {$\e$};
+  \node[val] at (2.5,-0.52*\k) {$\y$};
+  \node[val] at (4.0,-0.52*\k) {$\p$};
+  \node[val] at (6.0,-0.52*\k) {$\c$};
+}
+\node[row,text=ink!60] at (0,-2.14) {$\vdots$};
+\node[val,text=ink!60] at (6.0,-2.14) {$\vdots$};
+\node[row,text=ink!70,font=\scriptsize] at (0.35,-2.66) {$1\,600$ lignes};
+\draw[decorate,decoration={brace,amplitude=5pt},ink!45]
+  (6.45,0.35) -- (6.45,-2.8);
+\node[anchor=west,font=\small] at (7.0,-1.2)
+  {$J=\dfrac{1}{m}\displaystyle\sum_{i=1}^{m}\ell_i=0{,}108$};
+\end{tikzpicture}
+\caption{Les quatre élèves du tableau~\ref{tab:cout-eleves}, suivis des mille cinq
+cent quatre-vingt-seize autres. Chacun reçoit son propre coût, et la moyenne les
+réduit à un seul nombre : celui que la descente fait baisser, et le seul qui
+permette de comparer deux jeux de coefficients.}
+\label{fig:agregation}
+\end{figure}
+\FloatBarrier
+
+La moyenne remplit cet office, et le fait mieux que la somme : celle-ci croît
+avec le nombre d'élèves, si bien que le même modèle afficherait un coût dix fois
+plus grand sur un fichier dix fois plus long. Divisée par $m$, la valeur reste
+comparable d'un fichier à l'autre --- entre l'entraînement et le test, notamment
+--- et la longueur du pas de la descente conserve le même sens quel que soit le
+nombre d'élèves.
+
+En notant $y_i$ la réponse, valant $1$ pour un \Gryf et $0$ sinon, et $p_i$ la
+probabilité annoncée :
+\[
+  J=-\ann{rulecolor}{\frac{1}{m}\sum_{i=1}^{m}}{\annl{moyenne sur}\\ \annl{les élèves}}
+    \Bigl[\ann{accent}{y_i\log p_i}{\annl{seul terme retenu}\\ \annl{si $y_i=1$}}
+    +\ann{warning}{(1-y_i)\log(1-p_i)}{\annl{seul terme retenu}\\ \annl{si $y_i=0$}}\Bigr]
+\]
+
+Un seul des deux termes agit pour chaque élève. Pour un \Gryf, $y_i=1$ : le
+second s'annule et il reste $-\log p_i$. Pour un élève d'une autre maison,
+$y_i=0$ : le premier s'annule et il reste $-\log(1-p_i)$. Le facteur $y_i$ joue ainsi le rôle d'un interrupteur, et cette écriture en une seule ligne remplace un
+branchement, ce qui la rend dérivable d'un bout à l'autre --- propriété dont le
+chapitre suivant a besoin.
+
+\begin{resultat}[Coût au point de départ]
+Si tous les coefficients valent zéro, tous les scores valent zéro, donc toutes
+les probabilités valent $0{,}5$. Chaque élève coûte alors $-\log(0{,}5)$, et la
+moyenne aussi :
+\[
+  J=\log 2=0{,}693147 .
+\]
+C'est la première valeur qu'affiche n'importe quel entraînement partant de zéro.
+Une autre valeur situe l'erreur dans le calcul du score ou dans
+l'initialisation.
+\end{resultat}
+
+Reste à dire ce qu'on fait de ce nombre. Il dépend des coefficients, seule chose
+qui varie une fois le fichier fixé : les probabilités $p_i$ viennent des scores,
+les scores viennent des coefficients. Déplacer la frontière change les mille six cents probabilités, partant les mille
+six cents coûts, et avec eux leur moyenne. Le coût
+s'écrit ainsi comme une fonction des trois coefficients, et se note $J(w)$.
+
+Cette dépendance transforme la question de départ. Placer une frontière dans un
+nuage de points est un problème de géométrie, sans procédé de résolution évident.
+Chercher les trois nombres qui rendent $J(w)$ le plus petit possible est un
+problème de minimisation d'une fonction de trois variables, pour lequel il existe
+des méthodes. Les deux questions ont la même réponse, et c'est la seconde que le
+programme résout.
+
+\begin{resultat}[Formulation du problème]
+\[
+  \underbrace{\text{où placer la frontière ?}}_{\text{géométrie}}
+  \qquad\longrightarrow\qquad
+  \underbrace{\text{quel } w \text{ minimise } J(w)\text{ ?}}_{\text{calcul}}
+\]
+\end{resultat}
+
+La surface que définit $J(w)$ au-dessus des couples de coefficients possibles
+apparaît à la figure~\ref{fig:surface} ; la méthode consiste à en suivre la pente
+vers le bas.
+
+Deux questions restent ouvertes sur cette moyenne, et les deux sections suivantes
+les traitent : ce qu'elle recouvre, mille six cents coûts pouvant se répartir
+très différemment pour une même valeur, et ce qui la rend préférable au comptage
+des élèves bien classés.
+
+\section{Répartition du coût}
+
+Le coût moyen final vaut $0{,}108$, et cette valeur agrège mille six cents
+nombres très inégaux entre eux. L'inégalité tient à la forme du coût individuel.
+Un élève bien classé et loin de la frontière reçoit une probabilité proche de
+$1$, dont le logarithme est proche de zéro : sa contribution s'éteint. Un élève
+du mauvais côté reçoit une probabilité d'autant plus petite qu'il en est loin, et
+$-\log p$ croît alors sans borne. La moyenne se trouve portée par les quelques élèves que le modèle place du mauvais côté avec assurance.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[cloud,height=8cm,
+  xlabel={\Herb, en écarts-types},ylabel={\Runes, en écarts-types},
+  xmin=-2.8,xmax=2.8,ymin=-2.8,ymax=2.8,
+  colorbar,colorbar style={ylabel={coût de l'élève},font=\small},
+  colormap={cout}{color=(gridgray!45) color=(warning!60) color=(warning)},
+  point meta min=0,point meta max=3,legend style={draw=none}]
+  \addplot[scatter,only marks,mark size=1.5pt,scatter src=explicit,opacity=.85]
+    table[x=x,y=y,meta=cost] {data/cout_eleves.dat};
+  \addplot[ink,very thick,domain=-2.8:2.8]{(4.7454+3.4535*x)/3.4688};
+\end{axis}
+\end{tikzpicture}
+\caption{Chaque élève, coloré par son coût dans le modèle final. La quasi-totalité
+du nuage est grise, ces élèves contribuant de façon négligeable. Seuls quelques
+points, tous situés du côté opposé à leur maison, portent une couleur.}
+\label{fig:cout-nuage}
+\end{figure}
+\FloatBarrier
+
+\begin{chiffres}[Concentration du coût]
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+part du coût portée par les $2\,\%$ les plus coûteux & $60{,}5\,\%$ \\
+coût de l'élève le plus coûteux & $11{,}1$ \\
+coût moyen & $0{,}108$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+Cet élève est un \Gryf dont la note d'\Herb dépasse la moyenne et dont celle
+d'\Runes lui est inférieure : il se tient là où le modèle attend les trois
+autres maisons.
+\end{chiffres}
+
+\begin{resultat}[Conséquence sur l'entraînement]
+Le coût, et donc la correction qui en découle, dépend principalement d'un petit
+nombre d'élèves atypiques. Déplacer la frontière pour reclasser ces quelques points
+fait baisser $J$ davantage qu'augmenter la probabilité accordée aux mille cinq
+cents autres. De là vient sa sensibilité aux valeurs aberrantes, ce qui impose
+d'examiner les élèves mal classés et pas seulement la moyenne.
+\end{resultat}
+
+\section{Comptage et coût}
+
+Savoir si une frontière est bien placée admet deux réponses. Compter les élèves
+du bon côté est la plus directe : le résultat est un nombre entier, qui se lit
+sans convention. Faire la moyenne des coûts individuels donne un nombre réel,
+dont la valeur ne s'interprète pas seule. C'est pourtant la seconde qui sert à
+l'entraînement, et la raison tient à la manière dont chacune réagit lorsque la
+frontière se déplace.
+
+Le comptage change par sauts. Tant que la frontière se déplace sans que personne
+ne la traverse, il garde en effet la même valeur, et il saute d'une unité à
+l'instant où un élève passe de l'autre côté. Sur tout l'intervalle qui sépare
+deux sauts, il rend la même réponse pour des frontières différentes, et un
+calcul qui chercherait à l'améliorer recevrait partout la même information.
+
+Le coût répond à tout déplacement. Chaque élève y contribue par la probabilité
+que le modèle lui accorde, et cette probabilité change dès que la frontière
+bouge, fût-ce d'un millième d'écart-type. La moyenne bouge elle aussi, et le
+sens dans lequel elle bouge désigne le sens du déplacement à faire.
+
+Trois jeux de coefficients, mesurés sur les mêmes $1\,600$ élèves, donnent à voir
+cette différence.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lccc}
+\toprule
+coefficients & frontière & élèves bien classés & coût $J$ \\
+\midrule
+$w$ au $50^{\text{e}}$ tour    & \multicolumn{1}{c}{---}        & $1\,563$ & $0{,}1438$ \\
+$w$ au $400^{\text{e}}$ tour   & voisine de la précédente       & $1\,564$ & $0{,}1081$ \\
+$1{,}5\,w$ au $400^{\text{e}}$ & identique à la précédente      & $1\,564$ & $0{,}1155$ \\
+\bottomrule
+\end{tabular}
+\caption{Les deux premières lignes séparent presque les mêmes élèves ; la
+troisième multiplie les coefficients par $1{,}5$, ce qui laisse la frontière
+exactement où elle est.}
+\label{tab:comparaison}
+\end{table}
+
+Les deux premières lignes portent des frontières voisines, que le comptage
+sépare d'une unité et le coût d'un quart de sa valeur : trois cent cinquante
+tours de travail apparaissent dans une seule des deux mesures. La troisième garde
+la frontière exactement où elle était, en multipliant les trois coefficients par
+un même facteur --- $w$ et $\lambda w$ s'annulent aux mêmes points. Les mêmes
+élèves sont du bon côté, le comptage rend le même nombre, et le coût distingue
+pourtant les deux modèles : l'écartement des probabilités profite peu aux élèves
+déjà bien classés et pénalise lourdement les trente-six autres.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=.80\textwidth,height=6.4cm,
+  axis lines=left,axis line style={ink!40},
+  grid=major,grid style={gridgray!30},
+  tick label style={font=\small},label style={font=\small},
+  xlabel={biais $w_0$},ylabel={coût $J$},
+  xmin=-6.5,xmax=-2.6,ymin=0.10,ymax=0.23,
+  axis y line*=left]
+  \addplot[accent,very thick,no markers]
+    table[x=w0,y=cost] {data/comparaison.dat};
+\end{axis}
+\begin{axis}[width=.80\textwidth,height=6.4cm,
+  axis lines=right,axis line style={warning!50},
+  tick label style={font=\small,text=warning},
+  label style={font=\small,text=warning},
+  ylabel={élèves mal classés},
+  xmin=-6.5,xmax=-2.6,ymin=25,ymax=150,
+  axis x line=none,axis y line*=right]
+  \addplot[warning,thick,no markers,const plot]
+    table[x=w0,y=wrong] {data/comparaison.dat};
+\end{axis}
+\end{tikzpicture}
+\caption{Les deux mesures le long d'un déplacement du biais, les deux autres
+coefficients restant à leur valeur finale. Le nombre de mal classés progresse par
+paliers --- $68$ valeurs distinctes sur les $161$ positions essayées --- et reste
+plat sur des intervalles entiers : aucune correction ne s'en déduit. Le coût
+varie à chaque déplacement, ce qui permet d'en tirer une direction. Les deux minima tombent à des endroits différents : le coût est le plus bas en $w_0=-4{,}80$, les erreurs les moins nombreuses en $w_0=-5{,}68$.}
+\label{fig:deux-mesures}
+\end{figure}
+\FloatBarrier
+
+C'est cette sensibilité que le chapitre suivant exploite : une quantité qui
+répond à tout déplacement, si petit soit-il, se dérive, et sa dérivée indique
+dans quel sens déplacer les coefficients.

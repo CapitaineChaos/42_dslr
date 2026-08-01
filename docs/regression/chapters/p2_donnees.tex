@@ -1,0 +1,266 @@
+\chapter{Du score au coût}
+\label{ch:donnees}
+
+\begin{lecture}
+Le modèle est établi ; il reste à l'écrire, en Python et sans bibliothèque de
+calcul. Quatre étapes mènent du score d'un seul élève au coût moyen sur les mille six
+cents, chacune vérifiable par un nombre connu d'avance.
+\end{lecture}
+
+Le programme se répartit en neuf fichiers exécutables l'un après l'autre. Chacun
+importe le précédent, ajoute une fonction, et affiche un nombre qui se contrôle
+avant de passer au suivant.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  file/.style={draw=ink!30,rounded corners=2pt,font=\ttfamily\scriptsize,
+    text width=40mm,align=left,inner xsep=5pt,inner ysep=3.4pt},
+  what/.style={font=\small,text=ink,anchor=west},
+  band/.style={rotate=90,font=\scriptsize\bfseries,align=center}]
+
+\node[file,fill=accentlight] (f1) {step1\_score.py};
+\node[file,fill=accentlight,below=2.4mm of f1] (f2) {step2\_sigmoid.py};
+\node[file,fill=accentlight,below=2.4mm of f2] (f3) {step3\_single\_cost.py};
+\node[file,fill=accentlight,below=2.4mm of f3] (f4) {step4\_total\_cost.py};
+\node[file,fill=rulelight,below=2.4mm of f4] (f5) {step5\_gradient.py};
+\node[file,fill=rulelight,below=2.4mm of f5] (f6) {step6\_one\_step.py};
+\node[file,fill=rulelight,below=2.4mm of f6] (f7) {step7\_loop.py};
+\node[file,fill=warninglight,below=2.4mm of f7] (f8) {step8\_four\_houses.py};
+\node[file,fill=warninglight,below=2.4mm of f8] (f9) {step9\_holdout.py};
+
+\node[what,right=4mm of f1] {le score d'un élève};
+\node[what,right=4mm of f2] {la sigmoïde, écrite pour ne pas déborder};
+\node[what,right=4mm of f3] {le coût d'une prédiction};
+\node[what,right=4mm of f4] {la lecture du fichier, le coût moyen};
+\node[what,right=4mm of f5] {la pente, et sa vérification par mesure};
+\node[what,right=4mm of f6] {un pas de descente};
+\node[what,right=4mm of f7] {la boucle et ses deux arrêts};
+\node[what,right=4mm of f8] {quatre descentes, le plus grand score};
+\node[what,right=4mm of f9] {l'exactitude hors des élèves appris};
+
+\fill[accent!16,rounded corners=1.5pt]
+  ($(f1.north west)+(-9mm,0)$) rectangle ($(f4.south west)+(-4mm,0)$);
+\fill[rulecolor!16,rounded corners=1.5pt]
+  ($(f5.north west)+(-9mm,0)$) rectangle ($(f7.south west)+(-4mm,0)$);
+\fill[warning!16,rounded corners=1.5pt]
+  ($(f8.north west)+(-9mm,0)$) rectangle ($(f9.south west)+(-4mm,0)$);
+\node[band,text=accent]
+  at ($(f1.north west)!0.5!(f4.south west)+(-6.5mm,0)$) {le coût};
+\node[band,text=rulecolor]
+  at ($(f5.north west)!0.5!(f7.south west)+(-6.5mm,0)$) {la descente};
+\node[band,text=warning]
+  at ($(f8.north west)!0.5!(f9.south west)+(-6.5mm,0)$) {les maisons};
+\end{tikzpicture}
+\caption{Les cinq derniers fichiers importent tous \texttt{step4}, dont
+\texttt{load} et \texttt{total\_cost} servent jusqu'à la dernière étape.}
+\label{fig:montage}
+\end{figure}
+\FloatBarrier
+
+\section{Étape 1 : le score d'un élève}
+
+Le score est une somme de trois produits. Les deux notes arrivent déjà
+standardisées, opération traitée à l'étape~4, et les trois coefficients valent
+zéro.
+
+\codefile{scripts/tuto/step1_score.py}
+
+\begin{console}
+score: 0.0
+\end{console}
+
+Le $1{,}0$ en tête de \texttt{x} vaut $1$ pour tous les élèves : c'est la colonne
+du biais, qui fait entrer \texttt{weights[0]} dans la somme sans le multiplier par
+une donnée. Sans elle, chaque formule ultérieure devrait traiter
+\texttt{weights[0]} à part, y compris celle de la pente.
+
+Des coefficients nuls donnent un score nul pour n'importe quel élève. La sortie
+ne contrôle donc que la mécanique de la somme.
+
+\section{Étape 2 : du score à la probabilité}
+
+Le score parcourt tout $\R$, la probabilité doit tomber entre $0$ et $1$. La
+fonction logistique opère ce passage (ch.~\ref{ch:logit}).
+
+\codefile[firstline=4,lastline=7]{scripts/tuto/step2_sigmoid.py}
+
+Les deux branches calculent la même valeur et diffèrent par le seul exposant
+employé. En double précision, $e^{u}$ dépasse le plus grand flottant
+représentable dès $u>709{,}78$ : l'écriture $1/(1+e^{-z})$ échoue donc pour tout
+score inférieur à $-710$, alors que la valeur cherchée est simplement $0$.
+Multiplier haut et bas par $e^{z}$ donne $e^{z}/(1+e^{z})$, dont l'exposant reste
+négatif de ce côté : $e^{-800}$ passe sous le plus petit flottant, vaut $0$ sans
+lever d'exception, et le quotient rend $0$.
+
+\begin{console}
+sigmoid(0)    = 0.5
+sigmoid(2)    = 0.8808
+sigmoid(-800) = 0.0
+single branch : OverflowError, math range error
+\end{console}
+
+La dernière ligne exécute l'écriture à une seule branche sur le même nombre. Un
+score de $-800$ apparaît dès qu'un coefficient diverge
+(ch.~\ref{ch:convexite}).
+
+\begin{vigilance}[Contrôle en zéro]
+$\sigma(0)$ vaut $0{,}5$ exactement. Une fonction qui rend autre chose en zéro
+est fausse, et tout ce qui la suit le sera.
+\end{vigilance}
+
+\section{Étape 3 : le coût d'une prédiction}
+
+Le modèle annonce une probabilité, le fichier donne la réponse observée. Le coût
+mesure l'écart entre les deux.
+
+\codefile[firstline=5,lastline=8]{scripts/tuto/step3_single_cost.py}
+
+Les deux termes ne servent jamais ensemble : \texttt{expected} annule l'un et
+conserve l'autre.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  case/.style={rounded corners=2.5pt,inner sep=7pt,align=center,font=\small,
+    text width=66mm},
+  tag/.style={font=\footnotesize\bfseries,anchor=south},
+  note/.style={font=\footnotesize,text=ink,align=center,text width=66mm}]
+\node[case,fill=accentlight,draw=accent!55] (a)
+  {$-\bigl[\,{\color{accent}1\cdot\log p}\;+\;{\color{ink!22}0\cdot\log(1-p)}\,\bigr]$};
+\node[case,fill=warninglight,draw=warning!55,right=4mm of a] (b)
+  {$-\bigl[\,{\color{ink!22}0\cdot\log p}\;+\;{\color{warning}1\cdot\log(1-p)}\,\bigr]$};
+\node[tag,text=accent,above=1.2mm of a] {\texttt{expected = 1.0}};
+\node[tag,text=warning,above=1.2mm of b] {\texttt{expected = 0.0}};
+\node[note,below=1.2mm of a] {l'élève est dans la maison\\ le coût vaut $-\log p$};
+\node[note,below=1.2mm of b] {l'élève est ailleurs\\ le coût vaut $-\log(1-p)$};
+\end{tikzpicture}
+\caption{Le facteur nul annule son terme avant que le logarithme ne soit
+évalué ; aucune des deux branches ne calcule $\log 0$ tant que $p$ reste
+strictement entre $0$ et $1$, ce que garantit la sigmoïde.}
+\label{fig:deux-cas}
+\end{figure}
+\FloatBarrier
+
+\begin{console}
+no opinion, student inside the house  : 0.693147
+no opinion, student outside           : 0.693147
+confident and right                   : 0.002476
+confident and wrong                   : 6.002476
+log(2) = 0.693147
+\end{console}
+
+Les deux premières lignes correspondent à $z=0$, donc $p=0{,}5$ : le coût vaut
+$\log 2$ quelle que soit la réponse attendue, puisque les deux termes sont alors
+symétriques. Les deux suivantes correspondent à $z=6$, donc $p=0{,}9975$. Cette
+probabilité coûte $0{,}0025$ lorsqu'elle porte sur la réponse observée et
+$6{,}0025$ lorsqu'elle porte sur l'autre : pour une prédiction fausse assortie
+d'un score élevé, le coût croît comme $|z|$, sans borne supérieure.
+
+\section{Étape 4 : le coût moyen}
+
+Deux traitements précèdent l'emploi des notes brutes.
+
+\codefile[firstline=15,lastline=21]{scripts/tuto/step4_total_cost.py}
+
+\Herb compte $33$ notes absentes et \Runes $35$, sur $1\,600$ lignes.
+Elles reçoivent la médiane de leur colonne plutôt que la moyenne : quelques notes
+extrêmes déplacent la seconde et non la première.
+
+Les deux colonnes n'ont ensuite ni le même centre ni la même dispersion.
+\Herb a pour moyenne $1{,}19$ et pour écart-type $5{,}18$, \Runes
+$495{,}05$ et $105{,}19$. Un même coefficient produirait donc dans la seconde un
+effet vingt fois plus grand que dans la première, pour une raison qui tient à
+l'unité de la note et non à ce qu'elle dit de l'élève. Après retrait de la
+moyenne et division par l'écart-type, les deux colonnes ont pour moyenne $0$ et
+pour écart-type $1$, et un coefficient de $3$ signifie la même chose des deux
+côtés.
+
+\codefile[firstline=24,lastline=30]{scripts/tuto/step4_total_cost.py}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  tab/.style={draw=ink!30,rounded corners=2pt,fill=white,inner sep=5pt},
+  arr/.style={-{Latex[length=2.2mm]},thick,ink!65},
+  op/.style={font=\scriptsize,text=ink,align=center},
+  head/.style={font=\scriptsize\bfseries,text=ink,anchor=south}]
+
+\node[tab] (brut) {\footnotesize\begin{tabular}{r@{\hskip 4mm}r}
+\textcolor{herbo}{Herbo.} & \textcolor{runes}{A.\ Runes}\\[1pt]
+$-6{,}497$ & $523{,}982$\\
+$-7{,}82$ & $599{,}33$\\
+$-5{,}76$ & \textcolor{warning}{absente}\\
+$+5{,}73$ & $532{,}48$\\
+\end{tabular}};
+
+\node[tab,right=26mm of brut] (std) {\footnotesize\begin{tabular}{r@{\hskip 3mm}r@{\hskip 3mm}r}
+$1{,}000$ & $-1{,}485$ & $+0{,}275$\\
+$1{,}000$ & $-1{,}741$ & $+0{,}991$\\
+$1{,}000$ & $-1{,}344$ & \textcolor{warning}{$-0{,}296$}\\
+$1{,}000$ & $+0{,}877$ & $+0{,}356$\\
+\end{tabular}};
+
+\node[head,above=1.5mm of brut] {le fichier};
+\node[head,above=1.5mm of std] {\texttt{X}};
+\draw[arr] (brut) -- node[op,above=0.5mm]{médiane,\\puis $(v-\mu)/\sigma$} (std);
+\node[op,below=1.5mm of brut] {quatre élèves parmi $1\,600$};
+\node[op,below=1.5mm of std] {la première colonne vaut $1$ partout};
+\end{tikzpicture}
+\caption{La médiane d'\Runes, $463{,}92$, remplace la note absente du
+troisième élève et donne $-0{,}296$ après standardisation. Sa ligne reste
+exploitable.}
+\label{fig:matrice}
+\end{figure}
+\FloatBarrier
+
+Le coût moyen se calcule alors élève par élève, en réutilisant les deux fonctions
+précédentes.
+
+\codefile[firstline=33,lastline=44]{scripts/tuto/step4_total_cost.py}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  val/.style={draw=ink!35,rounded corners=2.5pt,fill=white,font=\small,
+    align=center,inner sep=5pt,minimum width=22mm,minimum height=9mm},
+  fn/.style={font=\ttfamily\scriptsize,text=accent,align=center},
+  arr/.style={-{Latex[length=2mm]},thick,ink!65},
+  side/.style={font=\ttfamily\scriptsize,text=ink,align=center},
+  drop/.style={-{Latex[length=1.8mm]},ink!45}]
+\node[val] (x) {$x$};
+\node[val,right=20mm of x] (z) {$z=0{,}000$};
+\node[val,right=20mm of z] (p) {$p=0{,}500$};
+\node[val,right=20mm of p] (c) {$0{,}693147$};
+\coordinate (m1) at ($(x)!0.5!(z)$);
+\coordinate (m3) at ($(p)!0.5!(c)$);
+\draw[arr] (x) -- node[fn,above=0.8mm]{score\_of} (z);
+\draw[arr] (z) -- node[fn,above=0.8mm]{sigmoid} (p);
+\draw[arr] (p) -- node[fn,above=0.8mm]{student\_cost} (c);
+\node[side,above=9mm of m1] (w) {weights\\ $(0,0,0)$};
+\node[side,above=9mm of m3] (e) {expected\\ $=1$};
+\draw[drop] (w) -- (m1);
+\draw[drop] (e) -- (m3);
+\node[side,below=1.5mm of x] {$[1{,}0\;\;{-}1{,}485\;\;0{,}275]$};
+\end{tikzpicture}
+\caption{L'élève $3$ traversant les trois fonctions, coefficients nuls. Les
+coefficients n'interviennent qu'au premier passage et la réponse attendue qu'au
+dernier : entre les deux, le calcul ne dépend plus des données.}
+\label{fig:circuit}
+\end{figure}
+\FloatBarrier
+
+\begin{console}
+1600 students, 3 columns (bias included)
+cost with zero weights: 0.693147
+\end{console}
+
+\begin{resultat}[Contrôle de sortie]
+Sur des coefficients nuls, le programme doit afficher $0{,}693147$
+(ch.~\ref{ch:erreur}). Cette valeur est la même pour tout fichier, tout choix de
+matières et tout nombre d'élèves : un écart localise donc l'erreur dans le score,
+la sigmoïde ou le coût.
+\end{resultat}
+
+Le programme sait maintenant juger un jeu de coefficients. En produire un
+meilleur est l'objet du chapitre suivant.

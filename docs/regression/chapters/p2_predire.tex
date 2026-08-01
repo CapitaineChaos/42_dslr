@@ -1,0 +1,218 @@
+\chapter{Quatre maisons et mesure de l'exactitude}
+\label{ch:predire}
+
+\begin{lecture}
+La descente du chapitre précédent traite une maison. Les deux dernières étapes
+l'appliquent aux quatre, puis mesurent l'exactitude du résultat sur des élèves
+que le modèle n'a jamais vus --- seule mesure qui prédise quelque chose.
+\end{lecture}
+
+La boucle précédente répond à une seule question : cet élève est-il \Gryf.
+Il en faut quatre, et il faut en tirer une réponse unique. L'exactitude obtenue
+demande ensuite d'être mesurée sur des élèves que le modèle n'a pas vus.
+
+\section{Étape 8 : la même descente, quatre fois}
+
+La descente, le coût et le gradient sont ceux de l'étape précédente, appelés
+quatre fois de suite. Seule la colonne des réponses est refaite à chaque tour :
+elle vaut $1$ pour la maison traitée et $0$ pour les trois autres.
+
+\codefile[firstline=12,lastline=22]{scripts/tuto/step8_four_houses.py}
+
+\begin{console}
+  Gryffindor   cost 0.1074    652 iterations
+  Hufflepuff   cost 0.1369    544 iterations
+  Ravenclaw    cost 0.1310    565 iterations
+  Slytherin    cost 0.1354    568 iterations
+
+1540 students out of 1600 get their house, that is 0.9625
+\end{console}
+
+Les quatre coûts sont du même ordre et aucune descente n'a touché son plafond :
+les quatre maisons se séparent aussi bien les unes que les autres sur ces deux
+matières.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  house/.style={font=\footnotesize\bfseries,anchor=east,text width=24mm,
+    align=right},
+  row/.style={rounded corners=2pt,inner sep=4.5pt,font=\footnotesize,
+    text width=48mm,align=center},
+  sc/.style={font=\small,anchor=west,text width=21mm},
+  res/.style={draw=gryff!55,fill=gryff!10,rounded corners=2.5pt,align=center,
+    font=\small,inner sep=6pt,text width=26mm},
+  arr/.style={-{Latex[length=2mm]},thick,ink!55}]
+
+\node[row,fill=gryff!10,draw=gryff!40] (r1)
+  {$-5{,}036\quad-3{,}651\quad+3{,}684$};
+\node[row,fill=huffle!10,draw=huffle!40,below=2mm of r1] (r2)
+  {$-3{,}032\quad+3{,}859\quad-4{,}325$};
+\node[row,fill=raven!10,draw=raven!40,below=2mm of r2] (r3)
+  {$-3{,}710\quad+4{,}040\quad+3{,}852$};
+\node[row,fill=slyth!10,draw=slyth!40,below=2mm of r3] (r4)
+  {$-4{,}525\quad-3{,}327\quad-3{,}531$};
+
+\node[house,left=2mm of r1] {\Gryf};
+\node[house,left=2mm of r2] {\Huff};
+\node[house,left=2mm of r3] {\Rav};
+\node[house,left=2mm of r4] {\Slyth};
+
+\node[sc,right=3mm of r1] (s1) {$\mathbf{+1{,}401}$};
+\node[sc,right=3mm of r2] (s2) {$-9{,}954$};
+\node[sc,right=3mm of r3] (s3) {$-8{,}651$};
+\node[sc,right=3mm of r4] (s4) {$-0{,}555$};
+
+\coordinate (mm) at ($(s1.east)!0.5!(s4.east)$);
+\node[res,right=8mm of mm] (out) {\texttt{predict}\\[1pt] \Gryf};
+\draw[arr] (mm) -- (out);
+\node[font=\footnotesize,text=ink,above=1.5mm of r1] {quatre jeux de coefficients};
+\node[font=\footnotesize,text=ink,above=1.5mm of s1] {scores};
+\end{tikzpicture}
+\caption{L'élève $3$ passé aux quatre modèles. \Slyth arrive deuxième avec
+$-0{,}555$ : ses coefficients ont le même signe que ceux de \Gryf sur
+\Herb et le signe opposé sur \Runes : les deux maisons occupent le
+même côté du nuage et ne se départagent que sur la seconde note.}
+\label{fig:ovr}
+\end{figure}
+\FloatBarrier
+
+\texttt{predict} retient le plus grand des quatre scores. Comparer les scores ou
+les probabilités revient au même, la sigmoïde étant croissante et commune aux
+quatre modèles : elle conserve l'ordre. Son calcul est réservé à l'affichage
+d'une probabilité.
+
+\section{Étape 9 : mesure sur des élèves inconnus}
+
+$96{,}25\,\%$ surestime nettement la performance réelle. Ces $1\,600$ élèves sont
+exactement ceux qui ont servi à placer les quatre frontières, et les reclasser ne
+mesure donc pas la capacité du modèle à traiter un élève inconnu. La mesure correcte scinde le fichier en un \emph{ensemble d'apprentissage}, qui
+sert à ajuster les coefficients, et un \emph{ensemble de test} mis de côté avant
+l'entraînement et consulté une seule fois, à la fin.
+
+\codefile[firstline=12,lastline=29]{scripts/tuto/step9_holdout.py}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[y=9mm,font=\footnotesize]
+\foreach \i/\house/\col/\a/\b/\na/\nb in {%
+  0/Gryffindor/gryff/4.95/6.18/262/65,
+  1/Hufflepuff/huffle/8.00/10.00/423/106,
+  2/Ravenclaw/raven/6.69/8.37/354/89,
+  3/Slytherin/slyth/4.55/5.69/241/60}{
+  \fill[\col!70] (0,-\i) rectangle (\a,-\i+0.6);
+  \fill[\col!22] (\a,-\i) rectangle (\b,-\i+0.6);
+  \draw[\col!45] (0,-\i) rectangle (\b,-\i+0.6);
+  \node[anchor=east,text=\col,font=\footnotesize\bfseries]
+    at (-1.5mm,-\i+0.3) {\house};
+  \node[anchor=center,text=white,font=\scriptsize\bfseries]
+    at (\a/2,-\i+0.3) {\na};
+  \node[anchor=west,text=ink,font=\scriptsize,xshift=1.5mm]
+    at (\b,-\i+0.3) {\nb};
+}
+\end{tikzpicture}
+\caption{Teinte pleine, les $1\,280$ élèves d'apprentissage ; teinte claire, les
+$320$ mis de côté. Le tirage prend $80\,\%$ de chaque maison, non $80\,\%$ du
+fichier. Un
+tirage global laisserait les quatre proportions varier d'une exécution à l'autre,
+et \Slyth, la plus petite maison, en subirait l'écart le plus large.}
+\label{fig:decoupe}
+\end{figure}
+\FloatBarrier
+
+Le mélange se fait sur les indices, par un générateur écrit sur place plutôt que
+par \texttt{random.shuffle}. Chaque nombre tiré s'obtient du précédent par
+\[
+  \text{\'etat}\;\longleftarrow\;(a\,\text{\'etat}+c)\bmod 2^{31},
+\]
+avec deux constantes éprouvées. Repartir du même état initial --- la graine $0$
+--- redonne la même suite, donc le même découpage à chaque exécution, sans quoi
+deux mesures ne seraient pas comparables.
+
+\begin{console}
+1280 students to learn from, 320 set aside
+
+  Gryffindor   cost 0.1087    657 iterations
+  Hufflepuff   cost 0.1467    494 iterations
+  Ravenclaw    cost 0.1309    561 iterations
+  Slytherin    cost 0.1429    529 iterations
+
+on students already seen : 0.9609
+on students never seen   : 0.9719
+everyone into Hufflepuff : 0.3312
+\end{console}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[x=14.5cm,font=\footnotesize]
+\draw[ink!40] (0,0) -- (1,0);
+\foreach \v/\lab in {0/{0{,}30},0.2857/{0{,}50},0.6429/{0{,}75},1/{1{,}00}}{
+  \draw[ink!40] (\v,-1.2mm) -- (\v,1.2mm);
+  \node[anchor=north,font=\scriptsize,text=ink] at (\v,-1.8mm) {\lab};
+}
+\fill[ink!55] (0.0446,0) circle (1.4pt);
+\node[anchor=south,align=center,text=ink,font=\scriptsize] at (0.0446,2.5mm)
+  {plancher\\ $0{,}3312$};
+\fill[warning] (0.9441,0) circle (1.4pt);
+\fill[accent] (0.9599,0) circle (1.4pt);
+\draw[warning!70] (0.9441,0) -- ++(0,7mm) -- ++(-14mm,0)
+  node[anchor=east,text=warning,font=\scriptsize] {apprentissage $0{,}9609$};
+\draw[accent!70] (0.9599,0) -- ++(0,-7mm) -- ++(-14mm,0)
+  node[anchor=east,text=accent,font=\scriptsize] {test $0{,}9719$};
+\end{tikzpicture}
+\caption{Le plancher est l'exactitude d'une règle qui attribuerait \Huff à tout
+le monde. L'écart entre apprentissage et test vaut onze millièmes, soit trois ou
+quatre élèves sur les $320$ mis de côté : l'ordre de grandeur de la variation
+qu'induirait un autre tirage.}
+\label{fig:echelle}
+\end{figure}
+\FloatBarrier
+
+Le premier chiffre porte sur les élèves d'apprentissage et reste optimiste par
+construction. Le deuxième porte sur $320$ élèves que le modèle n'a jamais vus :
+c'est le seul qui prédise quelque chose sur un élève à venir. Le troisième donne
+le plancher, celui qu'obtient une règle qui met tout le monde dans la maison la
+plus nombreuse ; un modèle doit le dépasser nettement pour démontrer un apport.
+
+\begin{vigilance}[Écart entre apprentissage et test]
+Ici le second dépasse même le premier, écart qui reste dans la marge d'un
+échantillon de $320$ élèves. Un modèle à $99\,\%$ sur l'apprentissage et $85\,\%$ sur le test
+aurait au contraire appris les élèves plutôt que la règle : c'est le
+\emph{surapprentissage}, et l'écart entre les deux mesures en est le seul
+révélateur. Trois coefficients par
+maison n'offrent pas assez de liberté pour cela ; avec les treize matières du
+fichier, donc quatorze coefficients, la question se pose.
+\end{vigilance}
+
+\section{Compléments pour un programme livrable}
+
+Trois ajouts séparent ce qui précède d'un programme utilisable sur un fichier
+d'élèves inconnus.
+
+\textbf{Enregistrer le modèle.} Les quatre vecteurs, mais aussi les trois
+statistiques par matière, la liste ordonnée des matières et celle des maisons. Un
+coefficient s'applique à la note qui occupait sa place pendant l'entraînement, et
+le plus grand score ne devient une maison que par la liste des libellés. Perdre
+l'un de ces ordres donne des scores justes et des réponses fausses, sans aucune
+erreur d'exécution.
+
+\textbf{Appliquer les statistiques d'entraînement à la prédiction.} Un élève
+inconnu reçoit la médiane, la moyenne et l'écart-type appris sur les élèves
+d'entraînement, jamais les siens. Recalculer ces trois nombres sur les nouvelles
+données placerait les scores dans une autre échelle ; sur un fichier d'un seul
+élève, l'écart-type serait nul et l'opération n'aurait pas de sens.
+
+\textbf{Lire les erreurs.} Le tableau qui croise maison réelle et maison prédite,
+la \emph{matrice de confusion}, indique quelles maisons sont confondues, là où le
+taux global les agrège en un seul nombre : ses $16$ cases distinguent une maison
+systématiquement manquée d'erreurs réparties au hasard.
+
+\begin{resultat}[Étapes du programme]
+Un score, une probabilité, un coût, une pente vérifiée contre une mesure, un pas,
+une boucle, quatre maisons, un découpage stratifié. Une centaine de lignes de
+fonctions sans bibliothèque de calcul, deux cent trente avec les imports et les
+affichages de contrôle, et $97{,}19\,\%$ de réponses justes sur des élèves jamais
+vus.
+
+Les formules employées ici sont démontrées dans la partie suivante.
+\end{resultat}

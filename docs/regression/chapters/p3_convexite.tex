@@ -1,0 +1,128 @@
+\chapter{Unicité du minimum}
+\label{ch:convexite}
+
+\begin{lecture}
+La descente de gradient suppose un minimum unique. Sur une surface qui en compte
+plusieurs, elle s'arrête au premier atteint et le résultat dépend du point de
+départ. Le coût de la régression logistique n'en admet qu'un, ce qui se démontre
+en vérifiant que sa courbure ne change jamais de signe.
+\end{lecture}
+
+\section{Courbure d'une fonction d'une variable}
+
+La dérivée seconde mesure la variation de la pente. Si elle reste positive, la
+pente croît sur tout l'intervalle et la concavité de la courbe reste tournée du
+même côté. Une telle fonction est dite \emph{convexe} : elle ne peut pas présenter deux
+minimums séparés par un maximum local, ce qui exigerait que la pente cesse de
+croître.
+
+\begin{figure}[htbp]
+\centering
+\begin{minipage}[t]{.48\textwidth}
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=.95\linewidth,height=4.8cm,axis lines=middle,
+  title={convexe},xmin=-2.4,xmax=2.4,ymin=-.4,ymax=4,xtick=\empty,ytick=\empty,
+  samples=120]
+  \addplot[accent,very thick,domain=-2.2:2.2]{0.7*x^2+0.3};
+  \addplot[only marks,mark=*,ink,mark size=2.4pt] coordinates {(0,0.3)};
+\end{axis}
+\end{tikzpicture}
+\end{minipage}\hfill
+\begin{minipage}[t]{.48\textwidth}
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=.95\linewidth,height=4.8cm,axis lines=middle,
+  title={non convexe},xmin=-2.4,xmax=2.4,ymin=-.4,ymax=4,xtick=\empty,ytick=\empty,
+  samples=160]
+  \addplot[warning,very thick,domain=-2.2:2.2]{0.35*x^4-1.1*x^2+1.6};
+  \addplot[only marks,mark=*,ink,mark size=2.4pt]
+    coordinates {(-1.25,0.74) (1.25,0.74)};
+\end{axis}
+\end{tikzpicture}
+\end{minipage}
+\caption{À gauche, un minimum unique, atteint quel que soit le point de départ. À
+droite, deux minimums locaux : la descente s'arrête dans celui vers lequel le
+gradient initial la dirige, et ignore l'autre.}
+\label{fig:convexe}
+\end{figure}
+
+\section{Courbure du coût logistique}
+
+Reprenons la dérivée première (ch.~\ref{ch:gradient}) :
+\[
+  \frac{\partial J}{\partial w_j}
+  =\frac{1}{m}\sum_{i=1}^{m}\bigl(\sigma(z_i)-y_i\bigr)x_{ij}.
+\]
+Dérivons une seconde fois, par rapport à un autre coefficient $w_k$ :
+
+\begin{align}
+  \frac{\partial^2 J}{\partial w_j\,\partial w_k}
+  &= \frac{1}{m}\sum_{i=1}^{m}\frac{\partial}{\partial w_k}
+     \bigl[\bigl(\sigma(z_i)-y_i\bigr)x_{ij}\bigr]
+    &&\text{la dérivée entre dans la somme} \notag\\[2pt]
+  &= \frac{1}{m}\sum_{i=1}^{m}x_{ij}\,\sigma'(z_i)\,
+     \frac{\partial z_i}{\partial w_k}
+    &&\text{chaîne, et } y_i \text{ est constant} \notag\\[2pt]
+  &= \frac{1}{m}\sum_{i=1}^{m}x_{ij}\,\sigma(z_i)\bigl(1-\sigma(z_i)\bigr)x_{ik}
+    &&\text{chapitre~\ref{ch:sigmoide}, et } \partial z_i/\partial w_k=x_{ik}
+    \label{eq:hess}
+\end{align}
+
+Ces nombres, rangés dans un tableau carré dont la case $(j,k)$ porte
+$\partial^2 J/\partial w_j\partial w_k$, forment la \emph{Hessienne} de $J$ : la
+matrice de ses dérivées secondes. Posons
+$s_i=\sigma(z_i)(1-\sigma(z_i))$, qui est le facteur commun à chaque terme.
+
+\section{Positivité de la courbure}
+
+Prenons une direction quelconque dans l'espace des coefficients, décrite par un
+vecteur $\mathbf v=(v_0,\ldots,v_n)$. La courbure de $J$ le long de cette
+direction vaut
+\begin{align}
+  \sum_{j}\sum_{k} v_j\,
+  \frac{\partial^2 J}{\partial w_j\partial w_k}\,v_k
+  &= \frac{1}{m}\sum_{i=1}^{m}s_i
+     \left(\sum_j v_jx_{ij}\right)\left(\sum_k v_kx_{ik}\right)
+    &&\text{on regroupe} \notag\\[2pt]
+  &= \frac{1}{m}\sum_{i=1}^{m}s_i\left(\sum_j v_jx_{ij}\right)^{\!2}
+    &&\text{les deux facteurs sont égaux} \notag\\[2pt]
+  &\geq 0
+\end{align}
+
+La dernière ligne tient parce que chaque terme de la somme est le produit de deux
+quantités positives ou nulles : un carré, toujours positif ou nul, et $s_i$, qui
+vaut $\sigma(z_i)(1-\sigma(z_i))$ avec $\sigma$ strictement comprise entre $0$ et
+$1$, donc lui aussi positif.
+
+\begin{resultat}[Unicité du minimum]
+La courbure de $J$ est positive ou nulle dans toutes les directions, quelle que
+soit la position des coefficients. Le coût est donc convexe et n'admet pas de
+minimum local secondaire. Tout point où le gradient s'annule est un minimum
+global, et la descente y conduit quel que soit son point de départ : partir de
+zéro relève de la reproductibilité, non de la qualité du résultat.
+\end{resultat}
+
+\section{Directions de courbure nulle}
+
+Positif \emph{ou nul} : la nuance a des conséquences. La courbure s'annule dans
+une direction $\mathbf v$ dès que $\sum_j v_jx_{ij}=0$ pour tous les élèves,
+c'est-à-dire lorsqu'une combinaison des notes est identiquement nulle. L'ensemble
+des minima est alors une droite, ou un sous-espace de dimension supérieure.
+
+C'est exactement ce qui se produit avec deux colonnes proportionnelles. Si
+Astronomy vaut $-100$ fois Defense Against the Dark Arts, augmenter un
+coefficient et diminuer l'autre dans le bon rapport laisse tous les scores
+inchangés : les prédictions restent identiques, mais les coefficients dérivent
+sans se stabiliser.
+
+\begin{vigilance}[Séparation complète]
+Un second cas éloigne le minimum à l'infini. Si une droite sépare parfaitement
+les deux groupes --- on dit alors que les données sont \emph{linéairement
+séparables} --- multiplier tous les coefficients par $10$ rapproche encore les
+probabilités de $0$ et de $1$, et fait donc encore baisser le coût. Chaque jeu de
+coefficients en admet un meilleur et la suite diverge. La convexité établie
+ci-dessus reste vraie : elle garantit l'unicité du minimum lorsqu'il existe, et
+c'est son existence à distance finie que ce cas met en défaut
+(annexe~\ref{ann:norme}).
+\end{vigilance}

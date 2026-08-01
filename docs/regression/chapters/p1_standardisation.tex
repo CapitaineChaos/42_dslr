@@ -1,0 +1,217 @@
+\chapter{Notes brutes et standardisation}
+\label{ch:standardisation}
+
+\begin{lecture}
+Deux opérations transforment les notes d'examen du fichier en valeurs
+standardisées : le remplacement des notes absentes, puis le changement d'unité.
+Les axes gradués en écarts-types en sont le résultat.
+\end{lecture}
+
+\section{Fichier d'entraînement}
+
+\texttt{dataset\_train.csv} contient $1\,600$ lignes, une par élève. Les six
+premières colonnes donnent l'index, la maison, le nom, la date de naissance et la
+main directrice ; les treize suivantes donnent une note par matière. La maison
+est renseignée pour les $1\,600$ élèves : c'est la réponse que le modèle doit
+retrouver.
+
+Deux d'entre elles servent ici, \Herb et \Runes :
+leurs distributions par maison se recouvrent peu, et elles suffisent à isoler les
+\Gryf (ch.~\ref{ch:nuage}). Le modèle complet en retient dix.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lrrrrrr}
+\toprule
+matière & absentes & minimum & maximum & médiane & moyenne & écart-type \\
+\midrule
+\Herb     & $33$ & $-10{,}30$ & $11{,}61$  & $3{,}469$   & $1{,}189$   & $5{,}175$ \\
+\Runes & $35$ & $283{,}87$ & $745{,}40$ & $463{,}918$ & $495{,}052$ & $105{,}186$ \\
+\bottomrule
+\end{tabular}
+\caption{Les deux colonnes employées, telles qu'elles figurent dans le fichier.
+La moyenne et l'écart-type sont calculés après remplacement des notes absentes,
+donc sur les $1\,600$ lignes.}
+\label{tab:brut}
+\end{table}
+
+\section{Notes absentes}
+
+Certaines cases du fichier sont vides : la note n'a pas été enregistrée pour cet
+élève dans cette matière. Le calcul qui suit exige une valeur pour chaque terme,
+puisque le score est une somme de produits ; une case vide arrête donc le
+traitement de la ligne entière.
+
+Deux voies s'ouvrent. Écarter les élèves incomplets conserve des mesures
+authentiques, au prix du nombre d'élèves, et suppose que les absents de la
+colonne ressemblent aux présents --- une hypothèse que le fichier ne permet pas
+de vérifier. Attribuer une valeur à chaque case vide conserve tous les élèves, au
+prix de valeurs fabriquées. Cette seconde opération s'appelle une
+\emph{imputation}, et c'est celle qui est retenue ici.
+
+Reste à choisir la valeur attribuée. Une valeur centrale perturbe la colonne au
+minimum, et deux candidates se présentent : la moyenne et la médiane. La médiane
+est la valeur qui coupe la colonne en deux moitiés de même effectif ; déplacer la
+plus haute note du fichier à mille points au-dessus la laisse identique, alors
+que la moyenne se déplace avec elle. Cette insensibilité aux valeurs extrêmes est
+la première raison de la préférer. La seconde tient à la suite : la moyenne de la
+colonne sert au calcul de la section suivante, et remplir les cases vides avec
+elle reviendrait à la calculer à partir d'elle-même.
+
+\begin{chiffres}[Cases vides des deux colonnes]
+\begin{center}
+\begin{tabular}{lrrl}
+\toprule
+ & \Herb & \Runes & \\
+\midrule
+notes absentes    & $33$ & $35$ & soit $68$ élèves, $4{,}25\,\%$ du fichier \\
+médiane attribuée & $3{,}469$ & $463{,}918$ & \\
+\addlinespace
+moyenne avant     & $1{,}141$ & $495{,}748$ & sur les notes présentes \\
+moyenne après     & $1{,}189$ & $495{,}052$ & elle monte d'un côté, baisse de l'autre \\
+\bottomrule
+\end{tabular}
+\end{center}
+Le remplissage déplace chaque moyenne de moins d'un centième d'écart-type :
+$0{,}009$ pour \Herb, $0{,}007$ pour \Runes. Les $68$ élèves concernés le sont
+chacun sur une seule des deux colonnes.
+\end{chiffres}
+
+Un élève ainsi complété occupe dans le nuage une position que ses résultats
+scolaires ne justifient pas. La méthode tient parce que les cases vides sont
+rares ; sur une colonne à moitié vide, elle empilerait la moitié des élèves sur
+un même point.
+
+\begin{releve}
+L'élève $21$, dont la note d'\Runes est absente, reçoit $463{,}918$, soit
+$-0{,}296$ une fois standardisée.
+\end{releve}
+
+\section{Différence d'échelle entre les colonnes}
+
+Les deux colonnes mesurent une performance scolaire, mais dans des unités sans
+rapport entre elles. Le score les additionne pourtant, après avoir multiplié
+chacune par son coefficient. Une matière dont les notes s'étalent sur une large
+plage pèse alors davantage qu'une autre, à coefficient égal, pour la seule raison
+de son échelle de notation. Deux conséquences en découlent : les coefficients
+cessent d'être comparables entre eux, et la distance entre deux élèves du plan
+dépend du barème de chaque matière plutôt que de leurs résultats.
+
+\begin{releve}
+Une note d'\Herb se lit entre $-10$ et $+12$, une note d'\Runes autour de
+$500$, et les secondes sont vingt fois plus dispersées : dans $w_1x_1+w_2x_2$, un
+$w_2$ de $1$ produit donc un effet vingt fois plus grand qu'un $w_1$ de $1$.
+\end{releve}
+
+Ramener les deux colonnes à une échelle commune supprime cette dépendance.
+
+\[
+  x=\frac{\annup{accent}{v-\mu}{\annl{écart à la moyenne}\\ \annl{de la colonne}}}
+         {\ann{warning}{\sigma}{\annl{écart-type}\\ \annl{de la colonne}}}
+\]
+
+Cette transformation porte le nom de \emph{centrage-réduction} ; son résultat s'appelle \emph{cote standard}, ou \emph{$z$-score} en anglais. Ce
+document note $x$ la cote standard et réserve la lettre $z$ au score du modèle,
+introduit au chapitre~\ref{ch:nuage}. La soustraction place la moyenne en $0$,
+la division fixe l'écart-type à $1$. Une valeur standardisée se lit donc
+directement : $+1$ désigne un élève situé un
+écart-type au-dessus de la moyenne de sa colonne, quelle que soit la matière.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[font=\small,
+  grad/.style={ink!45},
+  lab/.style={font=\scriptsize,text=ink},
+  ruler/.style={font=\footnotesize,text=ink,anchor=west}]
+% Position sur la regle : (v + 11) / 23 * 12, pour v de -11 a +12.
+\node[ruler] at (0,1.05) {\Herb, note brute};
+\draw[ink!45] (0,0) -- (12,0);
+\foreach \v/\lab in {0.365/{$-10{,}30$},6.359/{$1{,}189$},11.797/{$11{,}61$}}{
+  \draw[grad] (\v,-0.12) -- (\v,0.12);
+  \node[lab,anchor=south] at (\v,0.18) {\lab};
+}
+\draw[warning] (2.349,-0.12) -- (2.349,0.12);
+\node[lab,text=warning,anchor=south] at (2.349,0.18) {$-6{,}497$};
+
+\draw[-{Latex[length=2mm]},ink!45] (6.359,-0.28) -- (6.359,-1.72);
+\draw[-{Latex[length=2mm]},warning!70] (2.349,-0.28) -- (2.349,-1.72);
+
+\node[ruler,text=accent] at (0,-2.95) {\Herb, note standardisée};
+\draw[accent!60] (0,-2) -- (12,-2);
+\foreach \v/\lab in {0.365/{$-2{,}22$},6.359/{$0$},11.797/{$+2{,}01$}}{
+  \draw[accent!60] (\v,-2.12) -- (\v,-1.88);
+  \node[lab,text=accent,anchor=north] at (\v,-2.18) {\lab};
+}
+\draw[warning] (2.349,-2.12) -- (2.349,-1.88);
+\node[lab,text=warning,anchor=north] at (2.349,-2.18) {$-1{,}485$};
+\end{tikzpicture}
+\caption{La transformation est affine : elle déplace l'origine et change l'unité,
+sans modifier l'ordre des élèves ni les rapports de distances. En rouge,
+l'élève $3$.}
+\label{fig:graduation}
+\end{figure}
+\FloatBarrier
+
+Le nuage conserve sa forme, seules ses graduations changent.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[baseline=(current bounding box.north)]
+\begin{axis}[width=.42\textwidth,height=6.2cm,
+  axis lines=box,axis line style={ink!35},
+  grid=major,grid style={gridgray!35},
+  tick label style={font=\scriptsize},label style={font=\scriptsize},
+  title style={font=\small},title={notes brutes},
+  xlabel={\Herb},ylabel={\Runes},
+  xmin=-12,xmax=13,ymin=270,ymax=760,ytick={300,450,600,750}]
+  \addplot[only marks,mark=*,mark size=1.1pt,warning!70,opacity=.4]
+    table[x=x,y=y] {data/brut_autres.dat};
+  \addplot[only marks,mark=*,mark size=1.1pt,accent,opacity=.75]
+    table[x=x,y=y] {data/brut_gryffindor.dat};
+\end{axis}
+\end{tikzpicture}\hfill
+\begin{tikzpicture}[baseline=(current bounding box.north)]
+\begin{axis}[width=.42\textwidth,height=6.2cm,
+  axis lines=box,axis line style={ink!35},
+  grid=major,grid style={gridgray!35},
+  tick label style={font=\scriptsize},label style={font=\scriptsize},
+  title style={font=\small},title={notes standardisées},
+  xlabel={\Herb, en écarts-types},
+  ylabel={\Runes, en écarts-types},
+  xmin=-2.8,xmax=2.8,ymin=-2.8,ymax=2.8,xtick={-2,0,2},ytick={-2,0,2}]
+  \addplot[only marks,mark=*,mark size=1.1pt,warning!70,opacity=.4]
+    table[x=x,y=y] {data/autres.dat};
+  \addplot[only marks,mark=*,mark size=1.1pt,accent,opacity=.75]
+    table[x=x,y=y] {data/gryffindor.dat};
+\end{axis}
+\end{tikzpicture}
+\caption{Les mêmes $534$ élèves, un sur trois pour la lisibilité. Les deux
+figures se déduisent l'une de l'autre par changement de graduation. La
+standardisation rend les deux coefficients comparables entre eux et le score
+indépendant des unités de notation.}
+\label{fig:brut-vs-standard}
+\end{figure}
+\FloatBarrier
+
+\section{Application à un élève}
+
+L'élève $3$ a $-6{,}497$ en \Herb et $523{,}982$ en \Runes.
+
+\[
+  x_1=\frac{-6{,}497-1{,}189}{5{,}175}=-1{,}485,
+  \qquad
+  x_2=\frac{523{,}982-495{,}052}{105{,}186}=+0{,}275 .
+\]
+
+Ces deux valeurs sont les coordonnées du point qui représente cet élève dans le
+plan $(x_1,x_2)$. La première le situe à un écart-type et demi au-dessous de la
+moyenne en \Herb, la seconde à un quart d'écart-type au-dessus en \Runes.
+
+\begin{resultat}[Statistiques à conserver]
+La médiane, la moyenne et l'écart-type sont calculés une fois, sur les élèves
+d'entraînement, et font partie du modèle au même titre que les coefficients. Un
+élève inconnu se standardise avec ces trois nombres-là, jamais avec ceux de son
+propre fichier : recalculer une moyenne sur de nouvelles données placerait les
+scores dans une autre échelle, et sur un fichier d'un seul élève, l'écart-type
+serait nul.
+\end{resultat}

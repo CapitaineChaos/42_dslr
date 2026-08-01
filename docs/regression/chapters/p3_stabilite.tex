@@ -1,0 +1,162 @@
+\chapter{Réécritures pour la stabilité numérique}
+\label{ch:stabilite}
+
+\begin{lecture}
+Les formules démontrées jusqu'ici sont exactes en arithmétique réelle. Sur une
+machine, les nombres ont une taille finie, et deux expressions mathématiquement
+égales n'y sont pas équivalentes : l'une rend un résultat, l'autre échoue. Les
+deux réécritures établies ici conservent chaque valeur et modifient seulement la
+suite d'opérations qui y conduit.
+\end{lecture}
+
+\section{Coût exprimé à partir du score}
+
+En double précision, $\sigma(z)$ vaut exactement $1$ dès que $z$ dépasse environ
+$37$ : $e^{-37}$ est de l'ordre de $10^{-17}$, en dessous de ce qu'un flottant
+distingue de $1$ lorsqu'on l'y ajoute. Le coût demande alors $\log(1-1)$, qui
+n'existe pas. Un élève d'une autre maison auquel le modèle attribue une forte
+probabilité d'être \Gryf suffit donc à interrompre le programme, alors que
+c'est exactement le cas que le coût doit signaler.
+
+\begin{rappel}[Logarithme d'un quotient, logarithme d'une exponentielle]
+$\log(a/b)=\log a-\log b$, et $\log(e^{b})=b$.
+\end{rappel}
+
+Reprenons le coût d'un élève et remplaçons $p$ par $\sigma(z)$ :
+
+\begin{align}
+  \ell &= -\bigl[y\log\sigma(z)+(1-y)\log(1-\sigma(z))\bigr] \notag\\[4pt]
+  \log\sigma(z) &= \log\frac{1}{1+e^{-z}}
+    = \log 1-\log(1+e^{-z}) \notag\\
+    &= -\log(1+e^{-z})
+    &&\text{car } \log 1=0 \notag\\[4pt]
+  \log\bigl(1-\sigma(z)\bigr) &= \log\frac{e^{-z}}{1+e^{-z}}
+    = \log e^{-z}-\log(1+e^{-z}) \notag\\
+    &= -z-\log(1+e^{-z})
+    &&\text{car } \log e^{-z}=-z \notag\\[4pt]
+  \ell &= -\Bigl[y\bigl(-\log(1+e^{-z})\bigr) \notag\\
+    &\qquad\quad +(1-y)\bigl(-z-\log(1+e^{-z})\bigr)\Bigr] \notag\\[4pt]
+  &= y\log(1+e^{-z})+(1-y)z+(1-y)\log(1+e^{-z})
+    &&\text{on distribue} \notag\\[4pt]
+  &= \log(1+e^{-z})+(1-y)z
+    &&\text{les logs se regroupent} \notag\\[4pt]
+  &= \underbrace{\log(1+e^{-z})+z}_{=\;\log(1+e^{z})}-yz \notag\\[4pt]
+  &= \log(1+e^{z})-yz
+\end{align}
+
+Le regroupement souligné s'établit ainsi :
+\[
+  \log(1+e^{-z})+z
+  = \log(1+e^{-z})+\log e^{z}
+  = \log\bigl(e^{z}(1+e^{-z})\bigr)
+  = \log(e^{z}+1),
+\]
+en remontant $z$ sous forme de $\log e^{z}$, en regroupant les deux logarithmes
+en celui d'un produit, puis en développant : $e^{z}\cdot e^{-z}=e^{0}=1$.
+
+\begin{resultat}[Forme employée par le programme]
+\[
+  \ell(y,z)=\operatorname{softplus}(z)-yz,
+  \qquad \operatorname{softplus}(z)=\log(1+e^{z}).
+\]
+Cette forme se calcule à partir du score seul, hors d'atteinte des arrondis qui
+produisent $\log 0$.
+\end{resultat}
+
+\begin{releve}
+Pour $y=1$ et $z=6$, la forme directe donne $-\log(0{,}997527)=0{,}002476$ et
+celle-ci $\operatorname{softplus}(6)-6=6{,}002476-6=0{,}002476$.
+\end{releve}
+
+\section{Formes protégées de softplus et de la sigmoïde}
+
+$\operatorname{softplus}$ contient encore $e^{z}$, qui déborde pour $z$ grand.
+On l'écrit donc
+\[
+  \operatorname{softplus}(z)=\max(z,0)+\log\bigl(1+e^{-|z|}\bigr),
+\]
+dont l'exposant est toujours négatif ou nul. La vérification porte sur deux cas.
+Pour $z\geq0$, $\max(z,0)=z$ et l'expression vaut
+$z+\log(1+e^{-z})=\log(e^{z}+1)$, par le même regroupement que ci-dessus. Pour
+$z<0$, $\max(z,0)=0$ et $|z|=-z$, il reste $\log(1+e^{z})$, qui est la
+définition.
+
+La sigmoïde reçoit le même traitement, avec ses deux écritures
+(ch.~\ref{ch:logit}) :
+\[
+  \sigma(z)=
+  \begin{cases}
+    1/(1+e^{-z}), & z\geq 0,\\[2pt]
+    e^{z}/(1+e^{z}), & z<0 .
+  \end{cases}
+\]
+Dans les deux branches, l'exponentielle porte sur un nombre négatif ou nul. Un
+exposant très négatif s'arrondit à zéro sans dommage ; un exposant très positif,
+lui, dépasse la capacité du format et provoque une erreur.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[font=\small,x=0.0083cm]
+% Axe des scores, de -900 a 900 ; 1 unite = 0,0083 cm, soit 14,9 cm au total.
+\fill[warning!18] (-900,-0.28) rectangle (-710,0.28);
+\fill[warning!18] (710,-0.28) rectangle (900,0.28);
+\fill[huffle!12] (37,-0.28) rectangle (710,0.28);
+\fill[huffle!12] (-710,-0.28) rectangle (-37,0.28);
+\fill[rulecolor!12] (-37,-0.28) rectangle (37,0.28);
+\draw[ink!45] (-900,0) -- (900,0);
+\foreach \v in {-800,-400,0,400,800}{
+  \draw[ink!45] (\v,-0.32) -- (\v,0.32);
+  \node[font=\scriptsize,text=ink,anchor=north] at (\v,-0.36) {$\v$};
+}
+\foreach \v/\lab in {-710/{$-710$},-37/{$-37$},37/{$37$},710/{$710$}}{
+  \draw[ink!60,thin] (\v,-0.28) -- (\v,0.28);
+  \node[font=\scriptsize,text=ink!75,anchor=south] at (\v,0.32) {\lab};
+}
+\node[font=\footnotesize,text=ink,anchor=north] at (0,-1.0) {score $z$};
+\node[font=\scriptsize,text=rulecolor,align=center,anchor=north]
+  at (0,-1.6) {$\sigma$ et $\log$\\ exacts};
+\node[font=\scriptsize,text=huffle,align=center,anchor=north]
+  at (370,-1.6) {$\sigma$ arrondie à $0$ ou $1$ :\\ $\log$ direct impossible};
+\node[font=\scriptsize,text=huffle,align=center,anchor=north]
+  at (-370,-1.6) {$\sigma$ arrondie à $0$ ou $1$ :\\ $\log$ direct impossible};
+\node[font=\scriptsize,text=warning,align=center,anchor=north]
+  at (805,-1.6) {$e^{|z|}$\\ déborde};
+\node[font=\scriptsize,text=warning,align=center,anchor=north]
+  at (-805,-1.6) {$e^{|z|}$\\ déborde};
+\end{tikzpicture}
+\caption{Les trois régimes du calcul en double précision. La zone centrale seule
+tolère l'écriture directe ; les formes protégées rendent des valeurs finies sur
+tout l'axe. Un score de $\pm800$ apparaît dès que les coefficients divergent
+(ch.~\ref{ch:convexite}).}
+\label{fig:regimes}
+\end{figure}
+\FloatBarrier
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{rll}
+\toprule
+$z$ & écriture directe & écriture protégée \\
+\midrule
+$-800$ & $e^{800}$ déborde & $0{,}0$ \\
+$+800$ & $\log(1+e^{800})$ déborde & $800{,}0$ \\
+$+40$  & $\log(1-\sigma(40))=\log 0$ & $0{,}0$ \\
+\bottomrule
+\end{tabular}
+\caption{En double précision, l'exponentielle déborde au-delà de
+$|z|\approx710$ et la sigmoïde s'arrondit à $1$ dès $z\approx37$. Les formes
+protégées rendent des valeurs finies dans les trois cas.}
+\label{tab:stabilite}
+\end{table}
+
+\begin{vigilance}[Contrôles numériques]
+Le premier coût vaut $\log 2=0{,}693147$ quand les coefficients partent de zéro.
+Toute autre valeur signale une erreur dans le score ou l'initialisation.
+
+Le gradient calculé par la formule, comparé à
+$\bigl(J(\w+h\mathbf e_j)-J(\w-h\mathbf e_j)\bigr)/2h$ sur un cas de petite
+taille, doit coïncider à $10^{-6}$ près. Ce test détecte un signe inversé, un
+facteur $1/m$ oublié, un indice décalé.
+
+La sigmoïde et le coût, évalués en $z=\pm1000$, doivent rendre des nombres finis.
+\end{vigilance}

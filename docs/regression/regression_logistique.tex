@@ -1,0 +1,224 @@
+\documentclass[12pt,a4paper,openany]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{csquotes}
+\usepackage{libertinus}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{booktabs,tabularx,array,colortbl}
+\usepackage{graphicx}
+\usepackage{placeins}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,decorations.pathreplacing,fit,backgrounds}
+% Aucune césure dans une figure : les retours à la ligne y sont posés à la main.
+\tikzset{every node/.append style={execute at begin node=%
+  {\hyphenpenalty=10000\exhyphenpenalty=10000\relax}}}
+\usepackage{pgfplots}
+\usepgfplotslibrary{statistics}
+\pgfplotsset{compat=1.18}
+\pgfplotsset{courseplot/.style={width=.82\textwidth,height=7.2cm,
+  grid=major,grid style={gridgray!40}}}
+% Nuage de points : cadre plutôt qu'axes centrés, sinon les titres d'axes
+% atterrissent au milieu des données. Les zéros sont marqués en pointillé.
+\pgfplotsset{cloud/.style={width=.78\textwidth,height=8cm,
+  axis lines=box,axis line style={ink!35},
+  grid=major,grid style={gridgray!35},
+  tick label style={font=\small},label style={font=\small},
+  xlabel style={yshift=-2pt},ylabel style={yshift=4pt},
+  legend style={at={(0.5,1.12)},anchor=south,legend columns=-1,draw=none,
+    font=\small,/tikz/every even column/.append style={column sep=10pt}}}}
+\pgfplotsset{panel/.style={width=.33\textwidth,height=5.2cm,
+  axis lines=box,axis line style={ink!35},
+  grid=major,grid style={gridgray!35},
+  tick label style={font=\scriptsize},label style={font=\scriptsize},
+  title style={font=\small,yshift=-2pt},
+  xmin=-2.8,xmax=2.8,ymin=-2.8,ymax=2.8,
+  xtick={-2,0,2},ytick={-2,0,2}}}
+\usepackage{xcolor}
+\usepackage{xspace}
+\usepackage{enumitem}
+\usepackage{tcolorbox}
+\tcbuselibrary{breakable,skins,listings}
+\usepackage[margin=2.45cm]{geometry}
+\usepackage{listings}
+\lstset{basicstyle=\ttfamily\small,keywordstyle=\color{accent}\bfseries,
+  commentstyle=\color{rulecolor},stringstyle=\color{warning},
+  showstringspaces=false,breaklines=false,frame=none,
+  numbers=none,columns=fullflexible,language=Python,
+  literate={é}{{\'e}}1 {è}{{\`e}}1 {ê}{{\^e}}1 {à}{{\`a}}1 {ç}{{\c c}}1}
+% Les lignes des scripts du tutoriel tiennent en 76 colonnes à cette taille.
+\lstdefinestyle{code}{basicstyle=\ttfamily\footnotesize,xleftmargin=4mm,
+  aboveskip=1.1em,belowskip=0.6em}
+\usepackage[backend=biber,style=numeric,sorting=none]{biblatex}
+\addbibresource{references.bib}
+\AtEveryBibitem{\clearfield{urldate}}
+\usepackage{hyperref}
+% Les legendes se distinguent du corps : corps plus petit, marges laterales,
+% numero en gras colore suivi d'un point.
+\usepackage[font={small,color=ink!88},labelfont={bf,color=accent},
+  labelsep=period,margin=9mm,skip=7pt,justification=justified]{caption}
+
+\definecolor{ink}{HTML}{18212B}
+\definecolor{accent}{HTML}{155E75}
+\definecolor{accentlight}{HTML}{E7F3F6}
+\definecolor{warning}{HTML}{9A3412}
+\definecolor{warninglight}{HTML}{FFF1E8}
+\definecolor{gridgray}{HTML}{CBD5E1}
+\definecolor{rulecolor}{HTML}{4D7C0F}
+\definecolor{rulelight}{HTML}{F1F8E8}
+% Les quatre teintes de maison sont celles des figures matplotlib (gen_regions.py).
+\definecolor{gryff}{HTML}{155E75}
+\definecolor{huffle}{HTML}{9A3412}
+\definecolor{raven}{HTML}{4D7C0F}
+\definecolor{slyth}{HTML}{6B21A8}
+% Deux teintes libres, distinctes des quatre maisons.
+\definecolor{herbo}{HTML}{9D174D}
+\definecolor{runes}{HTML}{1D4ED8}
+\hypersetup{colorlinks=true,linkcolor=ink,citecolor=accent,urlcolor=accent,
+  pdftitle={Régression logistique}}
+\setlist{nosep,leftmargin=*}
+\setlength{\parindent}{0pt}
+\linespread{1.08}
+\setlength{\parskip}{0.72em}
+\setlength{\abovedisplayskip}{0.9em}
+\setlength{\belowdisplayskip}{0.9em}
+\setlength{\abovedisplayshortskip}{0.65em}
+\setlength{\belowdisplayshortskip}{0.65em}
+\setlength{\textfloatsep}{1.25em plus 0.25em minus 0.2em}
+\renewcommand{\arraystretch}{1.16}
+\setcounter{tocdepth}{1}
+\raggedbottom
+\widowpenalty=10000
+\clubpenalty=10000
+
+\newtcolorbox{resultat}[1][]{enhanced,colback=accentlight,colframe=accent,
+  boxrule=0.7pt,arc=1mm,left=2mm,right=2mm,top=1.5mm,bottom=1.5mm,
+  title={#1},fonttitle=\bfseries,coltitle=white}
+\newtcolorbox{vigilance}[1][]{enhanced,colback=warninglight,colframe=warning,
+  boxrule=0.7pt,arc=1mm,left=2mm,right=2mm,top=1.5mm,bottom=1.5mm,
+  title={#1},fonttitle=\bfseries,coltitle=white}
+\newtcolorbox{lecture}{enhanced,colback=gridgray!12,colframe=ink!55,
+  boxrule=0.55pt,arc=1mm,left=2mm,right=2mm,top=1.5mm,bottom=1.5mm}
+% Un relevé numérique pèse moins que la prose qui l'explique : corps réduit,
+% teinte adoucie, retrait à gauche, sans cadre ni fond qui appellent l'œil.
+\newtcolorbox{chiffres}[1][]{blank,
+  left=6mm,right=2mm,top=1mm,bottom=1mm,
+  fontupper=\small\color{ink!78},
+  title={#1},fonttitle=\scriptsize\bfseries\scshape,coltitle=ink!55,
+  attach title to upper={\par\nobreak\addvspace{2pt}}}
+
+% Même registre, pour un commentaire chiffré qui reste dans le fil du texte.
+\newenvironment{releve}
+  {\par\addvspace{5pt}\begingroup\small\color{ink!72}%
+   \leftskip=6mm\rightskip=3mm\noindent\ignorespaces}
+  {\par\endgroup\addvspace{6pt}}
+
+% Une règle de calcul est rappelée là où le texte s'en sert, jamais avant.
+\newtcolorbox{rappel}[1][]{enhanced,colback=rulelight,colframe=rulecolor,
+  boxrule=0.6pt,arc=1mm,left=2mm,right=2mm,top=1.5mm,bottom=1.5mm,
+  title={#1},fonttitle=\bfseries,coltitle=white}
+
+% Code et sortie se distinguent par la boîte : filet et barre d'accent d'un
+% côté, fond gris sans filet de l'autre.
+% L'argument optionnel porte la plage de lignes ; sans lui, le fichier entier.
+\newtcbinputlisting{\codefile}[2][firstline=1]{enhanced,listing only,listing file={#2},
+  colback=white,colframe=ink!20,boxrule=0.5pt,arc=1mm,
+  borderline west={2pt}{0pt}{accent!55},
+  left=3.5mm,right=2mm,top=1.4mm,bottom=1.4mm,
+  listing options={style=code,xleftmargin=0pt,aboveskip=0pt,belowskip=0pt,#1}}
+
+\newtcblisting{console}{enhanced,listing only,colback=ink!5,colframe=ink!5,
+  boxrule=0pt,arc=1mm,left=3.5mm,right=2mm,top=1.4mm,bottom=1.4mm,
+  listing options={language=,basicstyle=\ttfamily\footnotesize,
+    columns=fullflexible,keepspaces=true}}
+
+% Maisons et matieres sont reperees par leur couleur dans tout le texte.
+% \xspace restitue l'espace que la macro avalerait.
+\newcommand{\Gryf}{\textcolor{gryff}{Gryffindor}\xspace}
+\newcommand{\Huff}{\textcolor{huffle}{Hufflepuff}\xspace}
+\newcommand{\Rav}{\textcolor{raven}{Ravenclaw}\xspace}
+\newcommand{\Slyth}{\textcolor{slyth}{Slytherin}\xspace}
+\newcommand{\Herb}{\textcolor{herbo}{Herbology}\xspace}
+\newcommand{\Runes}{\textcolor{runes}{Ancient Runes}\xspace}
+
+% Terme d'equation annote : \ann{couleur}{expression}{legende sur une ou deux
+% lignes separees par \\}. L'etiquette prend la couleur du terme.
+\newcommand{\ann}[3]{\underbrace{\textcolor{#1}{#2}}_{\textcolor{#1}{\substack{#3}}}}
+% Variante pour un numérateur : l'accolade s'ouvre vers le haut.
+\newcommand{\annup}[3]{\overbrace{\textcolor{#1}{#2}}^{\textcolor{#1}{\substack{#3}}}}
+\newcommand{\annl}[1]{\text{\scriptsize #1}}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Pp}{\mathbb{P}}
+\newcommand{\x}{\mathbf{x}}
+\newcommand{\w}{\mathbf{w}}
+\newcommand{\X}{\mathbf{X}}
+\newcommand{\y}{\mathbf{y}}
+
+\title{\textbf{Régression logistique}\\
+  \large Ce qu'elle fait, et pourquoi elle le fait}
+\author{Sylvain Maitre}
+\date{\today}
+
+\begin{document}
+\hypersetup{pageanchor=false}
+\maketitle
+\pagenumbering{roman}
+
+\begin{abstract}
+Une droite sépare deux groupes de points. Elle rend une réponse binaire, alors
+qu'une probabilité est nécessaire : cet élève est Gryffindor à quatre-vingt-dix
+pour cent. La régression logistique construit ce passage, et le reste en
+découle --- la mesure de l'erreur, sa dérivée, et le déplacement de la droite
+jusqu'à sa position optimale.
+
+La première partie suit ce parcours sur un cas réel : mille six cents élèves,
+deux notes chacun, quatre maisons à reconnaître. Les formules y sont données et
+employées, jamais démontrées. La deuxième construit le programme qui exécute tout
+cela, du fichier brut à la maison prédite, sans bibliothèque de calcul. La
+troisième démontre chaque formule ligne à ligne, en rappelant les règles de
+calcul à l'endroit où elles servent.
+
+Les figures proviennent d'une descente réellement exécutée sur le fichier des
+élèves.
+
+Ce texte a été rédigé avec GPT et Claude selon mes instructions et éléments
+fournis. Le résultat n'est pas formidable mais il est lisible et peut apporter
+des éléments de compréhension. Il est mis à disposition sous licence CC-BY-SA 4.0.
+\end{abstract}
+
+\tableofcontents
+\clearpage
+\pagenumbering{arabic}
+\hypersetup{pageanchor=true}
+
+\part{Voir}
+\include{chapters/p1_standardisation}
+\include{chapters/p1_nuage}
+\include{chapters/p1_probabilite}
+\include{chapters/p1_erreur}
+\include{chapters/p1_descente}
+\include{chapters/p1_modele}
+\include{chapters/p1_classifieur}
+
+\part{Construire}
+\include{chapters/p2_donnees}
+\include{chapters/p2_entrainer}
+\include{chapters/p2_predire}
+
+\part{Démontrer}
+\include{chapters/p3_logit}
+\include{chapters/p3_sigmoide}
+\include{chapters/p3_cout}
+\include{chapters/p3_gradient}
+\include{chapters/p3_convexite}
+\include{chapters/p3_stabilite}
+
+\appendix
+\include{chapters/annexe_norme}
+
+\nocite{*}
+\printbibliography[title={Références}]
+\end{document}

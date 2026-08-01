@@ -1,0 +1,102 @@
+\chapter{Propriétés de la fonction logistique}
+\label{ch:sigmoide}
+
+\begin{lecture}
+Deux égalités serviront constamment par la suite. La première dit que la
+fonction est symétrique : changer le signe du score revient à échanger les deux
+réponses. La seconde donne sa dérivée, et cette dérivée s'exprime avec la
+fonction elle-même, ce qui simplifiera tout le calcul du gradient.
+\end{lecture}
+
+\section{Symétrie}
+
+\begin{align}
+  \sigma(-z) &= \frac{1}{1+e^{-(-z)}}
+    &&\text{définition, avec } -z \text{ à la place de } z \notag\\[2pt]
+  &= \frac{1}{1+e^{z}}
+    &&\text{car } -(-z)=z \notag\\[2pt]
+  \intertext{et par ailleurs}
+  1-\sigma(z) &= 1-\frac{1}{1+e^{-z}}
+    &&\text{définition} \notag\\[2pt]
+  &= \frac{(1+e^{-z})-1}{1+e^{-z}}
+    &&\text{même dénominateur} \notag\\[2pt]
+  &= \frac{e^{-z}}{1+e^{-z}}
+    &&\text{on simplifie le numérateur} \notag\\[2pt]
+  &= \frac{e^{-z}}{1+e^{-z}}\cdot\frac{e^{z}}{e^{z}}
+    &&\text{on multiplie par } 1 \text{ écrit } e^{z}/e^{z} \notag\\[2pt]
+  &= \frac{e^{-z}e^{z}}{e^{z}+e^{-z}e^{z}}
+    &&\text{on distribue} \notag\\[2pt]
+  &= \frac{1}{e^{z}+1}
+    &&\text{car } e^{-z}e^{z}=e^{0}=1 \label{eq:sym}
+\end{align}
+
+Les deux résultats coïncident, donc
+\[
+  \boxed{\;\sigma(-z)=1-\sigma(z)\;}
+\]
+
+La probabilité accordée à « \Gryf » pour un score $z$ égale donc celle
+accordée à « pas \Gryf » pour le score $-z$.
+
+\begin{releve}
+$\sigma(2)=0{,}8808$ et $\sigma(-2)=0{,}1192$, de somme $1$.
+\end{releve}
+
+\section{Dérivée}
+
+\begin{align}
+  \sigma(z) &= \frac{1}{1+e^{-z}} = \frac{1}{u},\qquad u=1+e^{-z} \notag\\[4pt]
+  u' &= \bigl(1+e^{-z}\bigr)'
+     = 0+e^{-z}\cdot(-1)
+    &&\text{dérivée d'une somme, puis chaîne sur } e^{-z} \notag\\[2pt]
+     &= -e^{-z} \notag\\[6pt]
+  \sigma'(z) &= -\frac{u'}{u^{2}}
+    &&\text{dérivée d'un inverse : } (1/u)'=-u'/u^{2} \notag\\[2pt]
+  &= -\frac{-e^{-z}}{(1+e^{-z})^{2}}
+    &&\text{on remplace } u \text{ et } u' \notag\\[2pt]
+  &= \frac{e^{-z}}{(1+e^{-z})^{2}}
+    &&\text{les deux signes moins s'annulent} \notag\\[2pt]
+  &= \frac{1}{1+e^{-z}}\cdot\frac{e^{-z}}{1+e^{-z}}
+    &&\text{on sépare le carré en deux facteurs} \notag\\[2pt]
+  &= \sigma(z)\cdot\bigl(1-\sigma(z)\bigr)
+    &&\text{le second facteur est } 1-\sigma(z),\ \text{établi en \eqref{eq:sym}}
+\end{align}
+
+\begin{resultat}[Dérivée de la sigmoïde]
+\[
+  \sigma'(z)=\sigma(z)\bigl(1-\sigma(z)\bigr).
+\]
+La pente se calcule donc sans nouvelle exponentielle : si l'on connaît déjà
+$p=\sigma(z)$, la pente vaut $p(1-p)$.
+\end{resultat}
+
+\section{Variation de la probabilité avec le score}
+
+La quantité $p(1-p)$ atteint son maximum, $0{,}25$, en $p=0{,}5$, et décroît vers
+$0$ aux deux extrémités : la probabilité varie fortement avec le score près de la
+frontière, et très peu lorsqu'elle est déjà proche de $0$ ou de $1$.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[courseplot,height=6cm,axis lines=middle,
+  xlabel={score $z$},ylabel={},xmin=-6.5,xmax=6.5,ymin=-.08,ymax=1.1,
+  samples=200,domain=-6.5:6.5,
+  legend style={at={(.5,1.03)},anchor=south,legend columns=2,draw=none}]
+  \addplot[accent,very thick]{1/(1+exp(-x))};
+  \addlegendentry{$\sigma(z)$}
+  \addplot[warning,very thick]{exp(-x)/(1+exp(-x))^2};
+  \addlegendentry{$\sigma'(z)=\sigma(z)(1-\sigma(z))$}
+  \addplot[only marks,mark=*,ink,mark size=2.4pt] coordinates {(0,0.25)};
+  \node[ink,anchor=south west,font=\small] at (axis cs:.2,.25){$0{,}25$};
+\end{axis}
+\end{tikzpicture}
+\caption{La dérivée atteint son maximum, $0{,}25$, en $z=0$, et tend vers zéro dès
+que la probabilité approche $0$ ou $1$.}
+\label{fig:derivee-sigmoide}
+\end{figure}
+\FloatBarrier
+
+Cette forme en cloche a une conséquence pratique : un élève déjà correctement
+classé contribue très peu au déplacement de la frontière, tandis qu'un élève
+proche de celle-ci y contribue au maximum. L'ajustement est donc déterminé par les cas limites.

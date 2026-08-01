@@ -1,0 +1,190 @@
+\chapter{Recherche de meilleurs coefficients}
+\label{ch:entrainer}
+
+\begin{lecture}
+Le chapitre précédent s'arrête sur une fonction qui évalue un jeu de
+coefficients. Les trois étapes qui suivent produisent la pente du coût, la
+contrôlent contre une mesure indépendante, puis l'appliquent en boucle jusqu'à
+stabilisation.
+\end{lecture}
+
+Après avoir jugé un jeu de coefficients, il reste à savoir dans quel sens les
+déplacer, et à vérifier que cette direction est la bonne avant d'en tirer une
+boucle d'entraînement.
+
+\section{Étape 5 : la pente et sa vérification}
+
+La pente du coût par rapport à chaque coefficient s'obtient par une formule
+démontrée au chapitre~\ref{ch:gradient}. Les trois pentes sortent ensemble d'un
+seul passage sur les élèves.
+
+\codefile[firstline=5,lastline=11]{scripts/tuto/step5_gradient.py}
+
+Une erreur de signe ou un indice décalé produit ici un programme qui s'exécute,
+converge lentement et reste silencieux. La formule se contrôle sans démonstration,
+en mesurant ce qu'elle prétend calculer : une pente est un rapport
+d'accroissements, obtenu en déplaçant un coefficient dans les deux sens et en
+divisant l'écart de coût par la distance parcourue.
+
+\codefile[firstline=14,lastline=19]{scripts/tuto/step5_gradient.py}
+
+Cette seconde fonction ignore tout de la régression logistique. Elle appelle deux
+fois le coût de l'étape~4 et divise, ce qui représente deux passages complets sur
+les $1\,600$ élèves pour un seul coefficient : inutilisable dans une boucle
+d'entraînement, mais indépendant de la formule qu'elle contrôle.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  box/.style={rounded corners=2.5pt,inner sep=6pt,align=center,font=\small,
+    text width=62mm,draw=ink!30},
+  arr/.style={-{Latex[length=2mm]},thick,ink!60}]
+\node[box,fill=gridgray!20] (in)
+  {\texttt{weights} $=(0{,}3\,;-0{,}7\,;0{,}4)$\\ \texttt{X}, \texttt{target}};
+\node[box,fill=accentlight,below=11mm of in,xshift=-34mm] (form)
+  {\texttt{gradient}\\[2pt] la formule,\\ un passage sur les élèves};
+\node[box,fill=rulelight,below=11mm of in,xshift=34mm] (mes)
+  {\texttt{measured\_slope}\\[2pt] deux coûts complets,\\ déplacement de $\pm10^{-5}$};
+\coordinate (mid) at ($(form.south)!0.5!(mes.south)$);
+\node[box,fill=white,draw=ink!45,below=10mm of mid,text width=100mm] (cmp)
+  {les deux valeurs coïncident sur neuf décimales,\\ aux trois colonnes};
+\draw[arr] (in) -- (form);
+\draw[arr] (in) -- (mes);
+\draw[arr] (form) -- (cmp);
+\draw[arr] (mes) -- (cmp);
+\end{tikzpicture}
+\caption{Le point d'évaluation est choisi loin de zéro. Plusieurs erreurs
+classiques --- facteur $1/m$ omis, indice décalé --- rendent zéro des deux côtés
+en $(0,0,0)$ et passeraient inaperçues.}
+\label{fig:juge}
+\end{figure}
+\FloatBarrier
+
+\begin{console}
+column    from the formula        measured             gap
+   0         +0.358202569     +0.358202569     9.04e-11
+   1         +0.071184453     +0.071184453     3.30e-11
+   2         -0.098350181     -0.098350181     3.91e-11
+\end{console}
+
+L'écart résiduel vient de la mesure, pas de la formule. Une différence centrée
+sur un pas $h$ commet une erreur en $h^2$, soit $10^{-10}$ pour $h=10^{-5}$, ce
+que les trois lignes retrouvent. Un $h$ plus grand mesurerait une corde au lieu
+d'une tangente ; un $h$ plus petit ferait perdre à la soustraction ses décimales
+significatives.
+
+\begin{vigilance}[Ordre de grandeur de l'écart]
+Un écart de l'ordre de $10^{-10}$ valide la formule. Un écart de $10^{-2}$
+désigne un facteur oublié, un signe opposé désigne une soustraction inversée, et
+une seule colonne fausse désigne l'indice.
+\end{vigilance}
+
+\section{Étape 6 : un pas}
+
+Descendre consiste à retrancher la pente, multipliée par la longueur du pas.
+
+\codefile[firstline=4,lastline=9]{scripts/tuto/step6_one_step.py}
+
+\begin{console}
+turn 0   cost 0.693147   weights +0.0000  +0.0000  +0.0000
+turn 1   cost 0.538507   weights -0.2956  -0.2289  +0.1924
+turn 2   cost 0.449297   weights -0.5194  -0.4005  +0.3364
+turn 3   cost 0.393020   weights -0.6955  -0.5348  +0.4500
+\end{console}
+
+Le premier biais se recalcule à la main, et c'est le contrôle à faire ici. Les
+coefficients étant nuls, le modèle annonce $0{,}5$ pour les $1\,600$ élèves. La
+pente du biais est la moyenne des écarts $\sigma(z)-y$, où $y$ vaut $1$ pour les
+\Gryf et $0$ pour les autres.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[font=\small]
+\fill[accent!65] (0,0) rectangle (2.45,0.72);
+\fill[gridgray!45] (2.45,0) rectangle (12,0.72);
+\draw[ink!35] (0,0) rectangle (12,0.72);
+\node[font=\footnotesize\bfseries,text=white] at (1.22,0.36) {$327$};
+\node[font=\footnotesize,text=ink] at (7.2,0.36)
+  {$1\,273$ élèves des trois autres maisons};
+\node[anchor=south,font=\footnotesize,text=accent] at (1.22,0.78)
+  {\Gryf, $20{,}44\,\%$};
+\node[anchor=north,font=\footnotesize,text=accent] at (1.22,-0.12)
+  {$\sigma(0)-1=-0{,}5$};
+\node[anchor=north,font=\footnotesize,text=ink] at (7.2,-0.12)
+  {$\sigma(0)-0=+0{,}5$};
+\node[anchor=north,font=\small] at (6,-1.05)
+  {moyenne $=\dfrac{1\,273\times0{,}5-327\times0{,}5}{1\,600}=0{,}2956$};
+\end{tikzpicture}
+\caption{Le pas retranche cette moyenne au biais, d'où $-0{,}2956$ au premier
+tour. Le biais se déplace donc vers la valeur qui fait annoncer $20{,}44\,\%$ à
+tout le monde, ce que peut faire de mieux un modèle réduit à son biais.}
+\label{fig:premierpas}
+\end{figure}
+\FloatBarrier
+
+\texttt{ALPHA} est le taux d'apprentissage $\alpha$. À $1$ sur des colonnes
+standardisées, le coût baisse dès le premier tour ; s'il augmentait, la cause serait un pas trop
+long ou un signe inversé dans la correction.
+
+La nouvelle liste de coefficients est construite, non modifiée en place.
+Corriger \texttt{weights[0]} avant de calculer la correction de
+\texttt{weights[1]} évaluerait les deux pentes en deux points différents, faute
+qu'une liste neuve rend impossible.
+
+\section{Étape 7 : itération jusqu'à stabilisation}
+
+\codefile[firstline=4,lastline=16]{scripts/tuto/step7_loop.py}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  st/.style={draw=ink!30,rounded corners=2.5pt,align=center,font=\small,
+    inner sep=6pt,text width=34mm},
+  lab/.style={font=\footnotesize,text=ink,align=left},
+  arr/.style={-{Latex[length=2mm]},thick,ink!60}]
+\node[st,fill=accentlight] (c) {\texttt{total\_cost}};
+\node[st,fill=rulelight,below=13mm of c] (g) {\texttt{gradient}};
+\node[st,fill=warninglight,below=13mm of g] (u) {\texttt{one\_step}};
+\node[st,fill=white,draw=accent!60,left=16mm of c] (out)
+  {\texttt{return}\\ \texttt{weights, cost}};
+\coordinate (ret) at ($(u.east)+(12mm,0)$);
+\draw[arr] (c) -- (g);
+\draw[arr] (g) -- (u);
+\draw[arr] (u.east) -- (ret) |- (c.east);
+\node[lab,right=1mm of ret,text width=26mm] {au plus\\ $6\,000$ tours};
+\draw[arr] (c) -- node[lab,above=1mm,align=center]
+  {baisse relative\\ sous $10^{-6}$} (out);
+\end{tikzpicture}
+\caption{Le coût est calculé une fois par tour, pour le seul test d'arrêt. Le
+gradient constitue un second passage sur les $1\,600$ élèves : une itération en
+coûte donc deux.}
+\label{fig:boucle}
+\end{figure}
+\FloatBarrier
+
+Les deux conditions d'arrêt sont nécessaires l'une comme l'autre. La première
+compare la baisse du coût à sa valeur, en relatif : sous \texttt{EPSILON}, les
+tours suivants ne déplacent plus la frontière de façon mesurable. La seconde est
+un plafond, et il est indispensable : dans certaines configurations, la première
+ne se déclenche jamais parce que les coefficients divergent
+(annexe~\ref{ann:norme}).
+
+\begin{console}
+stopped after 652 iterations, cost 0.107387
+weights: -5.0360  -3.6513  +3.6841
+\end{console}
+
+Le nombre d'itérations se lit en premier. À $652$ pour un plafond de $6\,000$,
+c'est le critère de stagnation qui a mis fin à la boucle. Une valeur égale au
+plafond signalerait un pas trop court, ou l'absence de minimum.
+
+Les figures de la première partie s'arrêtent au quatre-centième tour et donnent
+$-4{,}745$, $-3{,}454$, $+3{,}469$. Les rapports entre coefficients y sont déjà
+ceux d'ici à trois millièmes près : la frontière est en place bien avant que le coût
+cesse de baisser, et les $252$ derniers tours ne font qu'accentuer la pente de la
+sigmoïde de part et d'autre.
+
+\begin{resultat}[Fonction d'entraînement]
+Une fonction qui prend un tableau de notes et une colonne de réponses, et rend
+trois nombres. Il reste à l'employer quatre fois.
+\end{resultat}

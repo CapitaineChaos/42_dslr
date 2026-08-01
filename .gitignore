@@ -15,3 +15,5 @@ __pycache__/
 *.toc
 
 weights.csv
+
+.claude/settings.local.json

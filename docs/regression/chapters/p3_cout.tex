@@ -1,0 +1,161 @@
+\chapter{Construction du coût par vraisemblance}
+\label{ch:cout}
+
+\begin{lecture}
+Le modèle annonce une probabilité pour chaque élève. Le fichier, lui, donne la
+réponse. Un bon jeu de coefficients est celui sous lequel les réponses observées
+étaient les plus probables. Ce critère s'écrit, se transforme en somme, et
+devient le nombre unique que le programme cherche à faire baisser.
+\end{lecture}
+
+\section{Probabilité d'une réponse observée}
+
+Notons $y_i$ la réponse : $1$ si l'élève $i$ est \Gryf, $0$ sinon, et
+$p_i=\sigma(z_i)$ ce que le modèle annonce. La probabilité que le modèle
+attribue à la réponse effectivement observée vaut $p_i$ si $y_i=1$, et $1-p_i$
+si $y_i=0$. Ces deux cas se rassemblent :
+\[
+  \Pp(y_i)=p_i^{\,y_i}\,(1-p_i)^{\,1-y_i}.
+\]
+
+Vérification des deux cas, en se souvenant que $a^{0}=1$ et $a^{1}=a$ :
+\[
+  y_i=1:\quad p_i^{1}(1-p_i)^{0}=p_i\cdot1=p_i,
+  \qquad
+  y_i=0:\quad p_i^{0}(1-p_i)^{1}=1\cdot(1-p_i)=1-p_i .
+\]
+L'exposant nul ramène à $1$ le facteur qui ne correspond pas au cas observé.
+
+\section{Vraisemblance du fichier}
+
+Les élèves sont supposés indépendants une fois leurs notes connues. La
+probabilité d'observer l'ensemble des réponses du fichier est alors le produit
+des probabilités individuelles :
+\[
+  L(\w)=\prod_{i=1}^{m}p_i^{\,y_i}(1-p_i)^{\,1-y_i}.
+\]
+$L$ s'appelle la \emph{vraisemblance}. Elle dépend des coefficients $\w$, car ce
+sont eux qui produisent les $p_i$. Chercher les meilleurs coefficients, c'est
+chercher ceux qui rendent $L$ maximale.
+
+\begin{vigilance}[Sous-dépassement du produit]
+Le produit compte $1\,600$ facteurs, tous inférieurs à $1$. Même si chacun valait
+$0{,}9$, il vaudrait $0{,}9^{1600}\approx10^{-73}$. En machine, un tel nombre
+s'arrondit à zéro et toute comparaison devient impossible. Le logarithme rend le
+critère exploitable.
+\end{vigilance}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  bx/.style={draw=ink!30,rounded corners=2.5pt,align=center,font=\footnotesize,
+    inner sep=5pt,text width=26mm,minimum height=13mm},
+  op/.style={font=\scriptsize,text=accent,align=center},
+  arr/.style={-{Latex[length=2.2mm]},thick,ink!60}]
+\node[bx,fill=accentlight] (p) {$m$ probabilités\\[1pt] \footnotesize
+  $\Pp(y_i)\in\,]0,1[$};
+\node[bx,fill=warninglight,right=12mm of p] (l) {$L(\w)$\\[1pt] \footnotesize
+  $\approx10^{-73}$};
+\node[bx,fill=rulelight,right=12mm of l] (ll) {$\log L(\w)$\\[1pt] \footnotesize
+  somme de $m$ termes};
+\node[bx,fill=accentlight,right=12mm of ll] (j) {$J(\w)$\\[1pt] \footnotesize
+  $0{,}693$ au départ};
+\draw[arr] (p) -- node[op,above=1mm]{produit} (l);
+\draw[arr] (l) -- node[op,above=1mm]{$\log$} (ll);
+\draw[arr] (ll) -- node[op,above=1mm]{$\times\,(-1/m)$} (j);
+\node[font=\scriptsize,text=ink!75,below=1.5mm of l,text width=34mm,
+  align=center] {inutilisable en machine};
+\node[font=\scriptsize,text=ink!75,below=1.5mm of j,text width=34mm,
+  align=center] {à minimiser};
+\end{tikzpicture}
+\caption{Le produit des probabilités individuelles mesure la plausibilité du jeu
+de coefficients, mais s'annule numériquement dès quelques centaines de facteurs.
+Le logarithme le convertit en somme sans déplacer l'optimum, puisqu'il est
+strictement croissant ; le facteur $-1/m$ transforme la maximisation en
+minimisation et rend la valeur indépendante du nombre d'élèves.}
+\label{fig:vraisemblance}
+\end{figure}
+\FloatBarrier
+
+\section{Passage au logarithme}
+
+\begin{align}
+  \log L(\w)
+  &= \log\prod_{i=1}^{m}p_i^{\,y_i}(1-p_i)^{\,1-y_i} \notag\\[2pt]
+  &= \sum_{i=1}^{m}\log\Bigl[p_i^{\,y_i}(1-p_i)^{\,1-y_i}\Bigr]
+    &&\text{le log d'un produit, sur les } m \text{ facteurs} \notag\\[2pt]
+  &= \sum_{i=1}^{m}\Bigl[\log p_i^{\,y_i}+\log(1-p_i)^{\,1-y_i}\Bigr]
+    &&\text{le log d'un produit, sur deux termes} \notag\\[2pt]
+  &= \sum_{i=1}^{m}\Bigl[y_i\log p_i+(1-y_i)\log(1-p_i)\Bigr]
+    &&\log a^{b}=b\log a \label{eq:loglik}
+\end{align}
+
+Le passage au logarithme est légitime pour chercher un maximum : $\log$ est
+strictement croissante, donc elle conserve l'ordre. Le $\w$ qui maximise $L$ est
+exactement celui qui maximise $\log L$.
+
+\section{Du maximum à un minimum}
+
+Les algorithmes d'optimisation minimisent par convention. On change donc le
+signe, et on divise par $m$ pour obtenir une valeur moyenne, indépendante du
+nombre d'élèves :
+\begin{equation}
+  \boxed{\;J(\w)=-\frac{1}{m}\sum_{i=1}^{m}
+  \Bigl[y_i\log p_i+(1-y_i)\log(1-p_i)\Bigr]\;}
+  \tag{$\dagger$}\label{eq:cout}
+\end{equation}
+Maximiser $\log L$ et minimiser $J$ sont la même opération : multiplier par
+$-1/m$ retourne la fonction et la met à l'échelle, sans déplacer l'argument où
+l'optimum est atteint. C'est la formule que donne le sujet du projet.
+
+\section{Coût d'un élève}
+
+Le terme d'un seul élève vaut $-\log p_i$ s'il est \Gryf, et
+$-\log(1-p_i)$ sinon : dans les deux cas, l'opposé du logarithme de la
+probabilité accordée à la bonne réponse.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{ccrr}
+\toprule
+$y_i$ & $p_i$ & probabilité accordée à la vérité & coût $-\log(\cdot)$ \\
+\midrule
+$1$ & $0{,}99$ & $0{,}99$ & $0{,}010$ \\
+$1$ & $0{,}75$ & $0{,}75$ & $0{,}288$ \\
+$1$ & $0{,}50$ & $0{,}50$ & $0{,}693$ \\
+$1$ & $0{,}10$ & $0{,}10$ & $2{,}303$ \\
+$1$ & $0{,}01$ & $0{,}01$ & $4{,}605$ \\
+\midrule
+$0$ & $0{,}10$ & $0{,}90$ & $0{,}105$ \\
+$0$ & $0{,}90$ & $0{,}10$ & $2{,}303$ \\
+\bottomrule
+\end{tabular}
+\caption{Une prédiction correcte assortie d'une probabilité élevée coûte presque
+zéro. Une prédiction fausse assortie de la même probabilité coûte d'autant plus,
+sans borne supérieure : le coût diverge quand la probabilité accordée à la
+réponse observée tend vers zéro.}
+\label{tab:cout-individuel}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[courseplot,height=6cm,axis lines=left,
+  xlabel={probabilité accordée à la bonne réponse},ylabel={coût},
+  xmin=0,xmax=1,ymin=0,ymax=5,samples=250,domain=.008:1]
+  \addplot[accent,very thick]{-ln(x)};
+  \addplot[only marks,mark=*,warning,mark size=2.4pt]
+    coordinates {(0.99,0.010) (0.5,0.693) (0.1,2.303)};
+  \node[warning,anchor=south west,font=\small] at (axis cs:.5,.75){$\log 2=0{,}693$};
+\end{axis}
+\end{tikzpicture}
+\caption{Le coût d'un élève en fonction de la probabilité que le modèle accordait
+à sa maison réelle. Le point $0{,}693$ correspond à un modèle qui annonce
+$0{,}5$.}
+\label{fig:cout-individuel}
+\end{figure}
+\FloatBarrier
+
+La formule rend compte du contrôle employé depuis le chapitre~\ref{ch:erreur} :
+des coefficients nuls donnent $p_i=\sigma(0)=0{,}5$ pour chaque élève, donc un
+coût moyen de $-\log(0{,}5)=\log 2$.

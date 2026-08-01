@@ -1,0 +1,199 @@
+\chapter{Construction de la fonction logistique}
+\label{ch:logit}
+
+\begin{lecture}
+Le score $z$ parcourt $\R$, la probabilité est comprise entre $0$ et $1$. Il faut
+une fonction qui relie les deux. Plutôt que d'en postuler une, on procède en sens
+inverse : on transforme la probabilité jusqu'à ce qu'elle parcoure $\R$, et
+l'inversion de cette transformation donne la fonction logistique.
+\end{lecture}
+
+\section{Première transformation : la cote}
+
+Une probabilité $p$ appartient à $[0,1]$. Le rapport
+\[
+  \frac{p}{1-p}
+\]
+s'appelle la \emph{cote}. C'est le langage des paris : une cote de $3$ signifie
+trois chances contre une. Ce rapport vaut $0$ quand $p=0$, vaut $1$ quand
+$p=0{,}5$, et croît sans borne quand $p$ approche $1$.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{rrrr}
+\toprule
+$p$ & $1-p$ & cote $p/(1-p)$ & $\log$ de la cote \\
+\midrule
+$0{,}10$ & $0{,}90$ & $0{,}111$ & $-2{,}197$ \\
+$0{,}25$ & $0{,}75$ & $0{,}333$ & $-1{,}099$ \\
+$0{,}50$ & $0{,}50$ & $1{,}000$ & $0{,}000$ \\
+$0{,}75$ & $0{,}25$ & $3{,}000$ & $+1{,}099$ \\
+$0{,}90$ & $0{,}10$ & $9{,}000$ & $+2{,}197$ \\
+\bottomrule
+\end{tabular}
+\caption{La cote transporte $[0,1]$ vers $[0,+\infty[$, son logarithme vers
+$\R$ tout entier. La dernière colonne est symétrique autour de $p=0{,}5$ : c'est
+la propriété que le score doit posséder.}
+\label{tab:cotes}
+\end{table}
+
+La cote atteint ainsi toutes les valeurs positives ; restent les négatives.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[font=\small,
+  seg/.style={line width=1.4pt},
+  bnd/.style={font=\scriptsize,text=ink!75},
+  op/.style={font=\footnotesize,text=accent,align=center},
+  arr/.style={-{Latex[length=2.2mm]},thick,ink!55}]
+
+\draw[seg,gryff!70] (0,0) -- (4.4,0);
+\node[bnd,anchor=north] at (0,-0.18) {$0$};
+\node[bnd,anchor=north] at (4.4,-0.18) {$1$};
+\node[font=\footnotesize,text=ink,anchor=south] at (2.2,0.18) {$p$};
+
+\draw[seg,huffle!70] (0,-2) -- (4.4,-2);
+\draw[huffle!70,line width=1.4pt,dashed] (4.4,-2) -- (5.1,-2);
+\node[bnd,anchor=north] at (0,-2.18) {$0$};
+\node[bnd,anchor=north] at (2.05,-2.18) {$1$};
+\node[bnd,anchor=north] at (5.2,-2.18) {$+\infty$};
+\fill[huffle!70] (2.05,-2.12) rectangle (2.09,-1.88);
+\node[font=\footnotesize,text=ink,anchor=south] at (2.2,-1.82)
+  {$\dfrac{p}{1-p}$};
+
+\draw[seg,raven!70] (-1.3,-4) -- (5.1,-4);
+\draw[raven!70,line width=1.4pt,dashed] (-2,-4) -- (-1.3,-4);
+\node[bnd,anchor=north] at (-2.1,-4.18) {$-\infty$};
+\node[bnd,anchor=north] at (2.05,-4.18) {$0$};
+\node[bnd,anchor=north] at (5.2,-4.18) {$+\infty$};
+\fill[raven!70] (2.05,-4.12) rectangle (2.09,-3.88);
+\node[font=\footnotesize,text=ink,anchor=south] at (2.2,-3.82)
+  {$\log\dfrac{p}{1-p}$};
+
+\draw[arr] (6.4,0) -- (6.4,-1.6);
+\node[op,anchor=west] at (6.6,-0.8) {rapport à\\ son complément};
+\draw[arr] (6.4,-2.4) -- (6.4,-3.6);
+\node[op,anchor=west] at (6.6,-3.0) {logarithme};
+\end{tikzpicture}
+\caption{Les trois intervalles. La cote étire $[0,1]$ sur $[0,+\infty[$ en
+envoyant $0{,}5$ sur $1$ ; le logarithme envoie ce demi-axe sur $\R$ tout entier
+en plaçant $1$ à l'origine. La composée est donc une bijection croissante de
+$]0,1[$ sur $\R$, ce qui autorise à poser son égalité avec le score.}
+\label{fig:intervalles}
+\end{figure}
+\FloatBarrier
+
+\section{Seconde transformation : le logarithme}
+
+Le logarithme envoie $]0,+\infty[$ sur $\R$ : il vaut $-\infty$ près de zéro,
+$0$ en $1$, et croît sans borne. En le composant avec la cote, on obtient la
+\emph{log-cote}
+\[
+  \log\frac{p}{1-p},
+\]
+qui prend toutes les valeurs réelles, exactement comme le score $z$. Rien
+n'empêche plus de poser leur égalité :
+\begin{equation}
+  \boxed{\;\log\frac{p}{1-p}=z=\sum_{j=0}^{n}w_jx_j\;}
+  \tag{$\star$}\label{eq:logit}
+\end{equation}
+Cette égalité constitue l'unique hypothèse de la régression logistique : les
+log-cotes sont supposées être une somme pondérée des notes ; les seize pages qui
+suivent n'en font que dérouler les conséquences algébriques.
+
+\section{Expression de \texorpdfstring{$p$}{p} en fonction de \texorpdfstring{$z$}{z}}
+
+L'équation~\eqref{eq:logit} donne $z$ à partir de $p$, alors que le programme
+part de $z$ pour obtenir la probabilité. L'inversion consiste à isoler $p$ ;
+chaque ligne porte à droite l'opération qui la produit.
+
+\begin{align}
+  \log\frac{p}{1-p} &= z \notag\\[2pt]
+  e^{\log\frac{p}{1-p}} &= e^{z}
+    &&\text{on applique } e^{\;\cdot\;} \text{ aux deux membres} \notag\\[2pt]
+  \frac{p}{1-p} &= e^{z}
+    &&\text{car } e^{\log a}=a \notag\\[2pt]
+  p &= e^{z}(1-p)
+    &&\text{on multiplie les deux membres par } 1-p \notag\\[2pt]
+  p &= e^{z}-e^{z}p
+    &&\text{on développe} \notag\\[2pt]
+  p+e^{z}p &= e^{z}
+    &&\text{on rassemble les } p \notag\\[2pt]
+  p\,(1+e^{z}) &= e^{z}
+    &&\text{on met } p \text{ en facteur} \notag\\[2pt]
+  p &= \frac{e^{z}}{1+e^{z}}
+    &&\text{on divise par } 1+e^{z},\ \text{qui n'est jamais nul} \label{eq:sigma-brute}
+\end{align}
+
+Cette écriture se met sous une forme plus courante en divisant numérateur et
+dénominateur par $e^{z}$ :
+\begin{align}
+  p &= \frac{e^{z}}{1+e^{z}}
+     = \frac{e^{z}/e^{z}}{(1+e^{z})/e^{z}}
+    &&\text{on divise en haut et en bas par } e^{z}\neq0 \notag\\[2pt]
+    &= \frac{1}{1/e^{z}+1}
+    &&\text{car } e^{z}/e^{z}=1 \text{ et } e^{z}/e^{z}=1 \notag\\[2pt]
+    &= \frac{1}{1+e^{-z}}
+    &&\text{car } 1/e^{z}=e^{-z} \label{eq:sigma}
+\end{align}
+
+\begin{resultat}[Fonction logistique]
+\[
+  \sigma(z)=\frac{1}{1+e^{-z}}=\frac{e^{z}}{1+e^{z}} .
+\]
+Les deux écritures sont la même fonction, comme le montre le calcul ci-dessus.
+Elle découle de l'hypothèse~\eqref{eq:logit} écrite dans l'autre sens.
+\end{resultat}
+
+Chacune des deux formes échoue là où l'autre tient. Pour $z$ très négatif,
+$e^{-z}$ devient
+gigantesque et $1/(1+e^{-z})$ déborde la capacité de la machine, tandis que
+$e^{z}/(1+e^{z})$ rend $0$. Pour $z$ très positif, c'est
+l'inverse. Le programme utilise donc l'une ou l'autre selon le signe de $z$
+(ch.~\ref{ch:stabilite}).
+
+\section{Vérification numérique}
+
+La table~\ref{tab:cotes} se relit dans l'autre sens. Pour $z=1{,}099$ :
+\[
+  e^{-1{,}099}=0{,}3333,\qquad
+  \sigma(1{,}099)=\frac{1}{1+0{,}3333}=\frac{1}{1{,}3333}=0{,}75 .
+\]
+On retrouve la ligne $p=0{,}75$, dont la log-cote valait $+1{,}099$. Pour
+$z=0$ :
+\[
+  \sigma(0)=\frac{1}{1+e^{0}}=\frac{1}{1+1}=0{,}5 .
+\]
+Un élève situé exactement sur la droite reçoit une probabilité de $0{,}5$ : la
+frontière (ch.~\ref{ch:nuage}) est la ligne de niveau $0{,}5$ du modèle.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[courseplot,height=6.4cm,axis lines=middle,
+  xlabel={score $z$},ylabel={$\sigma(z)$},
+  xmin=-6.5,xmax=6.5,ymin=-.12,ymax=1.15,ytick={0,.25,.5,.75,1},
+  samples=200,domain=-6.5:6.5]
+  \addplot[gridgray,thick,dashed,domain=-6.5:6.5]{1};
+  \addplot[accent,very thick]{1/(1+exp(-x))};
+  \addplot[only marks,mark=*,warning,mark size=2.6pt]
+    coordinates {(0,0.5) (1.099,0.75) (-1.099,0.25)};
+  \node[warning,anchor=west,font=\small] at (axis cs:1.3,.78){$(1{,}099\,;\,0{,}75)$};
+  \node[warning,anchor=east,font=\small] at (axis cs:-1.3,.22){$(-1{,}099\,;\,0{,}25)$};
+  \node[ink,anchor=south west,font=\small] at (axis cs:.15,.5){$\sigma(0)=0{,}5$};
+\end{axis}
+\end{tikzpicture}
+\caption{La fonction logistique envoie $\R$ dans l'intervalle $]0,1[$, sans
+jamais atteindre les bornes, et passe par $0{,}5$ à l'origine.}
+\label{fig:sigmoide}
+\end{figure}
+\FloatBarrier
+
+\begin{vigilance}[Valeurs prises par $\sigma$]
+Pour $z$ fini, $1+e^{-z}$ reste strictement plus grand que $1$, donc $\sigma(z)$
+reste strictement compris entre $0$ et $1$. Toute probabilité annoncée par le
+modèle appartient donc à l'intervalle ouvert $]0,1[$. En
+machine, $\sigma(40)$ vaut pourtant exactement $1$ après arrondi : l'écart
+disparaît à partir d'un score d'environ $37$, avec les conséquences que cela
+entraîne dans un logarithme (ch.~\ref{ch:stabilite}).
+\end{vigilance}

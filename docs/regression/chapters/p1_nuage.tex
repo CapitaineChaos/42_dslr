@@ -1,0 +1,498 @@
+\chapter{Nuage de points et frontière de décision}
+\label{ch:nuage}
+
+\begin{lecture}
+Deux notes par élève définissent un point du plan. Les \Gryf occupent une
+région, les autres élèves une autre, et une droite sépare approximativement les
+deux : c'est la \emph{frontière de décision} du modèle, \emph{decision boundary}
+dans la littérature anglophone~\cite{hastie2009,bishop2006}. Reste à la déterminer par
+le calcul, et à en tirer une probabilité plutôt qu'une décision binaire.
+\end{lecture}
+
+\section{Séparation par une note}
+
+\Herb sépare les maisons en deux groupes : \Gryf et \Slyth d'un côté,
+\Huff et \Rav de l'autre. Sur cette seule note, un \Gryf et un
+\Slyth sont indiscernables. \Runes les sépare autrement : \Gryf et
+\Rav d'un côté, \Huff et \Slyth de l'autre. Là encore, deux maisons
+restent confondues.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=.78\textwidth,height=5.4cm,
+  axis lines=left,axis line style={ink!35},
+  grid=major,grid style={gridgray!35},
+  tick label style={font=\small},label style={font=\small},
+  xlabel={\Herb, en écarts-types},ylabel={proportion d'élèves},
+  xmin=-3,xmax=3,ymin=0,ytick=\empty,
+  legend style={at={(0.5,1.1)},anchor=south,legend columns=-1,draw=none,
+    font=\small,/tikz/every even column/.append style={column sep=10pt}}]
+  \addplot[hist={bins=34,density},fill=warning!55,draw=warning!70,opacity=.75]
+    table[y=x] {data/autres.dat};
+  \addlegendentry{les trois autres maisons}
+  \addplot[hist={bins=34,density},fill=accent!55,draw=accent!80,opacity=.75]
+    table[y=x] {data/gryffindor.dat};
+  \addlegendentry{\Gryf}
+\end{axis}
+\end{tikzpicture}
+\caption{Répartition des élèves selon leur seule note d'\Herb. Les \Gryf
+se concentrent sous la bosse de gauche --- le \emph{mode} de la distribution ---
+que partagent des élèves d'une autre maison : aucun seuil sur cet axe ne sépare
+les deux populations.}
+\label{fig:une-note}
+\end{figure}
+
+Prises ensemble, les deux notes situent chaque élève dans un plan, où les
+\Gryf occupent une région que les trois autres maisons laissent vide. La
+séparation qu'aucune des deux notes ne produit seule résulte de leur
+combinaison.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[cloud,
+  xlabel={\Herb, en écarts-types},ylabel={\Runes, en écarts-types},
+  xmin=-2.8,xmax=2.8,ymin=-2.8,ymax=2.8]
+  \draw[gridgray,dashed] (axis cs:-2.8,0)--(axis cs:2.8,0);
+  \draw[gridgray,dashed] (axis cs:0,-2.8)--(axis cs:0,2.8);
+  \addplot[only marks,mark=*,mark size=1.4pt,warning!70,opacity=.45]
+    table[x=x,y=y] {data/autres.dat};
+  \addlegendentry{les trois autres maisons}
+  \addplot[only marks,mark=*,mark size=1.4pt,accent,opacity=.8]
+    table[x=x,y=y] {data/gryffindor.dat};
+  \addlegendentry{\Gryf}
+\end{axis}
+\end{tikzpicture}
+\caption{Les mêmes élèves, chacun placé selon ses deux notes. Les \Gryf
+occupent seuls le quadrant $x_1<0$, $x_2>0$ --- notes basses en \Herb,
+hautes en \Runes ; les trois autres maisons se répartissent dans les trois
+quadrants restants.}
+\label{fig:nuage}
+\end{figure}
+\FloatBarrier
+
+\section{Équation de la frontière}
+
+Les deux notes standardisées $(x_1,x_2)$ sont des nombres sans dimension,
+exprimés dans la même unité --- l'écart-type de leur colonne. Le plan qu'elles
+engendrent peut donc être muni d'un repère orthonormé, et c'est ce qui donne un
+sens aux notions d'angle, de perpendiculaire et de distance employées plus bas.
+Sur les notes brutes, où un axe se gradue en points et l'autre en centaines de
+points, aucune de ces notions ne serait pertinente.
+
+Dans ce repère, une droite admet pour équation cartésienne
+\[
+  w_0+w_1x_1+w_2x_2=0 .
+\]
+Trois coefficients y figurent, alors que deux nombres suffisent à désigner une
+droite du plan --- sa pente et son ordonnée à l'origine, par exemple. La raison
+est que l'équation est définie à un facteur multiplicatif près : $w$ et
+$\lambda w$ ont exactement les mêmes solutions pour tout $\lambda\neq0$, et
+désignent donc la même droite. Ce sont les rapports entre coefficients qui la
+fixent, jamais leurs valeurs.
+
+Le couple $(w_1,w_2)$ est un \emph{vecteur normal} à la droite : il lui est
+perpendiculaire et pointe vers la région où $w_0+w_1x_1+w_2x_2$ est positif. Sa longueur est la \emph{norme} de $w$, notée $\|w\|$ et employée dans tout ce
+qui suit :
+\[
+  \|w\|=\sqrt{w_1^2+w_2^2} .
+\]
+Le coefficient $w_0$, lui, place la droite relativement à l'origine du repère,
+dont la distance signée à la droite vaut
+\[
+  d_0=-\frac{w_0}{\|w\|} .
+\] Il porte le nom
+de \emph{biais} : c'est la valeur que prend $w_0+w_1x_1+w_2x_2$ pour un élève
+dont les deux notes valent zéro, autrement dit pour un élève moyen dans les deux
+matières.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=.66\textwidth,axis equal image,
+  axis lines=box,axis line style={ink!40},
+  grid=major,grid style={gridgray!25},
+  tick label style={font=\small},label style={font=\small},
+  xlabel={$x_1$},ylabel={$x_2$},
+  xmin=-2.2,xmax=2.2,ymin=-1.4,ymax=2.2,
+  xtick={-2,-1,0,1,2},ytick={-1,0,1,2},
+  domain=-2.2:2.2,samples=2,clip=true]
+
+  \fill[accent!12] (axis cs:-2.2,-0.92) -- (axis cs:2.2,1.72)
+    -- (axis cs:2.2,2.2) -- (axis cs:-2.2,2.2) -- cycle;
+  \fill[warning!10] (axis cs:-2.2,-0.92) -- (axis cs:2.2,1.72)
+    -- (axis cs:2.2,-1.4) -- (axis cs:-2.2,-1.4) -- cycle;
+
+  \addplot[ink,very thick]{0.4+0.6*x};
+
+  % angle droit entre la frontiere et sa normale, au pied H
+  \addplot[ink!70,thin] coordinates
+    {(-0.022,0.387) (-0.115,0.541) (-0.269,0.448)};
+
+  \addplot[warning,-{Latex[length=2.6mm]},very thick]
+    coordinates {(-0.176,0.294) (-0.776,1.294)};
+  \addplot[accent,very thick] coordinates {(0,0) (-0.176,0.294)};
+  \addplot[only marks,mark=*,ink,mark size=2pt]
+    coordinates {(0,0) (-0.176,0.294)};
+
+  \node[font=\small,text=accent,anchor=east] at (axis cs:-0.20,0.16) {$d_O$};
+
+  \node[font=\small,text=warning,anchor=south] at (axis cs:-0.776,1.36)
+    {$(w_1,w_2)$};
+  \node[font=\scriptsize,text=ink,anchor=north east] at (axis cs:-0.05,-0.04)
+    {$O$};
+  \node[font=\small,text=ink,fill=white,inner sep=1.5pt,anchor=south east]
+    at (axis cs:2.12,1.70) {$z=0$};
+  \node[font=\small,text=accent!80!black,anchor=north west]
+    at (axis cs:-2.08,2.12) {$z>0$};
+  \node[font=\small,text=warning,anchor=south east]
+    at (axis cs:2.08,-1.32) {$z<0$};
+\end{axis}
+\end{tikzpicture}
+\caption{La frontière $-0{,}4-0{,}6x_1+x_2=0$ sépare le plan en deux demi-plans.
+Le vecteur normal $(w_1,w_2)=(-0{,}6\,;1)$, tracé à l'échelle depuis le pied de la
+perpendiculaire issue de l'origine, est orthogonal à la frontière et pointe vers
+le demi-plan où $z>0$. Le segment $d_O$ joint l'origine à ce pied et mesure
+$-w_0/\|w\|=0{,}343$. La norme de $(w_1,w_2)$ laisse la frontière en place et fixe
+la vitesse à laquelle $z$ croît lorsqu'on s'en éloigne.}
+\label{fig:normal}
+\end{figure}
+\FloatBarrier
+
+Les deux panneaux suivants font varier un coefficient à la fois à partir de
+$w=(0\,;0{,}8\,;1)$, les deux autres restant fixés. Deux panneaux couvrent tous
+les cas : la frontière ne dépend que de la direction de $(w_1,w_2)$, et faire
+varier $w_1$ à $w_2$ fixé parcourt déjà cette direction tout entière.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[baseline=(current bounding box.north)]
+\begin{axis}[panel,width=.40\textwidth,height=5.6cm,
+  title={variation de $w_0$\\[-1pt] \scriptsize $w_1=0{,}8$,\ $w_2=1$},
+  title style={align=center},xlabel={$x_1$},ylabel={$x_2$},
+  legend style={at={(0.5,-0.32)},anchor=north,draw=none,font=\tiny,
+    cells={anchor=west},row sep=-1.5pt,legend image post style={scale=.7}},
+  domain=-3:3,samples=2]
+  \addplot[ink!45,thick,densely dashed]{-0.8*x+1.6};
+  \addlegendentry{$w_0=-1{,}6$}
+  \addplot[accent,very thick]{-0.8*x};
+  \addlegendentry{$w_0=0$}
+  \addplot[warning,thick,densely dotted]{-0.8*x-1.6};
+  \addlegendentry{$w_0=+1{,}6$}
+\end{axis}
+\end{tikzpicture}\hfill
+\begin{tikzpicture}[baseline=(current bounding box.north)]
+\begin{axis}[panel,width=.40\textwidth,height=5.6cm,
+  title={variation de $w_1$\\[-1pt] \scriptsize $w_0=0$,\ $w_2=1$},
+  title style={align=center},xlabel={$x_1$},yticklabels={},
+  legend style={at={(0.5,-0.32)},anchor=north,draw=none,font=\tiny,
+    cells={anchor=west},row sep=-1.5pt,legend image post style={scale=.7}},
+  domain=-3:3,samples=2]
+  \addplot[ink!45,thick,densely dashed]{-0.2*x};
+  \addlegendentry{$w_1=0{,}2$}
+  \addplot[accent,very thick]{-0.8*x};
+  \addlegendentry{$w_1=0{,}8$}
+  \addplot[warning,thick,densely dotted]{-2.2*x};
+  \addlegendentry{$w_1=2{,}2$}
+\end{axis}
+\end{tikzpicture}
+\caption{Le trait plein est le même dans les deux panneaux : $w=(0\,;0{,}8\,;1)$.
+À gauche, $w_0$ translate la droite parallèlement à elle-même. À droite, $w_1$ la
+fait pivoter autour de l'origine, qui annule $w_0+w_1x_1+w_2x_2$ pour toute
+valeur de $w_1$ puisque $w_0$ est nul.}
+\label{fig:trois-nombres}
+\end{figure}
+\FloatBarrier
+
+\section{Score}
+
+Le membre de gauche de cette équation se calcule pour tout élève du plan, sur la
+frontière ou ailleurs. On l'appelle le \emph{score} :
+\[
+  z=\ann{rulecolor}{w_0}{\annl{biais}\\ \annl{le même pour tous}}
+   +\ann{accent}{w_1x_1}{\annl{apport de la note}\\ \annl{d'\Herb}}
+   +\ann{warning}{w_2x_2}{\annl{apport de la note}\\ \annl{d'\Runes}}
+\]
+La frontière de décision est l'ensemble des points où ce nombre s'annule,
+$\{x : z(x)=0\}$. Le score est positif d'un côté, négatif de l'autre, et sa
+valeur absolue croît proportionnellement à la distance à la frontière :
+$z=\|w\|\,d$ (ch.~\ref{ch:descente}).
+
+Reste à relier ce score à une probabilité. La régression logistique pose que le
+score est le logarithme d'une cote.
+
+La \emph{cote} d'un événement est le rapport entre sa probabilité et celle de
+l'événement contraire :
+\[
+  \operatorname{cote}(p)
+  =\frac{\annup{accent}{p}{\annl{probabilité}\\ \annl{de l'événement}}}
+        {\ann{warning}{1-p}{\annl{probabilité}\\ \annl{du contraire}}}
+\]
+C'est la quantité employée dans les paris. Un élève auquel on accorde $p=0{,}8$
+d'être \Gryf a ainsi une cote de
+\[
+  \frac{0{,}8}{0{,}2}=4 ,
+\]
+soit quatre fois plus de chances d'en être que de ne pas en être. Une cote de $1$
+correspond à $p=0{,}5$, les deux réponses étant alors également probables. Quand
+$p$ parcourt $]0,1[$, la cote parcourt $]0,+\infty[$ : elle tend vers $0$ lorsque
+la probabilité s'annule, et croît sans borne lorsqu'elle approche $1$.
+
+Le \emph{logit} est le logarithme de cette cote,
+\[
+  \operatorname{logit}(p)=\log\frac{p}{1-p}.
+\]
+Il vaut $0$ pour $p=0{,}5$, il est négatif en dessous et positif au-dessus, et il
+parcourt $\R$ tout entier : exactement l'ensemble des valeurs que peut prendre un
+score. L'hypothèse annoncée s'écrit donc
+\[
+  \log\frac{p}{1-p}=z=w_0+w_1x_1+w_2x_2 ,
+\]
+et c'est la seule que fait la régression logistique : le logit de la probabilité
+cherchée est une fonction \emph{affine} des notes, c'est-à-dire une somme de
+leurs multiples augmentée d'une constante. L'expression de $p$ en fonction de $z$ s'en déduit
+(ch.~\ref{ch:logit}).
+
+\begin{releve}
+L'élève $3$, dont le score vaut $+1{,}34$, a une cote de $e^{1{,}34}=3{,}82$
+d'être \Gryf, soit une probabilité de $3{,}82/4{,}82=0{,}79$.
+\end{releve}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+% axis equal image : sans echelles identiques sur les deux axes, la
+% perpendiculaire ne se lit pas comme telle.
+\begin{axis}[width=.66\textwidth,axis equal image,
+  axis lines=box,axis line style={ink!40},
+  grid=major,grid style={gridgray!30},
+  tick label style={font=\small},label style={font=\small},
+  xlabel={$x_1$},ylabel={$x_2$},
+  xmin=-3,xmax=3,ymin=-2.2,ymax=3,
+  xtick={-3,-2,-1,0,1,2,3},ytick={-2,-1,0,1,2,3},
+  domain=-3:3,samples=2,clip=true]
+  \fill[accent!12] (axis cs:-3,-1.4) -- (axis cs:3,2.2)
+    -- (axis cs:3,3) -- (axis cs:-3,3) -- cycle;
+  \fill[warning!10] (axis cs:-3,-1.4) -- (axis cs:3,2.2)
+    -- (axis cs:3,-2.2) -- (axis cs:-3,-2.2) -- cycle;
+  \addplot[ink,very thick]{0.4+0.6*x};
+  \addplot[ink!55,thin,dashed] coordinates {(-1.5,2.6) (-0.132,0.321)};
+  \addplot[only marks,mark=*,ink,mark size=2.2pt]
+    coordinates {(-1.5,2.6) (0.5,0.9) (1.5,-1.4)};
+  \node[font=\small,text=ink,anchor=south west] at (axis cs:-1.45,2.68)
+    {$z=+3{,}1$};
+  \node[font=\small,text=ink,anchor=south] at (axis cs:0.5,1.02) {$z=+0{,}2$};
+  \node[font=\small,text=ink,anchor=west] at (axis cs:1.62,-1.4) {$z=-2{,}7$};
+  \node[font=\small,text=ink,fill=white,inner sep=1.5pt,anchor=north west]
+    at (axis cs:2.2,1.72) {$z=0$};
+  \node[font=\small,text=accent,anchor=north west] at (axis cs:-2.9,2.9)
+    {$z>0$};
+  \node[font=\small,text=warning,anchor=south east] at (axis cs:2.9,-2.1)
+    {$z<0$};
+  \node[font=\scriptsize,text=ink!75,anchor=west]
+    at (axis cs:-0.75,1.50) {$d=2{,}66$};
+\end{axis}
+\end{tikzpicture}
+\caption{Le trait épais est la frontière, tracée ici pour
+$w=(-0{,}4\,;-0{,}6\,;1)$. Le segment en pointillé joint le
+point $z=+3{,}1$ à son projeté orthogonal sur la frontière ; il mesure
+$d=|z|/\|w\|=2{,}66$. À coefficients fixés, le score est proportionnel à la
+distance à la frontière : le point $z=+0{,}2$ en est distant de $0{,}17$.}
+\label{fig:score}
+\end{figure}
+
+\section{Variable cible}
+
+La frontière de décision sépare le plan en exactement deux régions. Elle peut
+donc porter une question à deux réponses, et une seule, alors que le fichier en
+distingue quatre.
+
+La construction traite donc une maison à la fois : \Gryf contre les trois autres
+réunies. Les trois questions restantes se posent à l'identique et se résolvent
+séparément (ch.~\ref{ch:classifieur}).
+
+La réponse à cette question s'appelle la \emph{variable cible}. Sa colonne se
+déduit ligne à ligne de la colonne \texttt{Hogwarts House} du fichier, qui donne
+la maison de chacun des $1\,600$ élèves. C'est cette même quantité que le modèle devra produire pour
+un élève dont on ne connaîtra que les notes. Elle se code par
+\[
+  y_i=\begin{cases}
+    1 & \text{si l'élève } i \text{ appartient à \Gryf},\\
+    0 & \text{sinon,}
+  \end{cases}
+\]
+ce qui donne $327$ valeurs égales à $1$ et $1\,273$ égales à $0$.
+
+Le choix de $1$ et $0$ procure deux propriétés qui serviront constamment. La
+moyenne de la colonne $y$ vaut la proportion de \Gryf dans le fichier,
+$327/1\,600=0{,}2044$. Et le chapitre suivant produira, pour chaque
+élève, une probabilité comprise entre $0$ et $1$ ; les deux colonnes seront alors
+comparables ligne à ligne, et leur différence mesurera l'erreur commise.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  idx/.style={draw=ink!25,fill=gridgray!12,minimum width=9mm,
+    minimum height=6.2mm,font=\footnotesize,inner sep=1pt},
+  cell/.style={draw=ink!25,minimum width=26mm,minimum height=6.2mm,
+    font=\footnotesize,inner sep=1pt},
+  ycell/.style={draw=ink!25,minimum width=11mm,minimum height=6.2mm,
+    font=\footnotesize,inner sep=1pt},
+  head/.style={font=\scriptsize\bfseries,text=ink,anchor=base},
+  arr/.style={-{Latex[length=1.8mm]},ink!55}]
+
+\foreach \n/\yy/\house/\col/\val/\bg in {%
+  0/0/Ravenclaw/raven/0/white, 1/-0.68/Slytherin/slyth/0/white,
+  2/-1.36/Ravenclaw/raven/0/white, 3/-2.04/Gryffindor/gryff/1/gryff!14,
+  4/-2.72/Gryffindor/gryff/1/gryff!14}{
+  \node[idx] at (0.45,\yy) {$\n$};
+  \node[cell,fill=\col!12,text=\col] at (2.25,\yy) {\house};
+  \node[ycell,fill=\bg] at (5.15,\yy) {$\val$};
+  \draw[arr] (3.6,\yy) -- (4.55,\yy);
+}
+
+\node[head] at (0.45,0.42) {\texttt{Index}};
+\node[head] at (2.25,0.42) {\texttt{Hogwarts House}};
+\node[head] at (5.15,0.42) {$y$};
+
+\node[font=\scriptsize,text=ink!65] at (0.45,-3.28) {$\vdots$};
+\node[font=\scriptsize,text=ink!65] at (2.25,-3.28) {$\vdots$};
+\node[font=\scriptsize,text=ink!65] at (5.15,-3.28) {$\vdots$};
+
+\node[font=\footnotesize,text=ink,anchor=west] at (6.15,-1.36)
+  {$y_i=1$ si l'élève $i$ est \Gryf, $y_i=0$ sinon};
+\end{tikzpicture}
+\caption{Les cinq premières lignes de \texttt{dataset\_train.csv}. Les deux
+colonnes de gauche figurent dans le fichier ; la troisième est construite, et
+l'est différemment pour chacune des quatre maisons. }
+\label{fig:codage}
+\end{figure}
+\FloatBarrier
+
+\section{Du signe à une quantité continue}
+
+Le signe de $z$ fournit déjà une règle de décision : \Gryf si $z>0$, autre maison
+sinon. Deux exigences conduisent à lui préférer une quantité qui varie de façon
+continue.
+
+La première est de rendre compte de la fiabilité. Deux élèves situés du même côté
+reçoivent la même réponse, que l'un se tienne loin de la frontière et l'autre
+tout contre, là où une note manquante ou une erreur de saisie suffit à le faire
+changer de classe. La valeur du score porte cette différence, que son signe seul
+laisse tomber.
+
+\begin{releve}
+Les deux élèves marqués sur la figure~\ref{fig:score} ont pour scores $+3{,}1$ et
+$+0{,}2$.
+\end{releve}
+
+La seconde est de rendre la frontière corrigeable. Déterminer sa position par le
+calcul suppose en effet de mesurer de combien elle est mal placée, de la déplacer
+d'autant, et de recommencer. Une réponse qui vaut juste ou fausse fournit une mesure qui
+saute d'une valeur à l'autre : elle garde la même valeur sur tout un intervalle
+de positions, et le calcul y reçoit partout la même indication. Il faut une
+quantité qui réponde à un déplacement, si petit soit-il.
+
+\begin{resultat}[Transformation cherchée]
+Il faut transformer le score $z$, qui parcourt $\R$, en une probabilité, comprise
+entre $0$ et $1$. Cette transformation doit être continue,
+pour qu'un petit déplacement de la droite produise un petit changement de
+probabilité, et croissante, pour qu'un score plus élevé signifie une chance plus
+grande. Une infinité de fonctions remplissent ces deux conditions ; la fonction de
+répartition de la loi normale en est une, et fonde le modèle \emph{probit}. Celle de la
+régression logistique s'obtient en posant que le logarithme de la cote est une
+fonction affine des notes, hypothèse qui conduit aux formules les plus simples
+(ch.~\ref{ch:logit}).
+\end{resultat}
+
+\section{Au-delà de deux matières}
+
+Le fichier compte treize matières, et le modèle complet en retient dix. La
+question se pose alors : la frontière reste-t-elle une droite ?
+
+Non, et le mot change à chaque dimension ajoutée. Avec $n$ notes, un élève est un
+point de $\R^n$ et l'équation devient
+\[
+  w_0+w_1x_1+\dots+w_nx_n=0,
+\]
+soit une équation linéaire à $n$ inconnues. Son ensemble de solutions est un
+sous-espace affine de dimension $n-1$ : une seule contrainte retire exactement un
+degré de liberté à l'espace. Cet objet porte le nom d'\emph{hyperplan affine} de
+$\R^n$ --- droite pour $n=2$, plan pour $n=3$, et sans représentation graphique
+au-delà.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{ccccc}
+\toprule
+matières & espace des élèves & frontière & sa dimension & coefficients \\
+\midrule
+$1$  & $\R$      & un point    & $0$ & $2$  \\
+$2$  & $\R^2$    & une droite  & $1$ & $3$  \\
+$3$  & $\R^3$    & un plan     & $2$ & $4$  \\
+$n$  & $\R^n$    & un hyperplan & $n-1$ & $n+1$ \\
+\midrule
+$10$ & $\R^{10}$ & un hyperplan & $9$ & $11$ \\
+\bottomrule
+\end{tabular}
+\caption{La frontière occupe toujours une dimension de moins que l'espace où
+vivent les élèves, et sépare toujours celui-ci en exactement deux régions. Le
+nombre de coefficients, lui, croît d'une unité par matière ajoutée.}
+\label{tab:dimensions}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[baseline=(current bounding box.north),font=\footnotesize]
+\node[font=\small,anchor=south] at (1.6,1.5) {$n=1$};
+\draw[ink!45] (0,0.4) -- (3.2,0.4);
+\foreach \x in {0.3,0.6,0.95,1.25}{\fill[accent] (\x,0.4) circle (1.5pt);}
+\foreach \x in {1.95,2.25,2.6,2.95}{\fill[warning!70] (\x,0.4) circle (1.5pt);}
+\fill[ink] (1.6,0.4) circle (2.2pt);
+\node[anchor=north,text=ink] at (1.6,0.25) {un point};
+\node[anchor=north,text=ink!70,font=\scriptsize] at (1.6,-0.15)
+  {dimension $0$};
+\end{tikzpicture}\hfill
+\begin{tikzpicture}[baseline=(current bounding box.north),font=\footnotesize]
+\node[font=\small,anchor=south] at (1.6,1.5) {$n=2$};
+\draw[gridgray!60] (0,-0.35) rectangle (3.2,1.35);
+\draw[ink,very thick] (0.25,-0.1) -- (2.95,1.1);
+\foreach \p in {(0.6,0.9),(1.0,1.15),(1.5,1.25)}{\fill[accent] \p circle (1.5pt);}
+\foreach \p in {(1.5,0.1),(2.2,0.35),(2.6,0.15)}{\fill[warning!70] \p circle (1.5pt);}
+\node[anchor=north,text=ink] at (1.6,-0.45) {une droite};
+\node[anchor=north,text=ink!70,font=\scriptsize] at (1.6,-0.85)
+  {dimension $1$};
+\end{tikzpicture}\hfill
+\begin{tikzpicture}[baseline=(current bounding box.north),font=\footnotesize]
+\node[font=\small,anchor=south] at (1.6,1.5) {$n=3$};
+\draw[ink!45,-{Latex[length=1.6mm]}] (0.9,0.3) -- (2.9,0.3);
+\draw[ink!45,-{Latex[length=1.6mm]}] (0.9,0.3) -- (1.6,0.85);
+\draw[ink!45,-{Latex[length=1.6mm]}] (0.9,0.3) -- (0.9,1.4);
+\fill[ink!22,draw=ink!60] (0.35,0.45) -- (2.35,-0.15) -- (2.95,0.55)
+  -- (0.95,1.15) -- cycle;
+\foreach \p in {(1.1,0.95),(1.7,0.8)}{\fill[accent] \p circle (1.5pt);}
+\foreach \p in {(1.6,0.15),(2.3,0.35)}{\fill[warning!70] \p circle (1.5pt);}
+\node[anchor=north,text=ink] at (1.6,-0.45) {un plan};
+\node[anchor=north,text=ink!70,font=\scriptsize] at (1.6,-0.85)
+  {dimension $2$};
+\end{tikzpicture}
+\caption{La frontière pour une, deux et trois matières. Le vecteur normal
+$(w_1,\dots,w_n)$ garde son rôle dans tous les cas, la distance d'un élève à la
+frontière vaut toujours $|z|/\|w\|$, et le signe de $z$ désigne toujours l'un des
+deux demi-espaces. Seule la représentation graphique s'arrête à $n=3$.}
+\label{fig:dimensions}
+\end{figure}
+\FloatBarrier
+
+Seule la représentation graphique change. Les formules des chapitres suivants
+s'écrivent avec un nombre quelconque de notes, le code de la deuxième partie
+boucle sur les colonnes en lisant leur nombre dans le fichier, et les
+démonstrations de la troisième valent pour $n$ quelconque. Deux matières servent
+ici parce qu'elles se dessinent.
+
+\begin{resultat}[Énoncé du problème]
+Reconnaître les $327$ \Gryf parmi les $1\,600$ élèves, à partir des deux notes
+standardisées du chapitre précédent, en déterminant par le calcul les trois
+coefficients d'une frontière de décision.
+\end{resultat}
