@@ -8,7 +8,7 @@ contrôlent contre une mesure indépendante, puis l'appliquent en boucle jusqu'�
 stabilisation.
 \end{lecture}
 
-Après avoir jugé un jeu de coefficients, il reste à savoir dans quel sens les
+Un jeu de coefficients étant jugé, vient la question du sens dans lequel les
 déplacer, et à vérifier que cette direction est la bonne avant d'en tirer une
 boucle d'entraînement.
 
@@ -67,9 +67,8 @@ column    from the formula        measured             gap
    2         -0.098350181     -0.098350181     3.91e-11
 \end{console}
 
-L'écart résiduel vient de la mesure, pas de la formule. Une différence centrée
-sur un pas $h$ commet une erreur en $h^2$, soit $10^{-10}$ pour $h=10^{-5}$, ce
-que les trois lignes retrouvent. Un $h$ plus grand mesurerait une corde au lieu
+L'écart résiduel vient de la mesure, pas de la formule. Centrée sur un pas $h$, une différence commet une erreur en $h^2$, soit
+$10^{-10}$ pour $h=10^{-5}$, ce que les trois lignes retrouvent. Un $h$ plus grand mesurerait une corde au lieu
 d'une tangente ; un $h$ plus petit ferait perdre à la soustraction ses décimales
 significatives.
 
@@ -92,9 +91,8 @@ turn 2   cost 0.449297   weights -0.5194  -0.4005  +0.3364
 turn 3   cost 0.393020   weights -0.6955  -0.5348  +0.4500
 \end{console}
 
-Le premier biais se recalcule à la main, et c'est le contrôle à faire ici. Les
-coefficients étant nuls, le modèle annonce $0{,}5$ pour les $1\,600$ élèves. La
-pente du biais est la moyenne des écarts $\sigma(z)-y$, où $y$ vaut $1$ pour les
+Le premier biais se recalcule à la main, et c'est le contrôle à faire ici. Les coefficients étant nuls, le modèle annonce $0{,}5$ pour les $1\,600$ élèves,
+et la pente du biais vaut la moyenne des écarts $\sigma(z)-y$, où $y$ vaut $1$ pour les
 \Gryf et $0$ pour les autres.
 
 \begin{figure}[htbp]
@@ -133,6 +131,10 @@ qu'une liste neuve rend impossible.
 
 \section{Étape 7 : itération jusqu'à stabilisation}
 
+Un pas isolé fait baisser le coût d'une fraction. La descente consiste à répéter
+ce pas jusqu'à ce que la baisse devienne négligeable, ce qui demande une boucle
+et deux conditions d'arrêt.
+
 \codefile[firstline=4,lastline=16]{scripts/tuto/step7_loop.py}
 
 \begin{figure}[htbp]
@@ -164,8 +166,7 @@ coûte donc deux.}
 
 Les deux conditions d'arrêt sont nécessaires l'une comme l'autre. La première
 compare la baisse du coût à sa valeur, en relatif : sous \texttt{EPSILON}, les
-tours suivants ne déplacent plus la frontière de façon mesurable. La seconde est
-un plafond, et il est indispensable : dans certaines configurations, la première
+tours suivants ne déplacent plus la frontière de façon mesurable. Plafond d'itérations, la seconde est indispensable : dans certaines configurations, la première
 ne se déclenche jamais parce que les coefficients divergent
 (annexe~\ref{ann:norme}).
 
@@ -186,5 +187,5 @@ sigmoïde de part et d'autre.
 
 \begin{resultat}[Fonction d'entraînement]
 Une fonction qui prend un tableau de notes et une colonne de réponses, et rend
-trois nombres. Il reste à l'employer quatre fois.
+trois nombres. Elle s'emploie ensuite quatre fois.
 \end{resultat}

@@ -136,11 +136,10 @@ dans le programme.
 
 Deux remèdes existent. Le plus simple est d'arrêter sur un nombre de tours fixé,
 ce que fait le plafond : la frontière obtenue est correcte, seule sa raideur est
-arbitraire. Le second consiste à ajouter au coût un terme $\frac{\mu}{2}\|w\|^2$
-qui croît avec la norme --- c'est la \emph{régularisation}. La courbe bleue de la
-figure~\ref{fig:deux-parts} est alors relevée par une parabole, un minimum
-réapparaît même sur des données séparables, et le paramètre $\mu$ fixe où il
-tombe. La bibliothèque \texttt{scikit-learn} l'applique par défaut, ce qui
+arbitraire. Le second, dit \emph{régularisation}, ajoute au coût un terme
+$\frac{\mu}{2}\|w\|^2$ qui croît avec la norme. Relevée par une parabole, la courbe bleue de la figure~\ref{fig:deux-parts}
+laisse alors réapparaître un minimum, même sur des données séparables, et le
+paramètre $\mu$ fixe où il tombe. La bibliothèque \texttt{scikit-learn} l'applique par défaut, ce qui
 explique qu'elle converge sur des données où une implémentation directe diverge.
 \end{vigilance}
 

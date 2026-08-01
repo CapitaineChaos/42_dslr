@@ -42,21 +42,17 @@ Certaines cases du fichier sont vides : la note n'a pas été enregistrée pour 
 puisque le score est une somme de produits ; une case vide arrête donc le
 traitement de la ligne entière.
 
-Deux voies s'ouvrent. Écarter les élèves incomplets conserve des mesures
-authentiques, au prix du nombre d'élèves, et suppose que les absents de la
-colonne ressemblent aux présents --- une hypothèse que le fichier ne permet pas
-de vérifier. Attribuer une valeur à chaque case vide conserve tous les élèves, au
-prix de valeurs fabriquées. Cette seconde opération s'appelle une
-\emph{imputation}, et c'est celle qui est retenue ici.
+Deux voies s'ouvrent : écarter les élèves incomplets, au prix du nombre d'élèves
+et d'une hypothèse invérifiable sur leur ressemblance avec les autres, ou
+attribuer une valeur à chaque case vide, au prix de mesures fabriquées. C'est
+cette seconde voie, l'\emph{imputation}, qui est retenue ici.
 
-Reste à choisir la valeur attribuée. Une valeur centrale perturbe la colonne au
-minimum, et deux candidates se présentent : la moyenne et la médiane. La médiane
-est la valeur qui coupe la colonne en deux moitiés de même effectif ; déplacer la
-plus haute note du fichier à mille points au-dessus la laisse identique, alors
-que la moyenne se déplace avec elle. Cette insensibilité aux valeurs extrêmes est
-la première raison de la préférer. La seconde tient à la suite : la moyenne de la
-colonne sert au calcul de la section suivante, et remplir les cases vides avec
-elle reviendrait à la calculer à partir d'elle-même.
+Reste à choisir la valeur. Deux candidates centrales se présentent, et la médiane
+l'emporte pour deux raisons. Coupant la colonne en deux moitiés de même effectif,
+elle reste identique si l'on déplace la plus haute note mille points au-dessus,
+là où la moyenne suivrait ce déplacement. Et puisque la moyenne sert au calcul de
+la section suivante, remplir les cases vides avec elle reviendrait à la calculer
+à partir d'elle-même.
 
 \begin{chiffres}[Cases vides des deux colonnes]
 \begin{center}
@@ -91,9 +87,9 @@ $-0{,}296$ une fois standardisée.
 
 Les deux colonnes mesurent une performance scolaire, mais dans des unités sans
 rapport entre elles. Le score les additionne pourtant, après avoir multiplié
-chacune par son coefficient. Une matière dont les notes s'étalent sur une large
-plage pèse alors davantage qu'une autre, à coefficient égal, pour la seule raison
-de son échelle de notation. Deux conséquences en découlent : les coefficients
+chacune par son coefficient. À coefficient égal, une matière dont les notes
+s'étalent sur une large plage pèse alors davantage qu'une autre, pour la seule
+raison de son échelle de notation. Deux conséquences en découlent : les coefficients
 cessent d'être comparables entre eux, et la distance entre deux élèves du plan
 dépend du barème de chaque matière plutôt que de leurs résultats.
 
@@ -103,19 +99,32 @@ $500$, et les secondes sont vingt fois plus dispersées : dans $w_1x_1+w_2x_2$, 
 $w_2$ de $1$ produit donc un effet vingt fois plus grand qu'un $w_1$ de $1$.
 \end{releve}
 
-Ramener les deux colonnes à une échelle commune supprime cette dépendance.
+Ramener les deux colonnes à une échelle commune supprime cette dépendance, et
+demande deux décisions.
+
+D'abord, à partir d'où compter. Une note de $463$ en \Runes ne dit rien tant
+qu'on ignore le niveau de la promotion ; ce qui situe un élève, c'est son écart à
+la moyenne de sa colonne, $v-\mu$. Cette soustraction, le \emph{centrage}, place
+le zéro sur l'élève moyen : les notes deviennent positives au-dessus de la
+moyenne, négatives en dessous.
+
+Ensuite, avec quelle unité mesurer cet écart. Il en faut une propre à chaque
+colonne, et l'écart-type $\sigma$ la fournit : il mesure la dispersion typique
+des notes autour de leur moyenne. Diviser par lui, la \emph{réduction}, exprime
+tout écart en nombre de dispersions typiques.
 
 \[
   x=\frac{\annup{accent}{v-\mu}{\annl{écart à la moyenne}\\ \annl{de la colonne}}}
          {\ann{warning}{\sigma}{\annl{écart-type}\\ \annl{de la colonne}}}
 \]
 
-Cette transformation porte le nom de \emph{centrage-réduction} ; son résultat s'appelle \emph{cote standard}, ou \emph{$z$-score} en anglais. Ce
-document note $x$ la cote standard et réserve la lettre $z$ au score du modèle,
-introduit au chapitre~\ref{ch:nuage}. La soustraction place la moyenne en $0$,
-la division fixe l'écart-type à $1$. Une valeur standardisée se lit donc
-directement : $+1$ désigne un élève situé un
-écart-type au-dessus de la moyenne de sa colonne, quelle que soit la matière.
+Le résultat porte le nom de \emph{cote standard}, ou \emph{$z$-score} en
+anglais ; on le note ici $x$, la lettre $z$ étant réservée au score du modèle
+(ch.~\ref{ch:nuage}). Par construction, la colonne transformée a pour moyenne $0$
+et pour écart-type $1$, quelle que soit la matière d'origine. Une valeur
+standardisée se lit alors directement : $+1$ désigne un élève situé une
+dispersion typique au-dessus de sa moyenne, en \Herb comme en \Runes, et les deux
+colonnes deviennent comparables terme à terme.
 
 \begin{figure}[htbp]
 \centering
@@ -185,10 +194,11 @@ Le nuage conserve sa forme, seules ses graduations changent.
     table[x=x,y=y] {data/gryffindor.dat};
 \end{axis}
 \end{tikzpicture}
-\caption{Les mêmes $534$ élèves, un sur trois pour la lisibilité. Les deux
-figures se déduisent l'une de l'autre par changement de graduation. La
-standardisation rend les deux coefficients comparables entre eux et le score
-indépendant des unités de notation.}
+\caption{Les mêmes $534$ élèves, un sur trois pour la lisibilité : en bleu les
+\Gryf, en orangé pâle les trois autres maisons. Les deux nuages se déduisent l'un
+de l'autre par changement de graduation, la forme et les positions relatives
+restant identiques. Seule change la lecture des axes, désormais en écarts-types
+sur les deux matières.}
 \label{fig:brut-vs-standard}
 \end{figure}
 \FloatBarrier

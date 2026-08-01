@@ -10,11 +10,20 @@ en vérifiant que sa courbure ne change jamais de signe.
 
 \section{Courbure d'une fonction d'une variable}
 
-La dérivée seconde mesure la variation de la pente. Si elle reste positive, la
-pente croît sur tout l'intervalle et la concavité de la courbe reste tournée du
-même côté. Une telle fonction est dite \emph{convexe} : elle ne peut pas présenter deux
-minimums séparés par un maximum local, ce qui exigerait que la pente cesse de
-croître.
+La descente s'arrête là où la pente s'annule. Encore faut-il savoir combien de
+tels points une fonction possède : s'ils sont plusieurs, le point d'arrivée
+dépend du point de départ, et deux exécutions du même programme peuvent rendre
+deux modèles.
+
+La dérivée seconde répond à cette question, car elle mesure la variation de la
+pente. Supposons-la strictement positive partout : la pente croît alors sur tout
+l'intervalle, donc elle passe au plus une fois par zéro. Un seul point critique
+existe, et c'est un minimum, la pente y passant du négatif au positif.
+
+Une fonction dont la dérivée seconde reste positive ou nulle est dite
+\emph{convexe}. Deux minimums séparés par un maximum local exigeraient que la
+pente monte, redescende, puis remonte : sa dérivée changerait de signe, ce que la
+convexité interdit.
 
 \begin{figure}[htbp]
 \centering
@@ -110,7 +119,7 @@ une direction $\mathbf v$ dès que $\sum_j v_jx_{ij}=0$ pour tous les élèves,
 c'est-à-dire lorsqu'une combinaison des notes est identiquement nulle. L'ensemble
 des minima est alors une droite, ou un sous-espace de dimension supérieure.
 
-C'est exactement ce qui se produit avec deux colonnes proportionnelles. Si
+Deux colonnes proportionnelles produisent exactement ce cas. Si
 Astronomy vaut $-100$ fois Defense Against the Dark Arts, augmenter un
 coefficient et diminuer l'autre dans le bon rapport laisse tous les scores
 inchangés : les prédictions restent identiques, mais les coefficients dérivent

@@ -1,25 +1,43 @@
-\chapter{Du score à la probabilité}
+\chapter{Probabilité d'appartenance}
 \label{ch:probabilite}
 
 \begin{lecture}
-Le score indique de quel côté de la frontière de décision se situe un élève. Il faut en tirer une probabilité. La fonction qui
-opère ce passage est la fonction logistique (ch.~\ref{ch:logit}).
+Le score indique de quel côté de la frontière de décision se situe un élève, et
+il faut en tirer une probabilité. Ce passage s'opère par la fonction logistique
+(ch.~\ref{ch:logit}).
 \end{lecture}
 
 \section{Fonction logistique}
 
+L'hypothèse du chapitre précédent égale le score au logarithme de la cote. Elle
+se lit dans un sens comme dans l'autre : elle donne $z$ à partir de $p$, et c'est
+$p$ à partir de $z$ dont le programme a besoin. Pour l'obtenir, on inverse l'égalité en trois opérations réversibles.
+
+\begin{align*}
+  \log\frac{p}{1-p} &= z \\[2pt]
+  \frac{p}{1-p} &= e^{z}
+    &&\text{exponentielle des deux membres} \\[2pt]
+  p &= e^{z}(1-p) = e^{z}-p\,e^{z}
+    &&\text{on multiplie par } 1-p \\[2pt]
+  p\bigl(1+e^{z}\bigr) &= e^{z}
+    &&\text{on regroupe les termes en } p \\[2pt]
+  p &= \frac{e^{z}}{1+e^{z}} = \frac{1}{1+e^{-z}}
+    &&\text{on divise en haut et en bas par } e^{z}
+\end{align*}
+
+La fonction ainsi obtenue s'appelle la \emph{fonction logistique}, et se note
+$\sigma$ :
 \[
-  \sigma(z)=\frac{1}{1+e^{-z}},
-  \qquad
   \ann{accent}{z}{\annl{score}\\ \annl{parcourt $\R$}}
   \;\longmapsto\;
-  \ann{warning}{\sigma(z)}{\annl{probabilité}\\ \annl{dans $\,]0,1[$}}
+  \ann{warning}{\sigma(z)=\frac{1}{1+e^{-z}}}{\annl{probabilité}\\ \annl{dans $\,]0,1[$}}
 \]
 
-Elle prend n'importe quel nombre et rend une valeur strictement comprise entre
-$0$ et $1$. Un score très négatif donne une probabilité proche de zéro, un score
-très positif une probabilité proche de un, et le score nul donne exactement
-$0{,}5$ : sur la frontière, le modèle ne départage pas les deux réponses.
+Ses valeurs se déduisent de l'écriture $1/(1+e^{-z})$. Pour $z$ très négatif,
+$e^{-z}$ est immense et le quotient tend vers zéro ; pour $z$ très positif,
+$e^{-z}$ tend vers zéro et le quotient vers $1$ ; en $z=0$, l'exponentielle vaut
+$1$ et le quotient exactement $0{,}5$. Sur la frontière, le modèle accorde donc
+la même probabilité aux deux réponses, ce qui est cohérent avec un score nul.
 
 \begin{figure}[htbp]
 \centering
@@ -42,11 +60,11 @@ scores sont calculés ci-dessous.}
 \label{fig:sigmoide-emploi}
 \end{figure}
 
-Deux propriétés servent constamment par la suite. La fonction est croissante,
-donc un score plus grand donne toujours une probabilité plus grande : classer par
-score ou par probabilité revient au même. Elle est symétrique autour de $0{,}5$,
-puisque $\sigma(-z)$ vaut exactement $1-\sigma(z)$, si bien que les deux réponses
-jouent des rôles symétriques.
+Deux propriétés servent constamment par la suite. Étant croissante, la fonction
+associe toujours une probabilité plus grande à un score plus grand : classer par
+score ou par probabilité revient au même. Elle est par ailleurs symétrique autour
+de $0{,}5$, puisque $\sigma(-z)$ vaut exactement $1-\sigma(z)$, si bien que les
+deux réponses jouent des rôles symétriques.
 
 \section{Calcul de la probabilité}
 
@@ -171,10 +189,10 @@ Ses notes standardisées valent $x_1=-1{,}485$ et $x_2=+0{,}275$, d'où
 
 Chaque terme du score est un produit de deux nombres signés, et son signe fixe le
 sens de sa contribution : un terme positif rapproche l'élève de \Gryf, un terme
-négatif l'en éloigne. Le signe du coefficient est une propriété
-de la matière, fixée par l'entraînement pour tous les élèves ; celui de la note
-standardisée dit seulement si cet élève-ci est au-dessus ou en dessous de la
-moyenne de sa promotion. La règle des signes combine les deux.
+négatif l'en éloigne. Du côté du coefficient, ce signe est une propriété de la
+matière, fixée par l'entraînement pour tous les élèves ; du côté de la note
+standardisée, il dit seulement si cet élève-ci se situe au-dessus ou en dessous
+de la moyenne de sa promotion. La règle des signes combine les deux.
 
 \begin{figure}[htbp]
 \centering
@@ -217,9 +235,9 @@ pour tous les élèves, ici vers les autres maisons. Un
 sur celle du biais.
 
 L'élève $3$ illustre la première ligne du tableau : sa note d'\Herb est basse, le
-coefficient est négatif, leur produit contribue en faveur de \Gryf. Sa note
-d'\Runes, légèrement au-dessus de la moyenne, contribue dans le même sens par la
-seconde ligne. Les deux contributions l'emportent de peu sur le biais, d'où un
+coefficient est négatif, leur produit contribue en faveur de \Gryf. Par la seconde ligne, sa note d'\Runes, légèrement au-dessus de la moyenne,
+contribue dans le même sens. Les deux contributions l'emportent de peu sur le
+biais, d'où un
 score de $+1{,}34$ et une probabilité de $0{,}79$ : l'élève se tient du côté
 attendu, près de la frontière. L'élève $4$ cumule une note d'\Herb très basse et une note
 d'\Runes élevée : les mêmes deux lignes jouent, avec des notes plus marquées, et
@@ -299,12 +317,12 @@ $0{,}70$ & $27$ & $4$  & $31$ & \\
 \bottomrule
 \end{tabular}
 \end{center}
-Le minimum tombe un peu au-dessus de $0{,}5$ parce que les deux groupes sont de
-tailles inégales : $327$ \Gryf contre $1\,273$ autres élèves. Une même
-proportion du grand groupe qui franchit le seuil fournit davantage d'erreurs que
-la même proportion du petit, si bien qu'un seuil un peu plus exigeant réduit le
-total. Le programme garde $0{,}5$. Cette valeur vient d'une décision, la même pour tout
-fichier ; $0{,}58$ est mesuré sur celui-ci et changerait avec lui.
+Si le minimum tombe un peu au-dessus de $0{,}5$, c'est que les deux groupes sont
+de tailles inégales : $327$ \Gryf contre $1\,273$ autres élèves. À proportion
+égale d'élèves franchissant le seuil, le grand groupe en fournit donc davantage
+que le petit, et un seuil un peu plus exigeant réduit le total. Le programme
+garde néanmoins $0{,}5$, valeur issue d'une décision et la même pour tout
+fichier, quand $0{,}58$ est mesuré sur celui-ci et changerait avec lui.
 \end{chiffres}
 
 
@@ -314,9 +332,9 @@ trop conduit à l'abaisser ; ne désigner que des cas sûrs conduit à l'élever
 choix relève de l'usage fait des prédictions, que les données seules laissent
 ouvert.
 
-Un seuil tranche entre deux réponses. Le classifieur à quatre maisons compare
-quatre scores et retient le plus grand, l'ordre suffisant à trancher
-(ch.~\ref{ch:classifieur}). La valeur $0{,}5$ garde en revanche partout son autre
+Un seuil tranche entre deux réponses. À quatre maisons, la décision se prend
+autrement : le classifieur compare quatre scores et retient le plus grand,
+l'ordre suffisant à trancher (ch.~\ref{ch:classifieur}). La valeur $0{,}5$ garde en revanche partout son autre
 rôle, celui de la probabilité que rend $\sigma$ en zéro, qui situe la frontière
 et donne le coût de départ.
 

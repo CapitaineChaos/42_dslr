@@ -9,6 +9,8 @@ les notes.
 
 \section{Interprétation des coefficients}
 
+La descente s'arrête sur trois nombres, qui contiennent tout ce que le modèle a
+retenu des mille six cents élèves :
 \[
   w_0=-4{,}745,\qquad
   w_1=-3{,}454\ \text{(\Herb)},\qquad
@@ -20,15 +22,30 @@ est haute, plus le score baisse, donc moins l'élève est \Gryf. \Runes
 est positif : c'est l'inverse. Le nuage (ch.~\ref{ch:nuage}) montre ce
 croisement, les \Gryf occupant la région en haut à gauche.
 
-La \emph{valeur absolue} mesure le poids de la matière. Les deux valeurs,
-$3{,}45$ et $3{,}47$, sont presque égales : les deux matières pèsent autant.
+La \emph{valeur absolue} mesure le poids de la matière. Presque égales, les deux
+valeurs $3{,}45$ et $3{,}47$ donnent aux deux matières le même poids.
 Cette comparaison n'a de sens que parce que les notes ont été standardisées,
 donc exprimées dans la même unité. Sur les notes brutes, le coefficient d'\Runes serait vingt fois plus petit que celui d'\Herb, pour la seule raison
 que ses valeurs sont vingt fois plus dispersées.
 
 Le \emph{biais} $w_0$ est le seul des trois à s'appliquer identiquement à tous
-les élèves. Il reflète la fréquence de base : les \Gryf étant minoritaires, un élève quelconque reçoit un score
-négatif, et seules des notes suffisamment marquées le ramènent au-dessus de zéro.
+les élèves. Il reflète la fréquence de base : les \Gryf étant minoritaires, un
+élève quelconque reçoit un score négatif, et seules des notes suffisamment
+marquées le ramènent au-dessus de zéro.
+
+Ces trois nombres se lisent aussi de façon quantitative, en revenant à la cote.
+Le score étant le logarithme de la cote (ch.~\ref{ch:nuage}), ajouter une unité à
+une note standardisée augmente le score de $w_j$, donc multiplie la cote par
+$e^{w_j}$ :
+\[
+  \frac{p'/(1-p')}{p/(1-p)}=e^{\,w_j}
+  \qquad\text{lorsque } x_j \text{ augmente de } 1 .
+\]
+Un écart-type de plus en \Runes multiplie ainsi par $e^{3{,}469}=32$ la cote
+d'être \Gryf ; un écart-type de plus en \Herb la divise par $e^{3{,}454}=32$
+également, les deux coefficients étant presque opposés. Quant au biais, il fixe
+la cote d'un élève moyen dans les deux matières : $e^{-4{,}745}=0{,}0087$, soit
+une chance sur cent quinze.
 
 Les deux panneaux ci-dessous font varier $w_0$ puis $w_1$ autour du modèle
 obtenu, les autres coefficients restant à leur valeur. Un troisième panneau pour
@@ -226,11 +243,11 @@ lesquels. Ces erreurs se reconnaissent à leur score, faible en valeur absolue, 
 probabilité qui l'accompagne, voisine de $0{,}5$ : le modèle sépare mal ces
 élèves, et le recouvrement des deux groupes le justifie.
 
-La seconde tient à des élèves dont les notes contredisent leur maison. Ils se
-trouvent loin dans la région de l'autre groupe, le modèle les classe avec
-assurance, et il se trompe. Ce sont les élèves atypiques du
-chapitre~\ref{ch:erreur}, dont le coût individuel dépasse cent fois la moyenne.
-Le plus éloigné se tient à $2{,}27$ écarts-types du mauvais côté.
+La seconde tient à des élèves dont les notes contredisent leur maison. Situés
+loin dans la région de l'autre groupe, ils sont classés avec assurance, et à
+tort : ce sont les élèves atypiques du chapitre~\ref{ch:erreur}, dont le coût
+individuel dépasse cent fois la moyenne. Le plus éloigné d'entre eux se tient à
+$2{,}27$ écarts-types du mauvais côté.
 
 \begin{chiffres}[Erreurs par distance à la frontière]
 \begin{center}

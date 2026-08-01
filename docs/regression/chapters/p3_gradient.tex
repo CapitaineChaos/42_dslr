@@ -89,13 +89,16 @@ disparaître les dénominateurs.
   \frac{\partial \ell}{\partial z}=\sigma(z)-y=p-y .
 \]
 La pente du coût par rapport au score est simplement l'écart entre ce que le
-modèle annonce et ce qui est observé. Un élève \Gryf ($y=1$) auquel le
-modèle accorde $0{,}1$ donne $-0{,}9$ ; le même, déjà classé à $0{,}99$, donne
-$-0{,}01$. La correction issue d'un élève correctement classé est donc
+modèle annonce et ce qui est observé. Pour un \Gryf ($y=1$) auquel le modèle accorde $0{,}1$, elle vaut $-0{,}9$ ; pour
+le même élève, déjà classé à $0{,}99$, elle tombe à $-0{,}01$. La correction issue d'un élève correctement classé est donc
 négligeable.
 \end{resultat}
 
 \section{Seconde dérivée : le score par rapport à un coefficient}
+
+Le second facteur de la chaîne demande de dériver le score par rapport à l'un des
+coefficients. Le score étant une somme où chaque coefficient apparaît une seule
+fois, la dérivation ne laisse subsister qu'un terme.
 
 \begin{align}
   \frac{\partial z_i}{\partial w_j}
@@ -111,6 +114,11 @@ rapport à $w_j$ vaut $x_{ij}$. Les autres termes $w_kx_{ik}$, avec $k\neq j$, s
 des constantes du point de vue de cette dérivée, qui est donc nulle.
 
 \section{Assemblage}
+
+Les deux dérivées précédentes se composent. La dérivation entre dans la moyenne,
+puisque la somme est finie et le facteur $1/m$ constant ; chaque terme fournit
+alors le produit du résidu par la note, et la moyenne de ces produits constitue
+le gradient cherché.
 
 \begin{align}
   \frac{\partial J}{\partial w_j}

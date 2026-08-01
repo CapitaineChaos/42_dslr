@@ -2,9 +2,8 @@
 \label{ch:cout}
 
 \begin{lecture}
-Le modèle annonce une probabilité pour chaque élève. Le fichier, lui, donne la
-réponse. Un bon jeu de coefficients est celui sous lequel les réponses observées
-étaient les plus probables. Ce critère s'écrit, se transforme en somme, et
+Le modèle annonce une probabilité pour chaque élève. Le fichier, lui, donne la réponse. Entre deux jeux de coefficients, le meilleur
+est celui sous lequel les réponses observées étaient les plus probables. Ce critère s'écrit, se transforme en somme, et
 devient le nombre unique que le programme cherche à faire baisser.
 \end{lecture}
 
@@ -79,6 +78,10 @@ minimisation et rend la valeur indépendante du nombre d'élèves.}
 
 \section{Passage au logarithme}
 
+La vraisemblance est un produit de mille six cents facteurs, forme peu commode à
+dériver et impossible à évaluer en machine. Le logarithme la transforme en somme
+sans déplacer le point où elle est maximale, puisqu'il est strictement croissant.
+
 \begin{align}
   \log L(\w)
   &= \log\prod_{i=1}^{m}p_i^{\,y_i}(1-p_i)^{\,1-y_i} \notag\\[2pt]
@@ -94,7 +97,7 @@ Le passage au logarithme est légitime pour chercher un maximum : $\log$ est
 strictement croissante, donc elle conserve l'ordre. Le $\w$ qui maximise $L$ est
 exactement celui qui maximise $\log L$.
 
-\section{Du maximum à un minimum}
+\section{Changement de signe et moyenne}
 
 Les algorithmes d'optimisation minimisent par convention. On change donc le
 signe, et on divise par $m$ pour obtenir une valeur moyenne, indépendante du
@@ -108,7 +111,7 @@ Maximiser $\log L$ et minimiser $J$ sont la même opération : multiplier par
 $-1/m$ retourne la fonction et la met à l'échelle, sans déplacer l'argument où
 l'optimum est atteint. C'est la formule que donne le sujet du projet.
 
-\section{Coût d'un élève}
+\section{Forme du terme individuel}
 
 Le terme d'un seul élève vaut $-\log p_i$ s'il est \Gryf, et
 $-\log(1-p_i)$ sinon : dans les deux cas, l'opposé du logarithme de la

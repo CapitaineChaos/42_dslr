@@ -5,8 +5,8 @@
 Deux notes par élève définissent un point du plan. Les \Gryf occupent une
 région, les autres élèves une autre, et une droite sépare approximativement les
 deux : c'est la \emph{frontière de décision} du modèle, \emph{decision boundary}
-dans la littérature anglophone~\cite{hastie2009,bishop2006}. Reste à la déterminer par
-le calcul, et à en tirer une probabilité plutôt qu'une décision binaire.
+dans la littérature anglophone~\cite{hastie2009,bishop2006}. Vient ensuite sa détermination par le calcul, puis le passage à une probabilité
+plutôt qu'à une décision binaire.
 \end{lecture}
 
 \section{Séparation par une note}
@@ -79,33 +79,81 @@ exprimés dans la même unité --- l'écart-type de leur colonne. Le plan qu'ell
 engendrent peut donc être muni d'un repère orthonormé, et c'est ce qui donne un
 sens aux notions d'angle, de perpendiculaire et de distance employées plus bas.
 Sur les notes brutes, où un axe se gradue en points et l'autre en centaines de
-points, aucune de ces notions ne serait pertinente.
+points, ces deux notions dépendraient du barème de chaque matière.
 
-Dans ce repère, une droite admet pour équation cartésienne
+Une droite du plan se construit à partir de deux données : une direction
+perpendiculaire et un point de passage. Notons $w=(w_1,w_2)$ un vecteur
+perpendiculaire à la droite cherchée, et $a$ un point par lequel elle passe. Un
+point $x$ appartient alors à la droite lorsque le vecteur $x-a$ est
+perpendiculaire à $w$, c'est-à-dire lorsque leur produit scalaire s'annule :
 \[
-  w_0+w_1x_1+w_2x_2=0 .
+  w\cdot(x-a)=0,
+  \qquad\text{où}\qquad
+  w\cdot v=w_1v_1+w_2v_2 .
 \]
-Trois coefficients y figurent, alors que deux nombres suffisent à désigner une
-droite du plan --- sa pente et son ordonnée à l'origine, par exemple. La raison
-est que l'équation est définie à un facteur multiplicatif près : $w$ et
-$\lambda w$ ont exactement les mêmes solutions pour tout $\lambda\neq0$, et
-désignent donc la même droite. Ce sont les rapports entre coefficients qui la
-fixent, jamais leurs valeurs.
+Développer ce produit et poser $w_0=-w\cdot a$ donne l'équation sous sa forme
+usuelle :
+\[
+  \ann{accent}{w_1x_1+w_2x_2}{\annl{direction}\\ \annl{perpendiculaire}}
+  \;+\;\ann{warning}{w_0}{\annl{position}\\ \annl{de la droite}}\;=\;0
+\]
 
-Le couple $(w_1,w_2)$ est un \emph{vecteur normal} à la droite : il lui est
-perpendiculaire et pointe vers la région où $w_0+w_1x_1+w_2x_2$ est positif. Sa longueur est la \emph{norme} de $w$, notée $\|w\|$ et employée dans tout ce
-qui suit :
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[x=1.35cm,y=1.35cm,font=\footnotesize,
+  >={Stealth[length=2.2mm]}]
+\begin{scope}
+\clip (-0.6,-0.5) rectangle (6.5,4.2);
+\draw[gridgray!40,step=1] (-1,-1) grid (7,5);
+\fill[accent!8] (-1,4.5) -- (7,0.5) -- (7,5) -- (-1,5) -- cycle;
+\draw[ink,very thick] (-1,4.5) -- (7,0.5);
+\end{scope}
+\draw[ink!45] (-0.6,-0.5) rectangle (6.5,4.2);
+
+\coordinate (a) at (2,3);
+\coordinate (x) at (4.6,1.7);
+\draw[warning,thick,->] (a) -- ++(0.894,1.789)
+  node[anchor=south west,text=warning] {$w=(w_1,w_2)$};
+\draw[accent,thick,->] (a) -- (x) node[midway,anchor=north west,text=accent,yshift=-1mm] {$x-a$};
+
+% l'angle droit entre w et x-a
+\draw[ink!55] ($(a)+(0.40,0.80)$) -- ($(a)+(0.40,0.80)+(0.775,-0.387)$)
+  -- ($(a)+(0.775,-0.387)$);
+
+\fill[ink] (a) circle (2pt) node[anchor=south east,inner sep=3pt] {$a$};
+\fill[ink] (x) circle (2pt) node[anchor=north,inner sep=4pt] {$x$};
+\node[accent!85,anchor=west] at (4.9,3.6) {$w\cdot x+w_0>0$};
+\node[ink!70,anchor=west] at (0.1,0.35) {$w\cdot x+w_0<0$};
+\node[ink,anchor=north west,fill=white,inner sep=1.5pt] at (5.15,1.42)
+  {$w\cdot x+w_0=0$};
+\end{tikzpicture}
+\caption{La droite est l'ensemble des points $x$ tels que $x-a$ soit
+perpendiculaire à $w$. Le vecteur $w$ pointe vers le demi-plan où l'expression
+$w\cdot x+w_0$ est positive.}
+\label{fig:construction}
+\end{figure}
+\FloatBarrier
+
+Tout ce dont la suite a besoin se lit sur cette construction.
+
+Le couple $(w_1,w_2)$ est le \emph{vecteur normal} : perpendiculaire à la droite
+par construction, il pointe vers le demi-plan où $w_0+w_1x_1+w_2x_2$ est positif,
+puisque s'éloigner de la droite dans sa direction fait croître le produit
+scalaire. Sa longueur, la \emph{norme} de $w$, sert dans tout ce qui suit :
 \[
-  \|w\|=\sqrt{w_1^2+w_2^2} .
+  \|w\|=\sqrt{w_1^2+w_2^2}
 \]
-Le coefficient $w_0$, lui, place la droite relativement à l'origine du repère,
-dont la distance signée à la droite vaut
-\[
-  d_0=-\frac{w_0}{\|w\|} .
-\] Il porte le nom
-de \emph{biais} : c'est la valeur que prend $w_0+w_1x_1+w_2x_2$ pour un élève
-dont les deux notes valent zéro, autrement dit pour un élève moyen dans les deux
-matières.
+
+Le coefficient $w_0$ règle la position. À direction fixée, le faire varier
+translate la droite parallèlement à elle-même, et la distance signée de l'origine
+à la droite vaut $-w_0/\|w\|$. On l'appelle le \emph{biais} : c'est la valeur que
+prend l'expression pour un élève dont les deux notes valent zéro, autrement dit
+pour un élève moyen dans les deux matières.
+
+Trois coefficients apparaissent alors que deux nombres suffisent à désigner une
+droite du plan. La raison tient à la construction : multiplier $w$ et $w_0$ par
+un même $\lambda\neq0$ multiplie tout le produit scalaire par $\lambda$ sans
+changer les points où il s'annule. Seuls les rapports entre coefficients fixent la droite.
 
 \begin{figure}[htbp]
 \centering
@@ -159,7 +207,6 @@ la vitesse à laquelle $z$ croît lorsqu'on s'en éloigne.}
 \label{fig:normal}
 \end{figure}
 \FloatBarrier
-
 Les deux panneaux suivants font varier un coefficient à la fois à partir de
 $w=(0\,;0{,}8\,;1)$, les deux autres restant fixés. Deux panneaux couvrent tous
 les cas : la frontière ne dépend que de la direction de $(w_1,w_2)$, et faire
@@ -215,11 +262,22 @@ frontière ou ailleurs. On l'appelle le \emph{score} :
    +\ann{warning}{w_2x_2}{\annl{apport de la note}\\ \annl{d'\Runes}}
 \]
 La frontière de décision est l'ensemble des points où ce nombre s'annule,
-$\{x : z(x)=0\}$. Le score est positif d'un côté, négatif de l'autre, et sa
-valeur absolue croît proportionnellement à la distance à la frontière :
-$z=\|w\|\,d$ (ch.~\ref{ch:descente}).
+$\{x : z(x)=0\}$. Ailleurs, la construction de la section précédente en donne
+directement le sens : puisque $w_0=-w\cdot a$, le score s'écrit
+\[
+  z=w\cdot x+w_0=w\cdot(x-a) .
+\]
+Or un produit scalaire vaut le produit des longueurs par le cosinus de l'angle,
+et $\|x-a\|\cos\theta$ est exactement la distance de $x$ à la droite, comptée
+perpendiculairement et affectée du signe du côté. En notant $d$ cette distance,
+\[
+  z=\|w\|\,d .
+\]
+Le signe du score donne donc le côté de la frontière, et sa valeur absolue la
+distance, au facteur $\|w\|$ près. Deux élèves de même score se tiennent à la
+même distance de la frontière, du même côté.
 
-Reste à relier ce score à une probabilité. La régression logistique pose que le
+Ce score doit maintenant devenir une probabilité. La régression logistique pose que le
 score est le logarithme d'une cote.
 
 La \emph{cote} d'un événement est le rapport entre sa probabilité et celle de
@@ -314,8 +372,8 @@ séparément (ch.~\ref{ch:classifieur}).
 
 La réponse à cette question s'appelle la \emph{variable cible}. Sa colonne se
 déduit ligne à ligne de la colonne \texttt{Hogwarts House} du fichier, qui donne
-la maison de chacun des $1\,600$ élèves. C'est cette même quantité que le modèle devra produire pour
-un élève dont on ne connaîtra que les notes. Elle se code par
+la maison de chacun des $1\,600$ élèves. Le modèle devra produire cette même quantité pour un élève dont on ne connaîtra
+que les notes. Elle se code par
 \[
   y_i=\begin{cases}
     1 & \text{si l'élève } i \text{ appartient à \Gryf},\\
@@ -370,7 +428,7 @@ l'est différemment pour chacune des quatre maisons. }
 \end{figure}
 \FloatBarrier
 
-\section{Du signe à une quantité continue}
+\section{Exigences sur la réponse du modèle}
 
 Le signe de $z$ fournit déjà une règle de décision : \Gryf si $z>0$, autre maison
 sinon. Deux exigences conduisent à lui préférer une quantité qui varie de façon
@@ -437,8 +495,7 @@ $10$ & $\R^{10}$ & un hyperplan & $9$ & $11$ \\
 \bottomrule
 \end{tabular}
 \caption{La frontière occupe toujours une dimension de moins que l'espace où
-vivent les élèves, et sépare toujours celui-ci en exactement deux régions. Le
-nombre de coefficients, lui, croît d'une unité par matière ajoutée.}
+vivent les élèves, et sépare toujours celui-ci en exactement deux régions. Le nombre de coefficients croît en revanche d'une unité par matière ajoutée.}
 \label{tab:dimensions}
 \end{table}
 

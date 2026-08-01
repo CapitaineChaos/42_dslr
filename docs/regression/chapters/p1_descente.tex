@@ -2,22 +2,50 @@
 \label{ch:descente}
 
 \begin{lecture}
-Le coût dépend des trois coefficients. Reste à déterminer dans quel sens les
-déplacer. La quantité qui l'indique prend ici une forme simple : l'erreur commise
+Le coût dépend des trois coefficients. Encore faut-il déterminer dans quel sens les déplacer. La quantité qui l'indique prend ici une forme simple : l'erreur commise
 sur un élève, multipliée par sa note. Les valeurs citées proviennent d'une
 descente exécutée sur les mille six cents élèves.
 \end{lecture}
 
 \section{Correction à appliquer}
 
-Pour chaque coefficient $w_j$, on calcule
+Le coût $J(w)$ atteint son minimum quelque part dans l'espace des coefficients,
+et la descente doit s'y rendre sans en connaître la position. Ce qu'elle peut
+mesurer, en revanche, c'est la pente du coût au point où elle se trouve : de
+combien $J$ varie lorsqu'on modifie légèrement un coefficient.
+
+Cette pente est la \emph{dérivée partielle} $\partial J/\partial w_j$, variation
+de $J$ par unité de $w_j$, les autres coefficients restant fixés. Son signe suffit
+à décider du sens. Positive, elle indique qu'augmenter $w_j$ augmente le coût, et
+qu'il faut donc le diminuer ; négative, elle indique l'inverse. Se déplacer à
+l'opposé de la pente fait baisser $J$, pourvu que le déplacement reste assez
+petit pour que la pente mesurée décrive encore le terrain.
+
+\[
+  \ann{accent}{w_j}{\annl{nouvelle}\\ \annl{valeur}}
+  \;\longleftarrow\;
+  \ann{accent}{w_j}{\annl{ancienne}\\ \annl{valeur}}
+  \;-\;
+  \ann{warning}{\alpha}{\annl{taux}\\ \annl{d'apprentissage}}
+  \ann{rulecolor}{\frac{\partial J}{\partial w_j}}{\annl{pente du coût}\\ \annl{en ce point}}
+  \qquad\text{pour tous les } j \text{ à la fois.}
+\]
+Tout l'algorithme tient dans ce signe moins. Le facteur $\alpha$ fixe la longueur
+du pas : c'est le \emph{taux d'apprentissage}, seul paramètre que l'utilisateur
+règle lui-même.
+
+Les coefficients sont corrigés simultanément, à partir des mêmes valeurs
+antérieures. Corriger $w_0$ puis calculer la correction de $w_1$ avec le $w_0$
+déjà modifié évaluerait les deux dérivées en deux points distincts.
+
+Reste à calculer cette pente. Pour le coût logistique, elle prend une forme dont
+tous les termes s'interprètent, et que le chapitre~\ref{ch:gradient} établit :
 \[
   \frac{\partial J}{\partial w_j}
   =\ann{rulecolor}{\frac{1}{m}\sum_{i=1}^{m}}{\annl{moyenne sur}\\ \annl{les $m$ élèves}}
    \;\ann{warning}{\bigl(p_i-y_i\bigr)}{\annl{erreur sur l'élève $i$}\\ \annl{annoncé moins observé}}
    \;\ann{accent}{x_{ij}}{\annl{sa note dans}\\ \annl{la matière $j$}}
 \]
-Cette formule dérive du coût du chapitre précédent (ch.~\ref{ch:gradient}).
 
 $p_i-y_i$ est l'erreur commise sur l'élève $i$ : la probabilité annoncée moins la
 réponse observée. Elle vaut $-0{,}9$ pour un \Gryf auquel le modèle
@@ -29,32 +57,12 @@ $x_{ij}$ est sa note dans la matière $j$. Elle pondère la contribution de
 l'erreur au coefficient $j$ : un élève aux notes extrêmes contribue fortement, un
 élève moyen, dont la note standardisée avoisine zéro, presque pas.
 
-Le déplacement se fait en sens inverse, le gradient indiquant la direction dans
-laquelle le coût augmente :
-\[
-  \ann{accent}{w_j}{\annl{nouvelle}\\ \annl{valeur}}
-  \;\longleftarrow\;
-  \ann{accent}{w_j}{\annl{ancienne}\\ \annl{valeur}}
-  \;-\;
-  \ann{warning}{\alpha}{\annl{taux}\\ \annl{d'apprentissage}}
-  \ann{rulecolor}{\frac{\partial J}{\partial w_j}}{\annl{pente du coût}\\ \annl{en ce point}}
-  \qquad\text{pour tous les } j \text{ à la fois.}
-\]
-Le signe moins constitue l'essentiel de l'algorithme : une pente positive
-signifie qu'augmenter $w_j$ augmenterait le coût, donc $w_j$ diminue. Le facteur
-$\alpha$ fixe la longueur du pas : c'est le \emph{taux d'apprentissage}, le seul
-paramètre de l'algorithme que l'utilisateur fixe lui-même.
-
-Les coefficients sont corrigés simultanément, à partir des mêmes valeurs
-antérieures. Corriger $w_0$ puis calculer la correction de $w_1$ avec le $w_0$
-déjà modifié évaluerait les deux dérivées en deux points distincts.
-
 \section{Premier pas de la descente}
 
-La descente part ici de coefficients nuls. Le point d'arrivée est le même quel
-que soit le départ, la surface du coût ayant un fond unique
-(ch.~\ref{ch:convexite}) ; partir de zéro rend le premier tour calculable à la
-main, tous les scores valant alors zéro et toutes les probabilités $0{,}5$. La correction du biais s'écrit alors,
+La descente part ici de coefficients nuls. Quel que soit ce départ, le point d'arrivée reste le même, la surface du coût
+ayant un fond unique (ch.~\ref{ch:convexite}) ; partir de zéro rend en outre le
+premier tour calculable à la main, tous les scores valant alors zéro et toutes
+les probabilités $0{,}5$. La correction du biais s'écrit alors,
 puisque $x_{i0}$ vaut $1$ pour tout le monde,
 \[
   \frac{\partial J}{\partial w_0}
@@ -118,9 +126,10 @@ correction ne provient plus que des cas litigieux, qui sont peu nombreux. La som
     coordinates {(0,0.693147) (10,0.250029) (50,0.143846) (400,0.108113)};
 \end{axis}
 \end{tikzpicture}
-\caption{Les dix premières itérations couvrent les deux tiers de la baisse
-totale ; les trois cent cinquante dernières n'agissent plus que sur la quatrième
-décimale.}
+\caption{Le coût moyen à chaque tour. Les points marquent les itérations $0$,
+$10$, $50$ et $400$, dont le tableau~\ref{tab:trace} donne les coefficients. Les
+dix premières couvrent les deux tiers de la baisse totale ; les trois cent
+cinquante dernières n'agissent plus que sur la quatrième décimale.}
 \label{fig:cout}
 \end{figure}
 
@@ -141,8 +150,7 @@ quantité, ou la variation du coût, qui sert de critère d'arrêt.}
 
 La seconde figure mesure cet épuisement directement : la longueur du gradient,
 c'est-à-dire la taille de la correction appliquée à chaque tour. Elle passe de $0{,}42$ à $0{,}0026$ sur les quatre cents
-itérations, soit une division par cent soixante. C'est de cette décroissance que
-vient le critère d'arrêt : une correction devenue assez petite laisse les
+itérations, soit une division par cent soixante. De cette décroissance vient le critère d'arrêt : une correction devenue assez petite laisse les
 coefficients là où ils sont.
 
 \section{Déplacement de la frontière}
@@ -151,8 +159,9 @@ La frontière $w_0+w_1x_1+w_2x_2=0$ se trace sous sa forme résolue,
 \[
   x_2=-\frac{w_0+w_1x_1}{w_2},
 \]
-qui donne l'ordonnée de la frontière pour chaque abscisse. Son déplacement au fil de
-la descente est trop faible pour être visible à l'échelle du nuage.
+qui donne son ordonnée pour chaque abscisse. Reportée à trois moments de la
+descente, elle occupe presque la même position, et il faut agrandir le tracé pour
+séparer les trois droites.
 
 \begin{figure}[htbp]
 \centering
@@ -165,10 +174,29 @@ maximal sur les bords. Le déplacement total vaut un tiers d'écart-type.}
 \end{figure}
 \FloatBarrier
 
-Trois cent quatre-vingt-dix-neuf itérations pour un tiers d'écart-type : le
-déplacement de la frontière n'absorbe pas l'essentiel de la descente. Celle-ci
-agit sur la probabilité, définie en tout point du plan et représentable comme une
-surface d'altitude $p$.
+Trois cent quatre-vingt-dix-neuf itérations pour un tiers d'écart-type : la
+descente consacre donc l'essentiel de son travail à autre chose qu'au
+déplacement de cette droite. Pour voir ce travail, il faut regarder la quantité
+que la descente modifie réellement, la probabilité, qui est définie en tout point
+du plan et pas seulement sur la frontière.
+
+\section{Surface de probabilité}
+
+À chaque point du plan des notes, le modèle associe une probabilité d'appartenir
+à \Gryf. Porter cette probabilité en altitude au-dessus du point qui la produit
+définit une surface, que les trois figures suivantes donnent aux itérations $1$,
+$10$ et $400$.
+
+Le premier tour montre une surface presque plane, traversant le nuage à
+mi-hauteur : le modèle répond $0{,}5$ ou presque en tout point, sans distinguer
+personne. Au dixième, deux plateaux se dégagent, l'un au-dessus du groupe des
+\Gryf, l'autre au-dessus des trois autres, séparés par une pente encore large. Au
+quatre centième, les plateaux sont établis et la transition tient sur moins d'un
+demi-écart-type.
+
+Une chose reste pourtant fixe d'une figure à l'autre : la ligne noire tracée à
+mi-hauteur, où la surface vaut exactement $0{,}5$. Sa projection au sol est la frontière du paragraphe précédent, et c'est de là que
+vient sa quasi-immobilité pendant que la surface, elle, change du tout au tout.
 
 \begin{figure}[p]
 \centering
@@ -271,8 +299,8 @@ tour.
 \end{tikzpicture}
 \caption{La pente de la frontière atteint sa valeur finale en une cinquantaine de
 tours et n'évolue ensuite que dans la troisième décimale, de $1{,}047$ à
-$0{,}996$. La norme des coefficients, elle, croît pendant les trois cent
-cinquante tours suivants, de $2{,}84$ à $4{,}89$. Les trois cent cinquante derniers tours resserrent la sigmoïde autour d'une frontière déjà en place.}
+$0{,}996$. tandis que la norme des coefficients croît pendant les trois cent cinquante tours
+suivants, de $2{,}84$ à $4{,}89$. Les trois cent cinquante derniers tours resserrent la sigmoïde autour d'une frontière déjà en place.}
 \label{fig:suite}
 \end{figure}
 \FloatBarrier
@@ -280,8 +308,8 @@ cinquante tours suivants, de $2{,}84$ à $4{,}89$. Les trois cent cinquante dern
 \begin{resultat}[Régimes successifs]
 Quelques itérations suffisent à orienter la frontière. Le reste de la descente
 augmente la norme des coefficients, ce qui écarte les probabilités de $0{,}5$ en
-conservant chaque décision. Le coût continue pourtant de décroître, puisqu'il
-décroît dès que la probabilité accordée à la réponse observée augmente : un
+conservant chaque décision. Pourtant le coût continue de décroître, puisqu'il baisse dès que la probabilité
+accordée à la réponse observée augmente : un
 critère d'arrêt fondé sur le coût s'arrête donc bien après que le classement
 s'est stabilisé. Cette croissance de la norme trouve elle-même une limite, que
 l'annexe~\ref{ann:norme} établit.
@@ -298,10 +326,9 @@ quatre dimensions ; fixer le biais à sa valeur finale ramène à deux.
 La descente se lit sur cette surface : partant d'un point, elle suit la ligne de
 plus grande pente et progresse par pas de longueur proportionnelle à $\alpha$.
 
-Deux propriétés de la surface commandent ce qui précède. Elle admet un minimum
-unique, propriété que la convexité établit (ch.~\ref{ch:convexite}) et dont il
-résulte que tout point de départ conduit au même modèle. Sa pente décroît par
-ailleurs à l'approche de ce minimum, ce qui raccourcit les pas successifs et se
+Deux propriétés de la surface commandent ce qui précède. Établie par la convexité (ch.~\ref{ch:convexite}), l'unicité du minimum entraîne
+que tout point de départ conduit au même modèle. Sa pente décroît par ailleurs à
+l'approche de ce minimum, ce qui raccourcit les pas successifs et se
 mesure à la figure~\ref{fig:norme}.
 
 \begin{figure}[p]
@@ -348,12 +375,12 @@ que par fractions, et il en faut d'autant plus pour parcourir la même distance.
 Comme un tour demande un passage complet sur les $1\,600$ élèves, le prix se paie
 en temps de calcul, pour aboutir à la même frontière.
 
-Un pas long expose au dépassement. Le gradient donne en effet la pente au point
-de départ, et cette pente ne décrit fidèlement le terrain qu'à son voisinage. Un déplacement
-assez grand fait sortir de ce voisinage : les coefficients passent de l'autre
-côté du minimum et remontent la pente opposée, si bien que le coût augmente au
-lieu de baisser (figure~\ref{fig:alpha}). Les tours suivants ramènent vers le
-bas, mais la trajectoire a fait un détour.
+Un pas long expose au dépassement. Or la pente que donne le gradient ne décrit
+fidèlement le terrain qu'au voisinage du point où elle est calculée. Sortir de ce
+voisinage fait passer les coefficients de l'autre côté du minimum, sur la pente
+opposée, si bien que le coût augmente au lieu de baisser
+(figure~\ref{fig:alpha}). Les tours suivants ramènent vers le bas, mais la
+trajectoire a fait un détour.
 
 \begin{figure}[htbp]
 \centering

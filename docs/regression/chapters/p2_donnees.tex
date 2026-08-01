@@ -1,4 +1,4 @@
-\chapter{Du score au coût}
+\chapter{Écriture du score et du coût}
 \label{ch:donnees}
 
 \begin{lecture}
@@ -78,7 +78,7 @@ une donnée. Sans elle, chaque formule ultérieure devrait traiter
 Des coefficients nuls donnent un score nul pour n'importe quel élève. La sortie
 ne contrôle donc que la mécanique de la somme.
 
-\section{Étape 2 : du score à la probabilité}
+\section{Étape 2 : la probabilité}
 
 Le score parcourt tout $\R$, la probabilité doit tomber entre $0$ et $1$. La
 fonction logistique opère ce passage (ch.~\ref{ch:logit}).
@@ -109,7 +109,7 @@ $\sigma(0)$ vaut $0{,}5$ exactement. Une fonction qui rend autre chose en zéro
 est fausse, et tout ce qui la suit le sera.
 \end{vigilance}
 
-\section{Étape 3 : le coût d'une prédiction}
+\section{Étape 3 : le coût d'un élève}
 
 Le modèle annonce une probabilité, le fichier donne la réponse observée. Le coût
 mesure l'écart entre les deux.
@@ -152,8 +152,7 @@ log(2) = 0.693147
 
 Les deux premières lignes correspondent à $z=0$, donc $p=0{,}5$ : le coût vaut
 $\log 2$ quelle que soit la réponse attendue, puisque les deux termes sont alors
-symétriques. Les deux suivantes correspondent à $z=6$, donc $p=0{,}9975$. Cette
-probabilité coûte $0{,}0025$ lorsqu'elle porte sur la réponse observée et
+symétriques. Pour les deux suivantes, $z=6$ et $p=0{,}9975$. Cette probabilité coûte $0{,}0025$ lorsqu'elle porte sur la réponse observée et
 $6{,}0025$ lorsqu'elle porte sur l'autre : pour une prédiction fausse assortie
 d'un score élevé, le coût croît comme $|z|$, sans borne supérieure.
 

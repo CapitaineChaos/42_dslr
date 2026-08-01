@@ -4,11 +4,15 @@
 \begin{lecture}
 Deux égalités serviront constamment par la suite. La première dit que la
 fonction est symétrique : changer le signe du score revient à échanger les deux
-réponses. La seconde donne sa dérivée, et cette dérivée s'exprime avec la
-fonction elle-même, ce qui simplifiera tout le calcul du gradient.
+réponses. Quant à la seconde, elle donne une dérivée qui s'exprime avec la fonction
+elle-même, ce qui simplifiera tout le calcul du gradient.
 \end{lecture}
 
 \section{Symétrie}
+
+Échanger les deux réponses revient à changer le signe du score, la frontière
+étant le lieu où il s'annule. La fonction logistique doit donc échanger $p$ et
+$1-p$ lorsqu'on passe de $z$ à $-z$, ce que le calcul confirme.
 
 \begin{align}
   \sigma(-z) &= \frac{1}{1+e^{-(-z)}}
@@ -43,6 +47,11 @@ $\sigma(2)=0{,}8808$ et $\sigma(-2)=0{,}1192$, de somme $1$.
 \end{releve}
 
 \section{Dérivée}
+
+Écrite $\sigma=1/u$ avec $u=1+e^{-z}$, la fonction se dérive par la règle de
+l'inverse, la chaîne fournissant $u'$. Le résultat s'exprime avec $\sigma$
+elle-même, ce qui évite d'avoir à réévaluer une exponentielle dans le calcul du
+gradient.
 
 \begin{align}
   \sigma(z) &= \frac{1}{1+e^{-z}} = \frac{1}{u},\qquad u=1+e^{-z} \notag\\[4pt]

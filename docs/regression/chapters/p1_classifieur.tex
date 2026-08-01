@@ -3,15 +3,26 @@
 
 \begin{lecture}
 Le modèle construit jusqu'ici répond à une seule question : \Gryf ou non.
-Le problème en compte quatre, et une réponse unique doit en sortir. La
-construction réutilise les outils déjà en place : le même ajustement est répété
+Or le problème en compte quatre, dont une réponse unique doit sortir. Pour cela,
+la construction réutilise les outils déjà en place : le même ajustement est répété
 pour chaque maison, et les quatre scores obtenus sont comparés.
 \end{lecture}
 
 \section{Un modèle par maison}
 
-Cette stratégie s'appelle \emph{un contre tous}, ou \emph{one-vs-rest}. Pour
-chaque maison, on reprend le procédé à l'identique, seule la cible changeant :
+Le modèle construit jusqu'ici répond par oui ou par non, parce qu'une frontière
+sépare le plan en deux régions et pas davantage. Quatre maisons demandent une
+autre construction, et deux voies s'offrent.
+
+La première consiste à concevoir un modèle qui produise directement quatre
+probabilités de somme $1$ : c'est la régression \emph{softmax}, dont la
+dérivation diffère de celle menée aux chapitres précédents. La seconde ramène le
+problème à quatre questions binaires, chacune traitée par le modèle déjà en
+place, puis combine les quatre réponses. C'est cette seconde voie qui est
+retenue, parce qu'elle réemploie tout ce qui précède sans y changer une ligne.
+
+Elle porte le nom d'\emph{un contre tous}, ou \emph{one-vs-rest}. Pour chaque
+maison, on reprend le procédé à l'identique, seule la cible changeant :
 \[
   y_i=1 \text{ si l'élève } i \text{ appartient à la maison traitée},\qquad
   y_i=0 \text{ sinon.}
@@ -81,25 +92,33 @@ trouve la maison traitée, celui de $w_2$ fait de même en \Runes. Les quatre
 maisons occupant chacune un coin du nuage, les quatre couples de signes possibles
 se trouvent employés, un par maison.
 
-Les quatre biais, eux, sont négatifs pour une raison commune : chaque maison est
+Les quatre biais sont négatifs pour une raison commune : chaque maison est
 minoritaire face aux trois autres réunies, si bien qu'un élève pris au hasard
 reçoit un score négatif dans les quatre modèles.
 
 \section{Règle du score maximal}
 
-Un nouvel élève reçoit quatre scores, un par maison. La règle de décision
-est le maximum :
+Un nouvel élève reçoit quatre scores, un par maison, et il faut en tirer une
+réponse. Chaque score mesure à quel point son modèle penche pour sa maison :
+retenir le plus élevé est la règle la plus directe.
 \[
   \text{maison prédite}=\arg\max_{k}\ z_k,
-  \qquad z_k=w_{k0}+w_{k1}x_1+w_{k2}x_2 .
+  \qquad z_k=w_{k0}+w_{k1}x_1+w_{k2}x_2
 \]
 
-Cette règle prend la place du seuil employé au chapitre~\ref{ch:probabilite} :
-avec quatre réponses possibles, c'est l'ordre des scores qui décide. Comparer les
-scores ou comparer les probabilités revient d'ailleurs au même, $\sigma$ étant
-croissante et identique pour les quatre modèles, donc l'ordre se conserve d'un
-côté à l'autre. La décision se prend sur les quatre scores, et les probabilités
-ne se calculent que pour être affichées.
+Cette règle repose sur une hypothèse qu'il vaut mieux énoncer : que les quatre
+scores soient comparables entre eux. Rien ne l'assure a priori, les quatre
+modèles ayant été ajustés séparément, chacun sur sa propre question. Deux
+éléments la rendent acceptable ici. Tous partagent la même famille de fonctions et les mêmes notes standardisées,
+donc la même échelle d'entrée ; et la sigmoïde, croissante et identique pour tous, convertit chaque
+score en probabilité de la même manière, si bien que comparer les scores ou les
+probabilités donne la même réponse. La décision se prend sur les scores, et les
+probabilités ne se calculent que pour être affichées.
+
+Un seuil de $0{,}5$ appliqué séparément à chaque modèle produirait un autre
+résultat : il pourrait ne désigner aucune maison, si les quatre probabilités
+tombaient en dessous, ou plusieurs à la fois. La règle du maximum désigne
+toujours exactement une maison, quelle que soit la valeur des scores.
 
 \begin{releve}
 L'élève $3$, de notes standardisées $x_1=-1{,}485$ et $x_2=+0{,}275$, donne
@@ -111,8 +130,7 @@ L'élève $3$, de notes standardisées $x_1=-1{,}485$ et $x_2=+0{,}275$, donne
 \end{align*}
 \end{releve}
 
-Le maximum est $z_G$, et la maison prédite est celle de l'élève. L'écart avec le
-deuxième score vaut près de deux unités, ce qui rend la décision franche.
+Le maximum est $z_G$, et la maison prédite est celle de l'élève. Le deuxième score se tient près de deux unités en dessous.
 
 \begin{table}[htbp]
 \centering
@@ -144,46 +162,45 @@ leur propre direction, établie à la section suivante.}
 \end{figure}
 \FloatBarrier
 
-\section{Des quatre frontières aux quatre régions}
+\section{Forme des régions}
 
-Chacune des quatre droites sépare une maison des trois autres, et la maison
-attribuée à un point du plan résulte de la comparaison de ses quatre scores.
-Parcourir un trajet rend cette comparaison visible : le long d'un segment, chaque
-score est une fonction affine du chemin parcouru, donc une droite.
+La règle du maximum attribue une maison à chaque point du plan. Quelle forme
+prend alors l'ensemble des points attribués à une maison donnée ?
+
+Prenons \Gryf. Son modèle l'emporte en un point lorsque son score y dépasse les
+trois autres, ce qui fait trois conditions distinctes. La première s'écrit
+\[
+  z_G\geq z_H
+  \iff
+  (w_{G0}-w_{H0})+(w_{G1}-w_{H1})x_1+(w_{G2}-w_{H2})x_2\geq 0 ,
+\]
+et les deux autres s'obtiennent en remplaçant $H$ par $R$ puis par $S$. Le membre
+de droite est une fonction affine des deux notes ; l'inégalité définit un
+demi-plan, bordé par la droite où les deux scores s'égalisent.
 
 \begin{figure}[htbp]
 \centering
-\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{figures/score_max.png}}
-\caption{Le trajet du panneau de gauche part du groupe des \Gryf et rejoint celui
-des \Huff. À droite, les quatre scores relevés le long de ce trajet. Le maximum
-des quatre est la ligne brisée en trait épais : elle appartient à \Gryf sur le
-premier tiers, à \Rav ensuite, à \Huff pour finir. Les deux points anguleux sont
-les endroits où deux scores s'égalisent, et ce sont eux qui marquent le passage
-d'une région à la suivante.}
-\label{fig:score-max}
+\makebox[\textwidth][c]{\includegraphics[width=1.18\textwidth]{figures/demiplans.png}}
+\caption{Les trois demi-plans où \Gryf l'emporte sur chacun de ses rivaux, puis
+leur intersection. Le dernier panneau porte les élèves de la maison, qui s'y
+trouvent presque tous.}
+\label{fig:demiplans}
 \end{figure}
 \FloatBarrier
 
-Le maximum de quatre fonctions affines est une ligne brisée dont chaque segment
-appartient à une maison. Les points anguleux vérifient l'égalité de deux scores,
-et cette égalité s'écrit comme une équation de droite :
-\[
-  z_G=z_R
-  \iff
-  (w_{G0}-w_{R0})+(w_{G1}-w_{R1})x_1+(w_{G2}-w_{R2})x_2=0 .
-\]
-La limite entre deux régions est donc une droite, de vecteur normal
-$w_G-w_R$ obtenu en soustrayant terme à terme les deux jeux de coefficients. Sur
-le modèle à deux matières,
-\[
-  w_G-w_R=(-4{,}997+3{,}729\,;\;-3{,}625-4{,}061\,;\;+3{,}655-3{,}869)
-        =(-1{,}268\,;\;-7{,}686\,;\;-0{,}214),
-\]
-\begin{releve}
-La limite est la droite $-1{,}268-7{,}686\,x_1-0{,}214\,x_2=0$, presque
-verticale puisque son vecteur normal est presque horizontal : elle coupe l'axe
-des \Herb en $x_1=-0{,}165$.
-\end{releve}
+La région de \Gryf est l'intersection de ces trois demi-plans, donc un polygone
+convexe, éventuellement non borné. Trois propriétés en découlent directement.
+Portés par les droites d'égalité $z_G=z_j$, ses bords se distinguent des quatre
+frontières binaires du début de chapitre. Chacun s'interrompt là où un troisième
+modèle prend le dessus, ce qui donne des arêtes de longueur finie. Et
+deux élèves d'une même région ont tout le segment qui les joint dans cette
+région, propriété de convexité qui interdit à une maison d'occuper deux zones
+séparées.
+
+Les quatre droites du début de chapitre ne disparaissent pas pour autant : la
+droite $z_k=0$ sépare les points où le modèle $k$ répond « oui » de ceux où il
+répond « non », tandis que la décision finale compare les quatre scores entre
+eux. Ces deux questions sont différentes, et leurs droites aussi.
 
 \begin{figure}[htbp]
 \centering
@@ -222,12 +239,28 @@ deux premières : en ce point les deux scores valent $0$, donc ils sont égaux.}
 \end{figure}
 \FloatBarrier
 
-Quatre maisons forment six paires, donc six droites d'égalité. Chacune ne borde
-une région que sur la portion où le score commun aux deux maisons dépasse aussi
-les deux autres : c'est ce qui donne au découpage ses arêtes de longueur finie,
-visibles sur le panneau de droite de la figure~\ref{fig:regions}. Les quatre
-modèles, ajustés séparément, produisent ainsi un découpage cohérent du plan.
+Quatre maisons forment six paires, donc six droites d'égalité, dont chacune ne
+borde une région que sur la portion où le score commun aux deux maisons dépasse
+aussi les deux autres. C'est la règle du maximum, et elle seule, qui attribue à
+chaque point du plan exactement une maison, alors que les quatre modèles
+s'ignorent.
 
+Cette construction se vérifie le long d'un trajet : chaque score y devient une
+fonction affine du chemin parcouru, donc une droite, et le maximum des quatre une
+ligne brisée dont les points anguleux marquent les changements de région.
+
+\begin{figure}[htbp]
+\centering
+\makebox[\textwidth][c]{\includegraphics[width=1.2\textwidth]{figures/score_max.png}}
+\caption{Le trajet du panneau de gauche part du groupe des \Gryf et rejoint celui
+des \Huff. À droite, les quatre scores relevés le long de ce trajet. Le maximum
+des quatre est la ligne brisée en trait épais : elle appartient à \Gryf sur le
+premier tiers, à \Rav ensuite, à \Huff pour finir. Les deux points anguleux sont
+les endroits où deux scores s'égalisent, et ce sont eux qui marquent le passage
+d'une région à la suivante.}
+\label{fig:score-max}
+\end{figure}
+\FloatBarrier
 \section{Contenu du classifieur}
 
 Avec dix matières au lieu de deux, chaque modèle a onze coefficients au lieu de
