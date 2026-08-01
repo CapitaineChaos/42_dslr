@@ -1,0 +1,3 @@
+maintenant il faut analyser cette pisse de chameau, il y a deja un rapport pas la peine de chercher 2x la meme chose, on cherche si cette chiasse est digne d'etre présentable au MIT en terme d'enchainement des idées, vocabulaire employés, pertinence, découpage, structure, remédiation, niveau de français, accessibilité à tous (avec annexe suffisemment avancée), logique de présentation, qualité de présentation, interet, qualité de lecture, interet sucité....... et faire un rapport evidemment. Compris ? cette fois on s'en fou des maths si c'est juste ou faut, on se concentre sur l'apect UX, design découpage etc parce que je t'assure c'est vraiment pourri y a pas de finesse, les tournures sont parfois aviilisantes ou destinées aux enfants.... etc etc tu comprends j'espere
+
+
