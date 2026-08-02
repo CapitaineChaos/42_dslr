@@ -1,0 +1,176 @@
+% !TeX root = ../regression_logistique.tex
+\chapter{Notation et vocabulaire}
+\label{ann:notation}
+
+\orient{%
+retrouver la définition, la dimension et le lieu d'introduction d'un symbole ;
+passer du vocabulaire français au vocabulaire anglais de référence}{%
+aucun}{%
+référence ponctuelle ; revenir au chapitre indiqué dans la dernière colonne}
+
+\section{Indices et dimensions}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{c>{\raggedright\arraybackslash}p{74mm}c}
+\toprule
+symbole & désignation & introduit \\
+\midrule
+$m$ & nombre d'observations d'un ensemble ; $1\,600$ pour le fichier entier
+  & ch.~\ref{ch:probleme} \\
+$n$ & nombre de variables explicatives ; $2$ en partie~I, $10$ pour le modèle
+    complet & ch.~\ref{ch:nuage} \\
+$i$ & indice d'observation, de $1$ à $m$ & ch.~\ref{ch:erreur} \\
+$j,k$ & indices de coefficient, de $0$ à $n$ ; l'indice $0$ est celui du biais
+  & ch.~\ref{ch:descente} \\
+$K$ & nombre de classes ; $4$ ici & ch.~\ref{ch:classifieur} \\
+\bottomrule
+\end{tabular}
+\caption{La somme sur les coefficients commence à $j=0$ parce que le biais est
+traité comme un coefficient ordinaire, associé à une colonne de $1$.}
+\label{tab:not-indices}
+\end{table}
+
+\section{Données}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{c>{\raggedright\arraybackslash}p{74mm}c}
+\toprule
+symbole & désignation & introduit \\
+\midrule
+$v$ & note brute, telle qu'elle figure dans le fichier
+  & ch.~\ref{ch:standardisation} \\
+$\mu$ & moyenne d'une colonne, mesurée sur l'apprentissage
+  & ch.~\ref{ch:standardisation} \\
+$\sigma$ & écart-type d'une colonne, mesuré sur l'apprentissage
+  & ch.~\ref{ch:standardisation} \\
+$x_j$ & note standardisée dans la matière $j$, soit $(v-\mu)/\sigma$
+  & ch.~\ref{ch:standardisation} \\
+$x_0$ & colonne constante égale à $1$, porteuse du biais
+  & ch.~\ref{ch:donnees} \\
+$\x$ & vecteur $(x_0,x_1,\dots,x_n)$ d'une observation & ch.~\ref{ch:nuage} \\
+$x_{ij}$ & note standardisée de l'observation $i$ dans la matière $j$
+  & ch.~\ref{ch:descente} \\
+$\X$ & tableau des $m$ vecteurs d'observation & ch.~\ref{ch:classifieur} \\
+$y_i$ & étiquette de référence de l'observation $i$ : $1$ pour la classe
+  traitée, $0$ sinon & ch.~\ref{ch:nuage} \\
+\bottomrule
+\end{tabular}
+\caption{La cote standard $(v-\mu)/\sigma$ est notée $x$ et non $z$, contrairement
+à l'usage statistique, la lettre $z$ étant réservée au score du modèle.}
+\label{tab:not-donnees}
+\end{table}
+
+\section{Paramètres et modèle}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{c>{\raggedright\arraybackslash}p{74mm}c}
+\toprule
+symbole & désignation & introduit \\
+\midrule
+$w_0$ & biais, coefficient de la colonne constante & ch.~\ref{ch:nuage} \\
+$w_j$ & coefficient de la matière $j$ & ch.~\ref{ch:nuage} \\
+$\w$ & vecteur $(w_0,w_1,\dots,w_n)$ de tous les coefficients
+  & ch.~\ref{ch:erreur} \\
+$w$ & vecteur normal $(w_1,\dots,w_n)$, \emph{biais exclu}, employé dans les
+  passages géométriques & ch.~\ref{ch:nuage} \\
+$\|w\|$ & norme du seul vecteur normal ; vaut $4{,}89$ pour \Mquatre
+  & ch.~\ref{ch:nuage} \\
+$\|\w\|$ & norme de tous les coefficients ; vaut $6{,}82$ pour \Mquatre
+  & \annexeref{ann:norme} \\
+$\alpha$ & taux d'apprentissage & ch.~\ref{ch:descente} \\
+$\varepsilon$ & seuil de stagnation du critère d'arrêt & ch.~\ref{ch:entrainer} \\
+$s$ & seuil de décision sur la probabilité ; $0{,}5$ ici
+  & ch.~\ref{ch:probabilite} \\
+$\mu$ (régularisation) & coefficient du terme $\tfrac{\mu}{2}\|\w\|^2$
+  & \annexeref{ann:norme} \\
+\bottomrule
+\end{tabular}
+\caption{Deux normes distinctes. $\|w\|$, sans le biais, fixe la raideur de la sigmoïde
+le long de la perpendiculaire à la frontière ; $\|\w\|$, biais compris, sert à
+la régularisation et à la divergence.}
+\label{tab:not-parametres}
+\end{table}
+
+\section{Fonctions et quantités calculées}
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{c>{\raggedright\arraybackslash}p{74mm}c}
+\toprule
+symbole & désignation & introduit \\
+\midrule
+$z$ & score, $\sum_j w_jx_j$ & ch.~\ref{ch:nuage} \\
+$\sigma(z)$ & fonction logistique, $1/(1+e^{-z})$ & ch.~\ref{ch:probabilite} \\
+$p$ & probabilité annoncée pour la classe traitée, $p=\sigma(z)$
+  & ch.~\ref{ch:probabilite} \\
+$\ell$ & perte associée à une prédiction & ch.~\ref{ch:erreur} \\
+$J(\w)$ & perte moyenne sur un ensemble d'observations & ch.~\ref{ch:erreur} \\
+$L(\w)$ & vraisemblance & \annexeref{ann:cout} \\
+$\nabla J$ & gradient de $J$, vecteur des $n+1$ dérivées partielles
+  & ch.~\ref{ch:descente} \\
+$\operatorname{softplus}(z)$ & $\log(1+e^{z})$ & \annexeref{ann:stabilite} \\
+$\operatorname{logit}(p)$ & $\log\bigl(p/(1-p)\bigr)$ & ch.~\ref{ch:nuage} \\
+$d$ & distance signée d'une observation à la frontière, $z/\|w\|$
+  & ch.~\ref{ch:nuage} \\
+$s_i$ & $\sigma(z_i)(1-\sigma(z_i))$, facteur de la hessienne
+  & \annexeref{ann:convexite} \\
+\bottomrule
+\end{tabular}
+\caption{La lettre $\sigma$ désigne l'écart-type d'une colonne dans les passages
+sur la préparation des données, et la fonction logistique partout ailleurs. La
+distinction se lit à l'argument : $\sigma$ seul est un écart-type, $\sigma(z)$
+est une fonction.}
+\label{tab:not-fonctions}
+\end{table}
+
+\section{États du modèle}
+
+Le tableau~\ref{tab:etats} du chapitre~\ref{ch:contrat} nomme les quatre jeux de
+coefficients employés : \Mzero, \Mquatre, \Mstop et \Movr. Toute valeur
+numérique citée dans le document se rapporte à l'un d'eux, et le nom est rappelé
+dans la légende de la figure ou du tableau concerné.
+
+\section{Glossaire}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{>{\raggedright\arraybackslash}p{40mm}>{\raggedright\arraybackslash}p{40mm}>{\raggedright\arraybackslash}p{54mm}}
+\toprule
+français & anglais & remarque \\
+\midrule
+cote & odds & rapport $p/(1-p)$, non une probabilité \\
+log-cote, logit & log-odds, logit & \\
+fonction logistique & logistic function, sigmoid & \\
+score & score, logit, linear predictor & « logit » désigne aussi le score dans
+  la littérature d'apprentissage \\
+entropie croisée binaire & binary cross-entropy & aussi \emph{log-loss} \\
+vraisemblance & likelihood & \\
+descente de gradient & gradient descent & ici en lot complet, \emph{batch} \\
+taux d'apprentissage & learning rate & \\
+frontière de décision & decision boundary & \\
+vecteur normal & normal vector, weight vector & \\
+hyperplan affine & affine hyperplane & \\
+un-contre-tous & one-vs-rest, one-vs-all & \cite{rifkin2004} \\
+matrice de confusion & confusion matrix & \\
+rappel & recall, sensitivity & \\
+précision & precision & \\
+apprentissage / test & training / test set & \\
+fuite de données & data leakage & \\
+surapprentissage & overfitting & \\
+convexe, strictement convexe & convex, strictly convex & deux propriétés
+  distinctes (\annexeref{ann:convexite}) \\
+séparabilité linéaire & linear separability & \cite{albert1984} \\
+régularisation & regularisation & \\
+cote standard & $z$-score, standard score & notée $x$ ici \\
+imputation & imputation & \cite{littlerubin2019} \\
+\bottomrule
+\end{tabular}
+\caption{Les sorties console des programmes de la partie~II sont en anglais,
+comme les noms de fonctions : c'est la langue des identifiants du projet. Le
+texte, lui, emploie systématiquement le terme français.}
+\label{tab:glossaire}
+\end{table}

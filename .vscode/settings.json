@@ -25,6 +25,15 @@
     "**/*.aux"
   ],
   "latex-workshop.linting.chktex.enabled": false,
+  "latex-workshop.message.log.show": true,
+  "latex-workshop.check.duplicatedLabels.enabled": false,
+  "latex-workshop.latex.recipe.default": "first",
+  "latex-workshop.latex.recipes": [
+    {
+      "name": "latexmk",
+      "tools": ["latexmk"]
+    }
+  ],
   "latex.linter.enabled": false,
   "ltex.language": "fr",
   "ltex.diagnosticSeverity": "hint",

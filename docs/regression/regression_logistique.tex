@@ -1,3 +1,10 @@
+% Balisage PDF : la gestion des ressources doit précéder \documentclass.
+\DocumentMetadata{
+  lang        = fr-FR,
+  pdfversion  = 2.0,
+  pdfstandard = ua-2,
+  testphase   = {phase-III,math,table,firstaid},
+}
 \documentclass[12pt,a4paper,openany]{report}
 
 \usepackage[utf8]{inputenc}
@@ -11,7 +18,7 @@
 \usepackage{graphicx}
 \usepackage{placeins}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta,positioning,calc,decorations.pathreplacing,fit,backgrounds}
+\usetikzlibrary{arrows.meta,positioning,calc,decorations.pathreplacing,fit,backgrounds,patterns}
 % Aucune césure dans une figure : les retours à la ligne y sont posés à la main.
 \tikzset{every node/.append style={execute at begin node=%
   {\hyphenpenalty=10000\exhyphenpenalty=10000\relax}}}
@@ -41,19 +48,20 @@
 \usepackage{enumitem}
 \usepackage{tcolorbox}
 \tcbuselibrary{breakable,skins,listings}
-\usepackage[margin=2.45cm]{geometry}
+\usepackage[margin=2.45cm,headheight=23pt,headsep=13pt]{geometry}
 \usepackage{listings}
 \lstset{basicstyle=\ttfamily\small,keywordstyle=\color{accent}\bfseries,
   commentstyle=\color{rulecolor},stringstyle=\color{warning},
-  showstringspaces=false,breaklines=false,frame=none,
+  showstringspaces=false,breaklines=true,breakatwhitespace=true,frame=none,
   numbers=none,columns=fullflexible,language=Python,
   literate={é}{{\'e}}1 {è}{{\`e}}1 {ê}{{\^e}}1 {à}{{\`a}}1 {ç}{{\c c}}1}
 % Les lignes des scripts du tutoriel tiennent en 76 colonnes à cette taille.
-\lstdefinestyle{code}{basicstyle=\ttfamily\footnotesize,xleftmargin=4mm,
+\lstdefinestyle{code}{basicstyle=\ttfamily\small,xleftmargin=4mm,
   aboveskip=1.1em,belowskip=0.6em}
 \usepackage[backend=biber,style=numeric,sorting=none]{biblatex}
 \addbibresource{references.bib}
 \AtEveryBibitem{\clearfield{urldate}}
+\usepackage{fancyhdr}
 \usepackage{hyperref}
 % Les legendes se distinguent du corps : corps plus petit, marges laterales,
 % numero en gras colore suivi d'un point.
@@ -76,9 +84,17 @@
 % Deux teintes libres, distinctes des quatre maisons.
 \definecolor{herbo}{HTML}{9D174D}
 \definecolor{runes}{HTML}{1D4ED8}
-\hypersetup{colorlinks=true,linkcolor=ink,citecolor=accent,urlcolor=accent,
-  pdftitle={Régression logistique}}
-\setlist{nosep,leftmargin=*}
+\hypersetup{colorlinks=true,linkcolor=accent!85!ink,citecolor=accent,urlcolor=accent,
+  pdftitle={Régression logistique --- modèle, optimisation et évaluation},
+  pdfauthor={Sylvain Maitre},
+  pdfsubject={Cours de régression logistique binaire et un-contre-tous},
+  pdfkeywords={régression logistique, entropie croisée, descente de gradient,
+    un-contre-tous, DSLR},
+  pdflang={fr-FR},
+  bookmarksnumbered=true,bookmarksopen=true,bookmarksopenlevel=1}
+% leftmargin=* est incompatible avec le balisage des listes (phase-III) :
+% la largeur est donnée explicitement.
+\setlist{nosep,leftmargin=1.7em,labelsep=0.5em}
 \setlength{\parindent}{0pt}
 \linespread{1.08}
 \setlength{\parskip}{0.72em}
@@ -120,19 +136,96 @@
   boxrule=0.6pt,arc=1mm,left=2mm,right=2mm,top=1.5mm,bottom=1.5mm,
   title={#1},fonttitle=\bfseries,coltitle=white}
 
+% Contrat d'ouverture de chapitre : objectifs observables, prérequis, parcours.
+% Trois champs, toujours dans cet ordre.
+\newtcolorbox{orientation}{enhanced,colback=white,colframe=ink!35,
+  boxrule=0.55pt,arc=1mm,left=2mm,right=2mm,top=1.5mm,bottom=1.5mm,
+  fontupper=\small\color{ink!92},
+  borderline west={2.2pt}{0pt}{accent!45}}
+\newcommand{\orientlab}[1]{\textcolor{accent}{\footnotesize\bfseries\scshape #1}\quad}
+\newcommand{\orient}[3]{%
+  \begin{orientation}
+  \orientlab{Objectifs}#1\par
+  \orientlab{Prérequis}#2\par
+  \orientlab{Parcours}#3
+  \end{orientation}}
+
+% Tâche laissée au lecteur : énoncé seul, corrigé reporté à l'annexe des
+% corrigés. Le compteur suit les chapitres pour que la référence soit stable.
+\newcounter{exo}[chapter]
+\newtcolorbox[use counter=exo]{exercice}[1][]{enhanced,
+  colback=white,colframe=rulecolor!70,boxrule=0.6pt,arc=1mm,
+  left=2mm,right=2mm,top=1.5mm,bottom=1.5mm,
+  borderline west={2.2pt}{0pt}{rulecolor!55},
+  fontupper=\small,
+  title={Exercice~\theexo\ --- #1},fonttitle=\footnotesize\bfseries,
+  coltitle=rulecolor,colbacktitle=rulelight,
+  attach title to upper={\par\nobreak\addvspace{3pt}}}
+\counterwithin{exo}{chapter}
+\renewcommand{\theexo}{\thechapter.\arabic{exo}}
+
+% Alternative textuelle d'une figure vectorielle. La phase de balisage TikZ
+% fournie par LaTeX ouvre et ferme elle-même la structure Figure ; l'environnement
+% ne fait que lui transmettre le texte. Un balisage manuel ici imbriquerait deux
+% contenus marqués et corromprait l'arbre de structure.
+\NewDocumentEnvironment{graphique}{m}
+  {\tikzset{tagging-setup={alt={#1}}}}
+  {}
+
+% Atelier : une tâche par fonction à écrire. Contrat, contrôle, indices gradués
+% et question de transfert ; le corrigé est reporté à l'annexe des corrigés,
+% pour qu'une tentative précède la lecture de la solution.
+\newcounter{tache}
+\newtcolorbox[use counter=tache]{tache}[1][]{enhanced,breakable,
+  colback=white,colframe=accent!80,boxrule=0.7pt,arc=1mm,
+  left=2.5mm,right=2mm,top=1.8mm,bottom=1.8mm,
+  fontupper=\small,
+  title={Étape~\thetache\ --- #1},fonttitle=\bfseries\small,coltitle=white}
+\newcommand{\tlab}[1]{\par\addvspace{3.5pt}%
+  \textcolor{accent!80!ink}{\footnotesize\bfseries\scshape #1}\quad\ignorespaces}
+\newcommand{\corrige}[1]{\par\addvspace{4pt}%
+  {\footnotesize\color{ink!58}Corrigé : \annexeref{ann:corriges},
+   \texttt{#1}.}}
+
+% Sortie vers une annexe : le fil principal ne porte que le résultat employé.
+\newtcolorbox{approfondir}[1][]{enhanced,colback=gridgray!8,colframe=ink!30,
+  boxrule=0.5pt,arc=1mm,left=2mm,right=2mm,top=1.2mm,bottom=1.2mm,
+  fontupper=\small\color{ink!85},
+  title={#1},fonttitle=\footnotesize\bfseries,coltitle=ink!70,
+  colbacktitle=gridgray!22}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{ink!25}\leaders\hrule height \headrulewidth\hfill}}
+\fancyhead[L]{\footnotesize\color{ink!62}\nouppercase{\leftmark}}
+\fancyhead[R]{\footnotesize\color{ink!62}\thepage}
+\fancypagestyle{plain}{\fancyhf{}\renewcommand{\headrulewidth}{0pt}%
+  \fancyfoot[C]{\footnotesize\color{ink!62}\thepage}}
+\renewcommand{\chaptermark}[1]{\markboth{\thechapter.\ #1}{}}
+
 % Code et sortie se distinguent par la boîte : filet et barre d'accent d'un
 % côté, fond gris sans filet de l'autre.
 % L'argument optionnel porte la plage de lignes ; sans lui, le fichier entier.
-\newtcbinputlisting{\codefile}[2][firstline=1]{enhanced,listing only,listing file={#2},
+% Le balisage est suspendu autour des listings : listings pose ses propres
+% retours à la ligne, que le baliseur compte à faux.
+\providecommand{\SuspendTagging}[1]{}
+\providecommand{\ResumeTagging}[1]{}
+\newtcbinputlisting{\codefilebox}[2][firstline=1]{enhanced,listing only,listing file={#2},
   colback=white,colframe=ink!20,boxrule=0.5pt,arc=1mm,
   borderline west={2pt}{0pt}{accent!55},
   left=3.5mm,right=2mm,top=1.4mm,bottom=1.4mm,
   listing options={style=code,xleftmargin=0pt,aboveskip=0pt,belowskip=0pt,#1}}
 
-\newtcblisting{console}{enhanced,listing only,colback=ink!5,colframe=ink!5,
+\newtcblisting{consolebox}{enhanced,listing only,colback=ink!5,colframe=ink!5,
   boxrule=0pt,arc=1mm,left=3.5mm,right=2mm,top=1.4mm,bottom=1.4mm,
-  listing options={language=,basicstyle=\ttfamily\footnotesize,
+  listing options={language=,basicstyle=\ttfamily\small,
     columns=fullflexible,keepspaces=true}}
+\newcommand{\codefile}[2][firstline=1]{%
+  \par\SuspendTagging{listing}\codefilebox[#1]{#2}\ResumeTagging{listing}\par}
+\newenvironment{console}
+  {\par\SuspendTagging{console}\consolebox}
+  {\endconsolebox\ResumeTagging{console}\par}
 
 % Maisons et matieres sont reperees par leur couleur dans tout le texte.
 % \xspace restitue l'espace que la macro avalerait.
@@ -156,11 +249,17 @@
 \newcommand{\w}{\mathbf{w}}
 \newcommand{\X}{\mathbf{X}}
 \newcommand{\y}{\mathbf{y}}
+\newcommand{\annexeref}[1]{annexe~\ref{#1}}
+% États du modèle : un nom par jeu de coefficients, employé partout.
+\newcommand{\Mzero}{\ensuremath{M_0}\xspace}
+\newcommand{\Mquatre}{\ensuremath{M_{400}}\xspace}
+\newcommand{\Mstop}{\ensuremath{M_{\text{arr}}}\xspace}
+\newcommand{\Movr}{\ensuremath{M_{4}}\xspace}
 
 \title{\textbf{Régression logistique}\\
-  \large Ce qu'elle fait, et pourquoi elle le fait}
+  \large Modèle, optimisation et évaluation}
 \author{Sylvain Maitre}
-\date{\today}
+\date{Version 2.0 --- 1\textsuperscript{er} août 2026}
 
 \begin{document}
 \hypersetup{pageanchor=false}
@@ -168,25 +267,30 @@
 \pagenumbering{roman}
 
 \begin{abstract}
-Une droite sépare deux groupes de points. Elle rend une réponse binaire, alors
-qu'une probabilité est nécessaire : cet élève est Gryffindor à quatre-vingt-dix
-pour cent. La régression logistique construit ce passage, et le reste en
-découle --- la mesure de l'erreur, sa dérivée, et le déplacement de la droite
-jusqu'à sa position optimale.
+La régression logistique associe à une observation une probabilité
+d'appartenance, sous l'hypothèse que le logarithme de la cote est une fonction
+affine des variables observées. L'optimisation ajuste cette probabilité à partir
+des étiquettes de référence. Ce cours établit le modèle, le met en {\oe}uvre et
+en démontre les propriétés employées.
 
-La première partie suit ce parcours sur un cas réel : mille six cents élèves,
-deux notes chacun, quatre maisons à reconnaître. Les formules y sont données et
-employées, jamais démontrées. La deuxième construit le programme qui exécute tout
-cela, du fichier brut à la maison prédite, sans bibliothèque de calcul. La
-troisième démontre chaque formule ligne à ligne, en rappelant les règles de
-calcul à l'endroit où elles servent.
+Le fil conducteur est un jeu de données de $1\,600$ élèves décrits par leurs
+notes, à répartir entre quatre classes. La première partie construit la chaîne
+complète --- préparation, score, probabilité, coût, gradient, décision,
+évaluation --- sur un sous-problème binaire à deux variables, choisi parce qu'il
+se dessine. La deuxième partie écrit le programme correspondant en Python sans
+bibliothèque de calcul, sous forme d'un atelier où chaque fonction est à
+compléter puis à contrôler contre une valeur connue d'avance. Les annexes
+portent les démonstrations, les rappels de prérequis, la géométrie en dimension
+quelconque et les questions de stabilité numérique.
 
-Les figures proviennent d'une descente réellement exécutée sur le fichier des
-élèves.
+Les valeurs numériques citées proviennent d'exécutions sur le fichier
+d'entraînement ; les conventions de reproduction figurent au
+chapitre~\ref{ch:contrat}.
 
-Ce texte a été rédigé avec GPT et Claude selon mes instructions et éléments
-fournis. Le résultat n'est pas formidable mais il est lisible et peut apporter
-des éléments de compréhension. Il est mis à disposition sous licence CC-BY-SA 4.0.
+Document rédigé avec l'assistance de modèles de langage (GPT, Claude) sur la base
+de mes instructions, de mon code et de mes données ; la sélection, la
+vérification numérique et la responsabilité éditoriale du contenu m'incombent.
+Diffusé sous licence CC-BY-SA 4.0.
 \end{abstract}
 
 \tableofcontents
@@ -194,7 +298,9 @@ des éléments de compréhension. Il est mis à disposition sous licence CC-BY-S
 \pagenumbering{arabic}
 \hypersetup{pageanchor=true}
 
-\part{Voir}
+\part{Modèle et interprétation}
+\include{chapters/p0_contrat}
+\include{chapters/p0_probleme}
 \include{chapters/p1_standardisation}
 \include{chapters/p1_nuage}
 \include{chapters/p1_probabilite}
@@ -203,22 +309,28 @@ des éléments de compréhension. Il est mis à disposition sous licence CC-BY-S
 \include{chapters/p1_modele}
 \include{chapters/p1_classifieur}
 
-\part{Construire}
+\part{Implémentation et évaluation}
 \include{chapters/p2_donnees}
 \include{chapters/p2_entrainer}
 \include{chapters/p2_predire}
 
-\part{Démontrer}
+\appendix
+\part{Fondements, démonstrations et compléments}
+\include{chapters/annexe_notation}
+\include{chapters/annexe_prerequis}
 \include{chapters/p3_logit}
 \include{chapters/p3_sigmoide}
 \include{chapters/p3_cout}
 \include{chapters/p3_gradient}
 \include{chapters/p3_convexite}
-\include{chapters/p3_stabilite}
-
-\appendix
 \include{chapters/annexe_norme}
+\include{chapters/annexe_optimisation}
+\include{chapters/p3_stabilite}
+\include{chapters/annexe_geometrie}
+\include{chapters/annexe_corriges}
 
-\nocite{*}
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{Références}
 \printbibliography[title={Références}]
 \end{document}

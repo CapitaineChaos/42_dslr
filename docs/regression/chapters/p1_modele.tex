@@ -1,51 +1,68 @@
-\chapter{Modèle obtenu}
+% !TeX root = ../regression_logistique.tex
+\chapter{Interprétation du modèle ajusté}
 \label{ch:modele}
 
-\begin{lecture}
-La descente s'arrête sur trois nombres, qui constituent le modèle et sont seuls à
-conserver. Ils s'interprètent directement et suffisent à classer un élève dont on ne connaît que
-les notes.
-\end{lecture}
+\orient{%
+lire le signe et la valeur d'un coefficient standardisé sans surinterpréter ;
+énoncer le contenu complet d'un modèle enregistré ; distinguer paramètres ajustés
+et décisions préalables}{%
+cote et logit (\annexeref{ann:prerequis}) ; chapitre~\ref{ch:descente}}{%
+essentiel}
 
 \section{Interprétation des coefficients}
 
-La descente s'arrête sur trois nombres, qui contiennent tout ce que le modèle a
-retenu des mille six cents élèves :
+La descente s'arrête sur trois nombres, qui portent tout ce que l'ajustement a
+extrait des $1\,600$ observations :
 \[
   w_0=-4{,}745,\qquad
   w_1=-3{,}454\ \text{(\Herb)},\qquad
   w_2=+3{,}469\ \text{(\Runes)} .
 \]
 
-Le \emph{signe} dit le sens de l'influence. \Herb est négatif : plus la note
-est haute, plus le score baisse, donc moins l'élève est \Gryf. \Runes
-est positif : c'est l'inverse. Le nuage (ch.~\ref{ch:nuage}) montre ce
-croisement, les \Gryf occupant la région en haut à gauche.
+Le \emph{signe} donne le sens de l'effet. Le coefficient d'\Herb est négatif :
+à note d'\Runes fixée, une note d'\Herb plus haute abaisse le score, donc la
+probabilité annoncée. Celui d'\Runes est positif : l'effet est inverse. Dans le
+nuage, les \Gryf occupent ainsi la région en haut à gauche.
 
-La \emph{valeur absolue} mesure le poids de la matière. Presque égales, les deux
-valeurs $3{,}45$ et $3{,}47$ donnent aux deux matières le même poids.
-Cette comparaison n'a de sens que parce que les notes ont été standardisées,
-donc exprimées dans la même unité. Sur les notes brutes, le coefficient d'\Runes serait vingt fois plus petit que celui d'\Herb, pour la seule raison
-que ses valeurs sont vingt fois plus dispersées.
+La \emph{valeur absolue} mesure l'effet d'un écart-type de cette variable sur la
+log-cote, \emph{les autres variables restant fixées}. Les deux valeurs $3{,}45$
+et $3{,}47$ sont presque égales : un écart-type de l'une ou de l'autre déplace le
+score de la même quantité. Cette comparaison n'a de sens que parce que les notes
+ont été standardisées : sur les notes brutes, le coefficient d'\Runes serait
+vingt fois plus petit que celui d'\Herb pour la seule raison que ses valeurs sont
+vingt fois plus dispersées.
 
-Le \emph{biais} $w_0$ est le seul des trois à s'appliquer identiquement à tous
-les élèves. Il reflète la fréquence de base : les \Gryf étant minoritaires, un
-élève quelconque reçoit un score négatif, et seules des notes suffisamment
-marquées le ramènent au-dessus de zéro.
+La portée de cette lecture est celle d'un effet conditionnel. Avec des variables
+corrélées, retirer une colonne modifie les coefficients de celles qui restent,
+parfois jusqu'au changement de signe ; un coefficient nul signifie « aucun apport
+une fois les autres variables connues ». L'ajustement porte par ailleurs sur des
+associations observées, et laisse ouverte la question de savoir si agir sur une
+note modifierait la classe. Classer des variables par $|w_j|$ suppose donc des
+colonnes standardisées et peu corrélées, et reste une lecture descriptive du
+modèle.
+
+Le \emph{biais} $w_0$ est le seul des trois à s'appliquer identiquement à toutes
+les observations. Il vaut la log-cote prédite pour une observation dont toutes
+les notes standardisées sont nulles, c'est-à-dire moyennes dans chaque matière.
+
+Le biais égale le logit de la proportion de \Gryf dans le seul cas d'un modèle
+réduit au biais, sans variable --- le cas du premier pas de la descente. Dès que
+des variables corrélées à la classe entrent dans
+le score, il s'en écarte : ici $\sigma(-4{,}745)=0{,}0087$, contre une proportion
+observée de $0{,}2044$.
 
 Ces trois nombres se lisent aussi de façon quantitative, en revenant à la cote.
-Le score étant le logarithme de la cote (ch.~\ref{ch:nuage}), ajouter une unité à
-une note standardisée augmente le score de $w_j$, donc multiplie la cote par
-$e^{w_j}$ :
+Le score étant le logarithme de la cote, ajouter une unité à une note
+standardisée augmente le score de $w_j$, donc multiplie la cote par $e^{w_j}$ :
 \[
   \frac{p'/(1-p')}{p/(1-p)}=e^{\,w_j}
   \qquad\text{lorsque } x_j \text{ augmente de } 1 .
 \]
 Un écart-type de plus en \Runes multiplie ainsi par $e^{3{,}469}=32$ la cote
-d'être \Gryf ; un écart-type de plus en \Herb la divise par $e^{3{,}454}=32$
-également, les deux coefficients étant presque opposés. Quant au biais, il fixe
-la cote d'un élève moyen dans les deux matières : $e^{-4{,}745}=0{,}0087$, soit
-une chance sur cent quinze.
+d'appartenir à \Gryf, la note d'\Herb restant fixée ; un écart-type de plus en
+\Herb la divise par $e^{3{,}454}=32$ également, les deux coefficients étant
+presque opposés. Le biais donne la cote prédite pour une observation moyenne dans
+les deux matières : $e^{-4{,}745}=0{,}0087$, soit une chance sur cent quinze.
 
 Les deux panneaux ci-dessous font varier $w_0$ puis $w_1$ autour du modèle
 obtenu, les autres coefficients restant à leur valeur. Un troisième panneau pour
@@ -55,13 +72,15 @@ par l'autre revient au même.
 
 \begin{figure}[htbp]
 \centering
-\begin{tikzpicture}[baseline=(current bounding box.north)]
+\begin{graphique}{Deux nuages de points identiques, chacun traversé par trois droites. À gauche, seul le biais varie : les trois droites sont parallèles. À droite, seul le coefficient d'Herbology varie : les trois droites pivotent autour d'un même point. Le trait épais est le modèle obtenu.}
+\begin{tikzpicture}[baseline=(current bounding box.north),
+  alt={Nuage de points traversé par trois droites parallèles. Seul le biais varie ; le trait épais représente le modèle ajusté.}]
 \begin{axis}[panel,width=.46\textwidth,height=6cm,
   title={variation de $w_0$\\[-1pt] \scriptsize
     $w_1=-3{,}454$,\ $w_2=+3{,}469$},
   title style={align=center},
   xlabel={\Herb},ylabel={\Runes}]
-  \addplot[only marks,mark=*,mark size=.8pt,warning!60,opacity=.3]
+  \addplot[only marks,mark=x,mark size=1.1pt,line width=.3pt,warning!80,opacity=.45]
     table[x=x,y=y] {data/autres.dat};
   \addplot[only marks,mark=*,mark size=.8pt,accent,opacity=.6]
     table[x=x,y=y] {data/gryffindor.dat};
@@ -70,13 +89,14 @@ par l'autre revient au même.
   \addplot[ink!35,thick,domain=-2.8:2.8]{(7.5+3.4535*x)/3.4688};
 \end{axis}
 \end{tikzpicture}\hfill
-\begin{tikzpicture}[baseline=(current bounding box.north)]
+\begin{tikzpicture}[baseline=(current bounding box.north),
+  alt={Nuage de points traversé par trois droites qui pivotent autour d'un même point. Seul le coefficient d'Herbology varie ; le trait épais représente le modèle ajusté.}]
 \begin{axis}[panel,width=.46\textwidth,height=6cm,
   title={variation de $w_1$\\[-1pt] \scriptsize
     $w_0=-4{,}745$,\ $w_2=+3{,}469$},
   title style={align=center},
   xlabel={\Herb},yticklabels={}]
-  \addplot[only marks,mark=*,mark size=.8pt,warning!60,opacity=.3]
+  \addplot[only marks,mark=x,mark size=1.1pt,line width=.3pt,warning!80,opacity=.45]
     table[x=x,y=y] {data/autres.dat};
   \addplot[only marks,mark=*,mark size=.8pt,accent,opacity=.6]
     table[x=x,y=y] {data/gryffindor.dat};
@@ -85,24 +105,16 @@ par l'autre revient au même.
   \addplot[ink!35,thick,domain=-2.8:2.8]{(4.7454+7.0*x)/3.4688};
 \end{axis}
 \end{tikzpicture}
-\caption{À gauche, seul $w_0$ change : la frontière se translate sans tourner, et
-la sigmoïde reste identique puisque $\|w\|$ ne dépend que de $w_1$ et $w_2$. À droite, seul
-$w_1$ change : la frontière pivote, mais $\|w\|$ change avec elle, donc la pente de
-la sigmoïde aussi : un coefficient de pondération agit sur deux propriétés à la
-fois. Le trait épais est le modèle obtenu, les traits pâles deux jeux voisins.}
+\end{graphique}
+\caption{Variation isolée du biais, à gauche : translation. Variation isolée de
+$w_1$, à droite : rotation et modification de la pente de la sigmoïde.}
 \label{fig:roles}
 \end{figure}
 \FloatBarrier
 
-\begin{resultat}[Contenu du modèle enregistré]
-Trois coefficients, plus les quatre nombres qui ont servi à standardiser --- la
-moyenne et l'écart-type de chaque matière. Ces derniers font partie du modèle :
-une note brute doit subir exactement la même transformation à la prédiction qu'à
-l'entraînement, sous peine de produire un score dans une autre échelle.
-\end{resultat}
-
 \begin{figure}[htbp]
 \centering
+\begin{graphique}{Trois blocs. En haut à gauche, les trois coefficients ajustés. En haut à droite, les conventions : ordre des matières et réponse associée. En bas, un tableau des statistiques d'entraînement donnant médiane, moyenne et écart-type pour chacune des deux matières.}
 \begin{tikzpicture}[
   bx/.style={draw=ink!30,rounded corners=2.5pt,inner sep=6pt,align=center},
   ttl/.style={font=\footnotesize\bfseries,text=ink,anchor=base}]
@@ -131,9 +143,10 @@ l'entraînement, sous peine de produire un score dans une autre échelle.
    \end{tabular}};
 \node[ttl,above=2mm of st] {statistiques d'entraînement};
 \end{tikzpicture}
-\caption{Un fichier de modèle complet. Appliqués à des notes standardisées avec
-d'autres statistiques, ou rangées dans un autre ordre, les coefficients
-produisent des scores parfaitement calculés et des réponses fausses.}
+\end{graphique}
+\caption{Contenu d'un modèle enregistré, référence unique pour tout le document :
+coefficients, six statistiques de préparation, ordre des matières et réponse
+associée. Chaque élément est nécessaire à la prédiction.}
 \label{fig:contenu-modele}
 \end{figure}
 \FloatBarrier
@@ -145,7 +158,7 @@ et d'autres décisions auraient donné un autre modèle sur le même fichier.
 
 \begin{table}[htbp]
 \centering
-\begin{tabular}{llp{54mm}}
+\begin{tabular}{ll>{\raggedright\arraybackslash}p{54mm}}
 \toprule
  & valeur ici & ce qui la fixe \\
 \midrule
@@ -176,90 +189,42 @@ Ces décisions restent invisibles dans les trois coefficients enregistrés, et
 doivent être consignées à côté d'eux pour qu'un tiers puisse refaire le
 résultat.
 
-\section{Classement d'un nouvel élève}
+\section{Classement d'une observation nouvelle}
 
-Le calcul est celui du chapitre~\ref{ch:probabilite}, la maison n'étant plus
-connue mais déduite.
+Le calcul est celui de la figure~\ref{fig:carte}, la classe n'étant plus connue
+mais déduite : standardiser les deux notes avec les statistiques d'entraînement,
+calculer $z=w_0+w_1x_1+w_2x_2$, annoncer \Gryf si $z\geq0$. Cette comparaison à
+zéro équivaut à comparer $p$ à $0{,}5$, la sigmoïde étant croissante ; le calcul
+de $p$ est réservé à l'affichage.
 
-\begin{enumerate}
-  \item standardiser les deux notes avec les moyennes et écarts-types
-        d'entraînement ;
-  \item calculer $z=w_0+w_1x_1+w_2x_2$ ;
-  \item annoncer \Gryf si $z\geq0$.
-\end{enumerate}
+Sur les $1\,600$ lignes du fichier, cette règle en classe correctement $1\,564$.
+Les trente-six prédictions incorrectes relèvent de deux situations que la
+distance à la frontière sépare.
 
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[
-  st/.style={draw=ink!30,rounded corners=2.5pt,align=center,font=\footnotesize,
-    inner sep=5pt,text width=24mm,minimum height=11mm},
-  src/.style={font=\scriptsize,text=rulecolor,align=center,text width=26mm},
-  arr/.style={-{Latex[length=2mm]},thick,ink!60},
-  feed/.style={-{Latex[length=1.8mm]},rulecolor!70}]
+La première est le recouvrement des deux groupes. Dans la bande où les deux
+populations occupent la même région du plan, aucune droite ne peut les séparer
+sans erreur, et déplacer la frontière ne fait que changer lesquelles.
+Ces prédictions se reconnaissent à leur score, faible en valeur absolue, et à la
+probabilité qui l'accompagne, voisine de $0{,}5$.
 
-\node[st,fill=gridgray!18] (raw) {notes brutes\\ du fichier};
-\node[st,fill=accentlight,right=11mm of raw] (std) {$x_1,\ x_2$\\ standardisées};
-\node[st,fill=accentlight,right=11mm of std] (z) {score $z$};
-\node[st,fill=gryff!14,right=11mm of z] (out) {maison\\ annoncée};
-\draw[arr] (raw) -- (std);
-\draw[arr] (std) -- (z);
-\draw[arr] (z) -- (out);
-
-\node[src,above=9mm of std] (s1) {médiane, moyenne\\ et écart-type\\ de chaque matière};
-\node[src,above=9mm of z] (s2) {coefficients\\ $w_0,w_1,w_2$};
-\node[src,above=9mm of out] (s3) {seuil $z\geq0$};
-\draw[feed] (s1) -- (std);
-\draw[feed] (s2) -- (z);
-\draw[feed] (s3) -- (out);
-
-\node[st,fill=warninglight,below=9mm of z] (p) {probabilité\\ $p=\sigma(z)$};
-\draw[arr,ink!45,densely dashed] (z) -- (p);
-\node[font=\scriptsize,text=ink!70,anchor=west,text width=40mm]
-  at ($(p.east)+(4mm,0)$) {pour afficher une probabilité};
-
-\node[font=\scriptsize\bfseries,text=rulecolor,anchor=south,yshift=3mm]
-  at (s2.north) {apports du modèle enregistré};
-\end{tikzpicture}
-\caption{La prédiction sur un élève dont la maison est inconnue. Les trois apports du modèle enregistré entrent par le haut et sont repris tels
-quels sur les nouvelles données. Le signe de $z$ suffit à la décision ; la sigmoïde le convertit
-en probabilité lorsque celle-ci doit être affichée.}
-\label{fig:prediction}
-\end{figure}
-\FloatBarrier
-
-L'étape~3 compare $z$ à zéro, ce qui équivaut à comparer $p$ à $0{,}5$ puisque la
-sigmoïde est croissante. La sigmoïde sert donc à deux choses : afficher une
-probabilité, et mesurer l'assurance d'une prédiction pour la comparer à une
-autre.
-
-Sur les $1\,600$ élèves du fichier, cette règle en classe correctement $1\,564$.
-Les trente-six erreurs relèvent de deux causes, que la distance à la frontière
-sépare.
-
-La première est le recouvrement des deux groupes. Dans la bande où les \Gryf et
-les autres élèves occupent la même région du plan, une droite laisse forcément
-des élèves du mauvais côté, et le choix de sa position ne fait que déplacer
-lesquels. Ces erreurs se reconnaissent à leur score, faible en valeur absolue, et à la
-probabilité qui l'accompagne, voisine de $0{,}5$ : le modèle sépare mal ces
-élèves, et le recouvrement des deux groupes le justifie.
-
-La seconde tient à des élèves dont les notes contredisent leur maison. Situés
-loin dans la région de l'autre groupe, ils sont classés avec assurance, et à
-tort : ce sont les élèves atypiques du chapitre~\ref{ch:erreur}, dont le coût
-individuel dépasse cent fois la moyenne. Le plus éloigné d'entre eux se tient à
-$2{,}27$ écarts-types du mauvais côté.
+La seconde tient à des observations dont les notes contredisent l'étiquette.
+Situées loin dans la région de l'autre groupe, elles reçoivent une prédiction
+incorrecte assortie d'une probabilité élevée : ce sont les observations atypiques
+dont la perte individuelle dépasse cent fois la
+moyenne. La plus éloignée est incorrectement classée à une distance de
+$2{,}27$ écarts-types de la frontière.
 
 \begin{chiffres}[Erreurs par distance à la frontière]
 \begin{center}
 \begin{tabular}{lrl}
 \toprule
-distance & élèves & \\
+distance & prédictions & \\
 \midrule
 moins de $0{,}5$ écart-type & $20$ & recouvrement des deux groupes \\
 de $0{,}5$ à $1{,}0$        & $11$ & \\
-plus de $1{,}0$             & $5$  & élèves atypiques, jusqu'à $2{,}27$ \\
+plus de $1{,}0$             & $5$  & observations atypiques, jusqu'à $2{,}27$ \\
 \midrule
-\textbf{total}              & $\mathbf{36}$ & sur $1\,600$, soit $97{,}75\,\%$ de justes \\
+\textbf{total}              & $\mathbf{36}$ & sur $1\,600$, soit $97{,}75\,\%$ de correctes \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -267,19 +232,16 @@ La distance est comptée perpendiculairement à la frontière, en écarts-types,
 $|z|/\|w\|$.
 \end{chiffres}
 
-\begin{vigilance}[Mesure faite sur les données d'entraînement]
-Un taux mesuré sur les élèves qui ont servi à placer la frontière surestime ce
-que le modèle fera sur des élèves nouveaux : il est toujours meilleur sur les
-données qu'il a vues. Une mesure valide suppose un ensemble de test mis de côté
-avant l'entraînement et consulté une seule fois, à la fin
-(ch.~\ref{ch:predire}).
-\end{vigilance}
+Le taux de $97{,}75\,\%$ est l'\emph{exactitude sur l'échantillon
+d'ajustement} : il sert de contrôle de cohérence, une valeur anormalement basse
+signalant un défaut d'ajustement. L'exactitude hors échantillon, assortie de son
+incertitude, est mesurée au chapitre~\ref{ch:predire}.
 
 \section{Extension à dix notes et quatre maisons}
 
 Passer de deux notes à dix ajoute huit coefficients et laisse les formules
-identiques : la frontière devient l'hyperplan de $\R^{10}$ décrit au
-chapitre~\ref{ch:nuage}. Ce qui change ici est la taille du fichier enregistré.
+identiques : la frontière devient un hyperplan de $\R^{10}$. Ce qui change ici
+est la taille du fichier enregistré.
 
 \begin{table}[htbp]
 \centering
@@ -300,17 +262,15 @@ calculés une fois par matière et servent aux quatre modèles.}
 \label{tab:taille}
 \end{table}
 
-Le passage à quatre maisons demande une décision de plus. On entraîne quatre
-modèles comme celui-ci --- \Gryf contre le reste, puis \Huff contre le
-reste, et ainsi de suite --- ce qui donne quatre scores pour un même élève. La
-maison retenue est celle du plus grand. Comme la sigmoïde est croissante et
-commune aux quatre, comparer les scores ou les probabilités revient au même, et
-la probabilité se calcule seulement pour être affichée.
+Le passage à quatre maisons ajoute une décision : quatre modèles comme celui-ci
+--- \Gryf contre le reste, puis \Huff contre le reste, et ainsi de suite ---
+donnent quatre scores pour une même observation, et la classe retenue est celle
+du plus grand (ch.~\ref{ch:classifieur}).
 
-\begin{resultat}[Chaîne complète]
-Deux notes situent un élève dans le plan, une frontière linéaire l'y sépare des
-autres. Le
-score donne le côté et la distance, la fonction logistique le convertit en
-probabilité, le coût mesure l'écart aux réponses connues, sa dérivée donne la
-correction, et l'application répétée de cette correction fixe la frontière.
-\end{resultat}
+\begin{exercice}[Lecture d'un coefficient]
+Un modèle ajusté sur les notes \emph{brutes} donnerait $w_2\approx+0{,}033$ pour
+\Runes. Montrer que ce coefficient décrit la même frontière que $+3{,}469$, et
+dire lequel des deux se compare à celui d'\Herb. Par quel facteur un écart-type
+de plus en \Runes multiplie-t-il la cote, et pourquoi ce facteur ne dépend-il pas
+de l'échelle retenue ?
+\end{exercice}

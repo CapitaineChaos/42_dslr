@@ -37,13 +37,17 @@ def cost(w):
     z = X @ w
     return np.mean(np.maximum(z, 0) + np.log1p(np.exp(-np.abs(z))) - y * z)
 
-# trajectoire reelle
+def proba(w):
+    z = X @ w
+    return np.where(z >= 0, 1/(1+np.exp(-np.abs(z))),
+                    np.exp(-np.abs(z))/(1+np.exp(-np.abs(z))))
+
+
+# trajectoire a trois coefficients, employee par les nappes de probabilite
 w = np.zeros(3); traj = []
 for it in range(401):
-    z = X @ w
-    p = np.where(z >= 0, 1/(1+np.exp(-np.abs(z))), np.exp(-np.abs(z))/(1+np.exp(-np.abs(z))))
     traj.append((w.copy(), cost(w)))
-    w -= 1.0 * (X.T @ (p - y) / len(X))
+    w -= 1.0 * (X.T @ (proba(w) - y) / len(X))
 W0 = traj[-1][0][0]
 
 # --- surface du cout ---
@@ -54,8 +58,19 @@ for i in range(G1.shape[0]):
     for k in range(G1.shape[1]):
         J[i, k] = cost(np.array([W0, G1[i, k], G2[i, k]]))
 
-tw = np.array([t[0] for t in traj])
-tj = np.array([cost(np.array([W0, a, b])) for a, b in zip(tw[:, 1], tw[:, 2])])
+# Descente reellement executee sur la surface tracee : le biais est fige a W0 et
+# seules ses deux composantes libres bougent. La trajectoire appartient donc a
+# la surface, et coupe ses lignes de niveau perpendiculairement.
+v = np.array([W0, 0.0, 0.0]); slice_traj = []
+for it in range(401):
+    slice_traj.append(v.copy())
+    g = X.T @ (proba(v) - y) / len(X)
+    g[0] = 0.0
+    v -= 1.0 * g
+tw = np.array(slice_traj)
+tj = np.array([cost(p) for p in tw])
+print('descente 2D sur la tranche : depart J=%.4f, arrivee J=%.4f, w=(%.3f, %.3f)'
+      % (tj[0], tj[-1], tw[-1, 1], tw[-1, 2]))
 
 # --- surface seule, pleine page ---
 fig = plt.figure(figsize=(9.4, 8.4))

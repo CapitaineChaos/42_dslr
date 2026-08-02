@@ -5,7 +5,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, '..', '..', '..', '..', 'V.0_Common'))
 from dataset import HOUSES
 
-from step4_total_cost import load, score_of
+from step4_total_cost import load, fit_stats, design, score_of
 from step7_loop import descend
 
 
@@ -23,7 +23,10 @@ def predict(model, x):
 
 
 if __name__ == "__main__":
-    X, houses = load()
+    columns, houses = load()
+    rows = list(range(len(houses)))
+    X = design(columns, fit_stats(columns, rows), rows)
     model = train(X, houses)
     right = sum(1 for x, house in zip(X, houses) if predict(model, x) == house)
     print(f"\n{right} students out of {len(X)} get their house, that is {right / len(X):.4f}")
+    print("measured on the very students used to fit: optimistic by construction")

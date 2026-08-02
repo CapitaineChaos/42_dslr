@@ -1,0 +1,267 @@
+% !TeX root = ../regression_logistique.tex
+\chapter{Problème de classification et protocole d'évaluation}
+\label{ch:probleme}
+
+\orient{%
+distinguer régression linéaire et régression logistique ; énoncer la tâche,
+l'entrée, la sortie et la mesure ; lire le modèle et son entraînement sur une
+vue graphique globale ; ordonner les phases d'utilisation}{%
+aucun}{%
+essentiel ; le protocole d'évaluation est détaillé au ch.~\ref{ch:predire}}
+
+\section{Données, entrée et sortie}
+
+Le fichier \texttt{dataset\_train.csv} décrit $1\,600$ élèves par treize notes
+d'examen et une maison observée, parmi quatre. La tâche consiste à produire une
+règle qui, appliquée aux seules notes d'un élève, annonce sa maison.
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{rlrrrl}
+\toprule
+index & maison observée & \textcolor{herbo}{Herbology} & \textcolor{runes}{Ancient Runes}
+  & \dots & \\
+\midrule
+$0$ & \Rav   & $+5{,}73$  & $532{,}48$ & & \\
+$1$ & \Slyth & $-5{,}99$  & $367{,}76$ & & \\
+$3$ & \Gryf  & $-6{,}497$ & $523{,}982$ & & \\
+$21$ & \Huff & $+4{,}12$  & \textcolor{warning}{absente} & & note non enregistrée \\
+\bottomrule
+\end{tabular}
+\caption{Quatre lignes du fichier, réduites aux deux colonnes employées dans la
+partie~I. « maison observée » est l'étiquette de référence, seule colonne
+inaccessible à la règle au moment de prédire.}
+\label{tab:extrait}
+\end{table}
+
+L'évaluation d'une telle règle porte sur trois quantités :
+
+\begin{enumerate}
+  \item la proportion de prédictions correctes \emph{sur des observations qui
+        n'ont pas servi à la construire} ;
+  \item la comparaison de cette proportion à celle d'une règle triviale ;
+  \item la répartition des erreurs restantes, que le taux global agrège.
+\end{enumerate}
+
+\section{Régression linéaire et régression logistique}
+
+Une régression relie une variable à expliquer à des variables observées. La
+\emph{régression linéaire} modélise une quantité réelle par
+\[
+  \widehat y=\beta_0+\sum_{j=1}^{n}\beta_jx_j .
+\]
+Elle convient lorsque la sortie est continue --- une durée, une masse, une
+température --- et que sa moyenne conditionnelle peut être approchée par une
+fonction affine. Ses coefficients sont généralement ajustés en minimisant les
+écarts quadratiques entre valeurs observées et valeurs prédites.
+
+Pour une étiquette binaire $y\in\{0,1\}$, la même somme affine peut produire
+n'importe quel réel. La \emph{régression logistique} conserve cette somme comme
+\emph{score}
+\[
+  z=w_0+\sum_{j=1}^{n}w_jx_j,
+\]
+puis modélise la probabilité conditionnelle par
+\[
+  \Pp(y=1\mid\x)=\sigma(z)=\frac{1}{1+e^{-z}}.
+\]
+Le nom « régression » vient de l'estimation de cette probabilité ; la décision
+de classe résulte ensuite d'un seuil.
+
+Ce modèle est indiqué lorsque la réponse est binaire, qu'une probabilité est
+utile et que le logarithme des chances peut être raisonnablement décrit par une
+fonction affine des variables. Il offre alors des coefficients interprétables
+et un ajustement efficace. Des interactions persistantes, une frontière très
+courbe ou des données non structurées conduisent à comparer des modèles plus
+flexibles sur le même protocole hors échantillon.
+
+\begin{resultat}[Portée de la fonction logistique]
+La frontière demeure une droite en deux dimensions et un hyperplan au-delà,
+car $p=0{,}5$ équivaut à $z=0$. La sigmoïde
+a pour rôle de transformer le score en probabilité, de fournir une perte lisse
+adaptée à une réponse binaire et de rendre l'ajustement possible par dérivation.
+Une frontière non linéaire demande d'autres variables --- interactions,
+polynômes --- ou une autre famille de modèles.
+\end{resultat}
+
+\section{Vue graphique globale}
+
+Les quatre panneaux de la figure~\ref{fig:chaine-complete} décrivent le modèle
+et son entraînement. Les deux panneaux supérieurs portent la prédiction ; les
+deux panneaux inférieurs montrent comment une étiquette observée transforme
+cette prédiction en correction des coefficients.
+
+\begin{figure}[!t]
+\centering
+\begin{graphique}{Quatre panneaux présentent la régression logistique. En haut à gauche, un nuage binaire est séparé par la droite de score nul, perpendiculaire au vecteur des coefficients. En haut à droite, la sigmoïde transforme le score en probabilité. En bas à gauche, les deux pertes logistiques dépendent de l'étiquette observée et croissent pour une prédiction assurée incorrecte. En bas à droite, des lignes de niveau de la perte moyenne entourent un minimum ; un pas opposé au gradient rapproche les coefficients de ce minimum.}
+\begin{minipage}[t]{.49\textwidth}
+\centering
+\begin{tikzpicture}[alt={Nuage de deux classes dans le plan des variables standardisées. Une droite z égal à zéro les sépare ; une flèche perpendiculaire à la droite indique le vecteur w et le sens des scores croissants.}]
+\begin{axis}[width=.96\linewidth,height=5.6cm,
+  axis lines=box,axis line style={ink!35},grid=major,grid style={gridgray!30},
+  tick label style={font=\scriptsize},label style={font=\scriptsize},
+  title={1. Score et frontière},title style={font=\small},
+  xlabel={$x_1$},ylabel={$x_2$},xmin=-2.3,xmax=2.3,ymin=-1.8,ymax=2.2,
+  xtick={-2,0,2},ytick={-1,0,1,2}]
+  \addplot[ink,thick,domain=-2.3:2.3]{0.7*x+0.1};
+  \addplot[only marks,mark=triangle*,accent,mark size=2.5pt]
+    coordinates {(-1.8,0.6) (-1.1,1.2) (-0.2,0.8) (0.5,1.3) (1.5,1.7)};
+  \addplot[only marks,mark=square*,warning,mark size=2.2pt]
+    coordinates {(-1.7,-1.2) (-0.8,-0.6) (0.1,-0.5) (0.8,0.1) (1.7,0.4)};
+  \draw[-{Latex[length=2mm]},very thick,rulecolor]
+    (axis cs:0,0.1) -- (axis cs:-0.7,1.1);
+  \node[font=\scriptsize,text=rulecolor,anchor=west] at (axis cs:-0.68,1.16)
+    {$\w$ ; $z$ croît};
+  \node[font=\scriptsize,text=ink,fill=white,inner sep=1pt]
+    at (axis cs:1.25,0.84) {$z=0$};
+\end{axis}
+\end{tikzpicture}
+\end{minipage}\hfill
+\begin{minipage}[t]{.49\textwidth}
+\centering
+\begin{tikzpicture}[alt={Courbe logistique en S. Le score parcourt les réels et la probabilité croît de zéro à un, avec une valeur de 0,5 au score nul.}]
+\begin{axis}[width=.96\linewidth,height=5.6cm,
+  axis lines=left,axis line style={ink!35},grid=major,grid style={gridgray!30},
+  tick label style={font=\scriptsize},label style={font=\scriptsize},
+  title={2. Score vers probabilité},title style={font=\small},
+  xlabel={score $z$},ylabel={$p=\sigma(z)$},
+  xmin=-5,xmax=5,ymin=0,ymax=1.05,ytick={0,.5,1},samples=160,domain=-5:5]
+  \addplot[accent,very thick]{1/(1+exp(-x))};
+  \addplot[only marks,mark=*,warning,mark size=2.4pt]
+    coordinates {(-2,0.1192) (0,0.5) (2,0.8808)};
+  \draw[ink!45,dashed] (axis cs:0,0) -- (axis cs:0,.5);
+  \draw[ink!45,dashed] (axis cs:-5,.5) -- (axis cs:0,.5);
+\end{axis}
+\end{tikzpicture}
+\end{minipage}
+
+\vspace{2mm}
+
+\begin{minipage}[t]{.49\textwidth}
+\centering
+\begin{tikzpicture}[alt={Deux pertes logistiques en fonction du score. Pour une étiquette un, la perte décroît avec le score ; pour une étiquette zéro, elle croît. Elles se croisent à log deux au score nul.}]
+\begin{axis}[width=.96\linewidth,height=5.6cm,
+  axis lines=left,axis line style={ink!35},grid=major,grid style={gridgray!30},
+  tick label style={font=\scriptsize},label style={font=\scriptsize},
+  title={3. Étiquette vers perte},title style={font=\small},
+  xlabel={score $z$},ylabel={perte $\ell$},
+  xmin=-4,xmax=4,ymin=0,ymax=4.3,samples=140,domain=-4:4,
+  legend style={at={(.5,.98)},anchor=north,draw=none,font=\scriptsize,
+    legend columns=2}]
+  \addplot[accent,very thick]{ln(1+exp(-x))};
+  \addlegendentry{$y=1$}
+  \addplot[warning,very thick,dashed]{ln(1+exp(x))};
+  \addlegendentry{$y=0$}
+  \addplot[only marks,mark=*,ink,mark size=2.1pt]
+    coordinates {(0,0.6931)};
+\end{axis}
+\end{tikzpicture}
+\end{minipage}\hfill
+\begin{minipage}[t]{.49\textwidth}
+\centering
+\begin{tikzpicture}[alt={Lignes de niveau elliptiques de la perte moyenne dans le plan de deux coefficients. Un point courant se déplace selon moins alpha fois le gradient vers un point plus proche du minimum central.},
+  x=.88cm,y=1cm,font=\scriptsize]
+  \node[font=\small,text=ink] at (4.6,4.45) {4. Perte vers correction};
+  \draw[-{Latex[length=1.8mm]},ink!50] (.4,.45) -- (7.2,.45)
+    node[anchor=north] {$w_1$};
+  \draw[-{Latex[length=1.8mm]},ink!50] (.65,.2) -- (.65,4.1)
+    node[anchor=east] {$w_2$};
+  \begin{scope}[shift={(4.05,2.15)},rotate=22]
+    \draw[gridgray,thick] (0,0) ellipse [x radius=2.7,y radius=1.45];
+    \draw[gridgray!80,thick] (0,0) ellipse [x radius=1.9,y radius=1.0];
+    \draw[accent!55,thick] (0,0) ellipse [x radius=1.0,y radius=.52];
+  \end{scope}
+  \fill[accent] (4.05,2.15) circle (2pt);
+  \node[text=accent,anchor=south] at (4.05,2.28) {minimum};
+  \fill[warning] (1.45,3.55) circle (2pt);
+  \node[text=warning,anchor=south west] at (1.52,3.58) {$\w_t$};
+  \draw[-{Latex[length=2.2mm]},very thick,rulecolor]
+    (1.45,3.55) -- (2.42,3.02);
+  \fill[rulecolor] (2.42,3.02) circle (2pt);
+  \node[text=rulecolor,anchor=north west] at (2.48,2.98)
+    {$\w_{t+1}$};
+  \node[text=rulecolor,anchor=south] at (1.95,3.38)
+    {$-\alpha\nabla J$};
+\end{tikzpicture}
+\end{minipage}
+\end{graphique}
+\caption{Vue globale. Le score affine fixe la frontière ; la sigmoïde lui
+associe une probabilité ; l'étiquette sélectionne une perte ; la moyenne des
+pertes définit la surface dont le gradient corrige les coefficients.}
+\label{fig:chaine-complete}
+\end{figure}
+\clearpage
+
+\section{Utilisation générale}
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\begin{tabularx}{\textwidth}{
+  >{\raggedright\arraybackslash}p{29mm}
+  >{\raggedright\arraybackslash}X
+  >{\raggedright\arraybackslash}p{49mm}}
+\toprule
+phase & décision & contrôle \\
+\midrule
+formuler & définir la classe positive, l'unité d'observation et l'usage de la
+  prédiction & coût relatif des deux erreurs, fréquence des classes \\
+séparer & réserver apprentissage, validation éventuelle et test avant tout
+  ajustement & absence de doublons et de fuite entre ensembles \\
+préparer & imputer, centrer et réduire à partir de l'apprentissage seul
+  & mêmes variables, ordre et statistiques à l'application \\
+ajuster & minimiser la perte logistique sur l'apprentissage
+  & perte décroissante, gradient contrôlé, arrêt documenté \\
+décider & fixer le seuil binaire ou l'argmax multiclasse selon l'usage
+  & rappel, précision, matrice de confusion, coûts des erreurs \\
+évaluer & consulter le test une fois, avec un plancher et une incertitude
+  & comparaison hors échantillon, analyse des erreurs \\
+déployer & enregistrer préparation, coefficients, classes et seuil
+  & dérive des variables, calibration et qualité après mise en service \\
+\bottomrule
+\end{tabularx}
+\caption{Cycle d'utilisation d'une régression logistique. Le test mesure une
+procédure dont les réglages ont été fixés sur l'apprentissage et la validation.}
+\label{tab:cycle-logistique}
+\end{table}
+\FloatBarrier
+
+Dans le cas étudié, deux notes standardisées produisent un score, puis une
+probabilité et une décision ; l'étiquette observée détermine ensuite la perte et
+le gradient. Les chapitres~\ref{ch:standardisation} à~\ref{ch:descente}
+établissent successivement ces opérations ; le
+chapitre~\ref{ch:classifieur} étend la décision aux quatre maisons.
+
+\section{Résultat hors échantillon}
+
+L'exactitude annoncée est mesurée sur des lignes mises de côté avant toute autre
+opération, statistiques de préparation comprises : découpage stratifié à
+$80/20$, graine fixée, test consulté une fois. Le chapitre~\ref{ch:predire}
+détaille ce protocole, ses limites et la répartition des erreurs.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lrl}
+\toprule
+mesure & valeur & portée \\
+\midrule
+exactitude hors échantillon & $311/320=0{,}9719$ & prédit une observation à venir \\
+intervalle de Wilson à $95\,\%$ & $[0{,}9474\,;0{,}9851]$ & largeur due aux $320$ observations \\
+exactitude sur l'apprentissage & $0{,}9609$ & optimiste par construction \\
+règle triviale, classe majoritaire & $0{,}3312$ & plancher à dépasser \\
+\bottomrule
+\end{tabular}
+\caption{Résultat des quatre modèles binaires ajustés sur $1\,280$ lignes et
+mesurés sur les $320$ restantes.}
+\label{tab:resultat-honnete}
+\end{table}
+
+\begin{resultat}[Énoncé du problème traité en partie~I]
+Reconnaître les $327$ \Gryf parmi les $1\,600$ élèves à partir de deux notes
+standardisées, en déterminant par le calcul les trois coefficients d'une
+frontière de décision. Le passage aux quatre maisons
+(ch.~\ref{ch:classifieur}) et la mesure hors échantillon
+(ch.~\ref{ch:predire}) reprennent ce même modèle sans le modifier.
+\end{resultat}

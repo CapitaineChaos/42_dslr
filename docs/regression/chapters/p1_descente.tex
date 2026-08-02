@@ -1,11 +1,16 @@
+% !TeX root = ../regression_logistique.tex
 \chapter{Descente de gradient}
 \label{ch:descente}
 
-\begin{lecture}
-Le coût dépend des trois coefficients. Encore faut-il déterminer dans quel sens les déplacer. La quantité qui l'indique prend ici une forme simple : l'erreur commise
-sur un élève, multipliée par sa note. Les valeurs citées proviennent d'une
-descente exécutée sur les mille six cents élèves.
-\end{lecture}
+\orient{%
+appliquer une itération de descente de gradient à la main ; prédire le signe
+d'une composante du gradient ; énoncer la condition sous laquelle un pas fait
+baisser la perte ; régler $\alpha$ à partir d'une courbe de perte ; définir un
+critère d'arrêt et diagnostiquer un entraînement}{%
+dérivée partielle et gradient (\annexeref{ann:prerequis}) ;
+chapitre~\ref{ch:erreur}}{%
+essentiel ; la formule du gradient est établie à l'\annexeref{ann:gradient}, la
+convexité à l'\annexeref{ann:convexite}}
 
 \section{Correction à appliquer}
 
@@ -30,40 +35,45 @@ petit pour que la pente mesurée décrive encore le terrain.
   \ann{rulecolor}{\frac{\partial J}{\partial w_j}}{\annl{pente du coût}\\ \annl{en ce point}}
   \qquad\text{pour tous les } j \text{ à la fois.}
 \]
-Tout l'algorithme tient dans ce signe moins. Le facteur $\alpha$ fixe la longueur
-du pas : c'est le \emph{taux d'apprentissage}, seul paramètre que l'utilisateur
-règle lui-même.
+Le signe moins porte la logique de la méthode : $-\nabla J$ est la direction de
+plus forte décroissance locale de $J$ au point courant. Le facteur $\alpha$ fixe
+la longueur du pas dans cette direction ; c'est le \emph{taux d'apprentissage},
+seul paramètre réglé à la main dans ce cours.
 
 Les coefficients sont corrigés simultanément, à partir des mêmes valeurs
 antérieures. Corriger $w_0$ puis calculer la correction de $w_1$ avec le $w_0$
 déjà modifié évaluerait les deux dérivées en deux points distincts.
 
-Reste à calculer cette pente. Pour le coût logistique, elle prend une forme dont
-tous les termes s'interprètent, et que le chapitre~\ref{ch:gradient} établit :
+Pour le coût logistique, cette pente prend une forme dont tous les termes
+s'interprètent :
 \[
   \frac{\partial J}{\partial w_j}
-  =\ann{rulecolor}{\frac{1}{m}\sum_{i=1}^{m}}{\annl{moyenne sur}\\ \annl{les $m$ élèves}}
-   \;\ann{warning}{\bigl(p_i-y_i\bigr)}{\annl{erreur sur l'élève $i$}\\ \annl{annoncé moins observé}}
-   \;\ann{accent}{x_{ij}}{\annl{sa note dans}\\ \annl{la matière $j$}}
+  =\ann{rulecolor}{\frac{1}{m}\sum_{i=1}^{m}}{\annl{moyenne sur les}\\ \annl{$m$ observations}}
+   \;\ann{warning}{\bigl(p_i-y_i\bigr)}{\annl{résidu de}\\ \annl{l'observation $i$}}
+   \;\ann{accent}{x_{ij}}{\annl{sa valeur pour}\\ \annl{la variable $j$}}
 \]
 
-$p_i-y_i$ est l'erreur commise sur l'élève $i$ : la probabilité annoncée moins la
-réponse observée. Elle vaut $-0{,}9$ pour un \Gryf auquel le modèle
-n'accorde que $0{,}1$, et $-0{,}01$ pour un \Gryf déjà reconnu à $0{,}99$.
-La correction se trouve négligeable pour un élève correctement classé, maximale
-pour un élève classé dans l'autre catégorie avec une probabilité élevée.
+$p_i-y_i$ est le \emph{résidu} de l'observation $i$ : la probabilité annoncée
+moins la réponse observée. Pour un \Gryf, il vaut $-0{,}9$ lorsque la probabilité
+produite vaut $0{,}1$, et $-0{,}01$ lorsqu'elle vaut $0{,}99$. La
+correction est donc négligeable sur une observation correctement classée,
+maximale sur une observation classée dans l'autre catégorie avec une probabilité
+élevée.
 
-$x_{ij}$ est sa note dans la matière $j$. Elle pondère la contribution de
-l'erreur au coefficient $j$ : un élève aux notes extrêmes contribue fortement, un
-élève moyen, dont la note standardisée avoisine zéro, presque pas.
+$x_{ij}$ pondère la contribution de ce résidu au coefficient $j$ : une
+observation aux valeurs extrêmes contribue fortement, une observation moyenne,
+dont la note standardisée avoisine zéro, presque pas.
 
 \section{Premier pas de la descente}
 
-La descente part ici de coefficients nuls. Quel que soit ce départ, le point d'arrivée reste le même, la surface du coût
-ayant un fond unique (ch.~\ref{ch:convexite}) ; partir de zéro rend en outre le
-premier tour calculable à la main, tous les scores valant alors zéro et toutes
-les probabilités $0{,}5$. La correction du biais s'écrit alors,
-puisque $x_{i0}$ vaut $1$ pour tout le monde,
+La descente part ici de coefficients nuls, état \Mzero. Le coût étant convexe,
+toute limite atteinte est un minimum global. L'unicité de ce minimum et la
+convergence de tous les départs vers un même point demandent les conditions
+énoncées à l'\annexeref{ann:convexite}.
+
+Partir de zéro rend surtout le premier tour calculable à la main, tous les scores
+valant alors zéro et toutes les probabilités $0{,}5$. La correction du biais
+s'écrit, puisque $x_{i0}$ vaut $1$ pour toutes les observations,
 \[
   \frac{\partial J}{\partial w_0}
   =\frac{1}{m}\sum_{i=1}^{m}
@@ -78,9 +88,9 @@ La descente donne exactement cette valeur, $327$ élèves sur $1\,600$ étant
 \Gryf. Avec $\alpha=1$, le biais passe de $0$ à $-0{,}2956$.
 \end{releve}
 
-Le modèle annonçait $50\,\%$ de \Gryf pour une fréquence observée de
-$20{,}44\,\%$. Le biais diminue, et continuera de diminuer tant que la
-moyenne annoncée dépassera cette fréquence.
+Les coefficients nuls produisaient une probabilité moyenne de $50\,\%$ pour une
+fréquence observée de $20{,}44\,\%$. Le biais diminue tant que la probabilité
+moyenne dépasse cette fréquence.
 
 \begin{table}[htbp]
 \centering
@@ -98,7 +108,7 @@ $400$ & $-4{,}7454$ & $-3{,}4535$ & $3{,}4688$ & $0{,}108113$ \\
 \bottomrule
 \end{tabular}
 \caption{Descente réelle, $\alpha=1$, sur les $1\,600$ élèves. Le coût initial
-vaut $\log 2$ (ch.~\ref{ch:cout}). Les signes des
+vaut $\log 2$. Les signes des
 coefficients se fixent dès le premier tour et ne changent plus : négatif pour
 \Herb, positif pour \Runes.}
 \label{tab:trace}
@@ -110,14 +120,16 @@ Répéter l'opération précédente quatre cents fois produit une suite de coût
 le tracé résume la descente entière. La baisse y est d'abord rapide, puis de plus
 en plus lente, et cette forme se déduit de la formule de correction.
 
-Au départ, chaque élève contribue autant que les autres : le modèle accorde
-$0{,}5$ à tout le monde et se trompe ainsi de moitié sur chacun, si bien que les
-mille six cents erreurs $p_i-y_i$ s'additionnent. À mesure que les probabilités s'ajustent,
-l'erreur s'éteint pour les élèves que le modèle a placés du bon côté, et la
-correction ne provient plus que des cas litigieux, qui sont peu nombreux. La somme qui commande le déplacement se vide ainsi de ses termes, tour après tour.
+Au départ, toutes les probabilités valent $0{,}5$ : le résidu $p_i-y_i$ vaut
+$\pm0{,}5$ partout, et les $1\,600$ contributions s'additionnent. À mesure que
+les probabilités s'ajustent, ce résidu tend vers zéro pour les observations
+correctement classées. La correction provient alors des observations proches de
+la frontière ou incorrectement classées, peu nombreuses. Le nombre de termes
+non négligeables de la somme décroît donc tour après tour.
 
 \begin{figure}[htbp]
 \centering
+\begin{graphique}{Courbe décroissante du coût moyen en fonction de l'itération, de 0 à 400. La valeur part de 0,693 et tombe rapidement, puis s'aplatit vers 0,108. Quatre points marqués aux itérations 0, 10, 50 et 400.}
 \begin{tikzpicture}
 \begin{axis}[courseplot,height=6.4cm,axis lines=left,
   xlabel={itération},ylabel={coût $J$},xmin=0,xmax=400,ymin=0,ymax=.75]
@@ -126,32 +138,85 @@ correction ne provient plus que des cas litigieux, qui sont peu nombreux. La som
     coordinates {(0,0.693147) (10,0.250029) (50,0.143846) (400,0.108113)};
 \end{axis}
 \end{tikzpicture}
-\caption{Le coût moyen à chaque tour. Les points marquent les itérations $0$,
-$10$, $50$ et $400$, dont le tableau~\ref{tab:trace} donne les coefficients. Les
-dix premières couvrent les deux tiers de la baisse totale ; les trois cent
-cinquante dernières n'agissent plus que sur la quatrième décimale.}
+\end{graphique}
+\caption{Perte moyenne aux itérations $0$, $10$, $50$ et $400$. Les dix premiers
+tours couvrent $75{,}7\,\%$ de la baisse totale ; les $350$ derniers, $6\,\%$.}
 \label{fig:cout}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}
-\begin{axis}[courseplot,height=5.6cm,axis lines=left,ymode=log,
-  xlabel={itération},ylabel={longueur du gradient},xmin=0,xmax=400]
-  \addplot[warning,very thick,no markers] table[x=iter,y=norm] {data/gradient.dat};
-\end{axis}
-\end{tikzpicture}
-\caption{La longueur du gradient, en échelle logarithmique. Elle décroît
-régulièrement : la surface s'aplatit à l'approche du minimum. C'est cette
-quantité, ou la variation du coût, qui sert de critère d'arrêt.}
-\label{fig:norme}
 \end{figure}
 \FloatBarrier
 
-La seconde figure mesure cet épuisement directement : la longueur du gradient,
-c'est-à-dire la taille de la correction appliquée à chaque tour. Elle passe de $0{,}42$ à $0{,}0026$ sur les quatre cents
-itérations, soit une division par cent soixante. De cette décroissance vient le critère d'arrêt : une correction devenue assez petite laisse les
-coefficients là où ils sont.
+La longueur du gradient mesure cet épuisement directement : elle passe de
+$0{,}42$ à $0{,}0026$ sur les quatre cents itérations, soit une division par cent
+soixante (\annexeref{ann:optimisation}). De cette décroissance vient le critère
+d'arrêt : une correction devenue assez petite laisse les coefficients là où ils
+sont.
+
+\section{Réglage du pas et arrêt}
+
+Le taux $\alpha$ dépend de l'échelle et des corrélations des variables, donc de
+la courbure de $J$. Le nombre d'itérations dépend ensuite de cette courbure, de
+$\alpha$, du point de départ et de la précision demandée. Ces deux nombres ne
+possèdent pas de valeur universelle déterminable avant d'examiner les données.
+
+La standardisation précède le réglage. Une série de valeurs de $\alpha$ espacées
+sur une échelle logarithmique est ensuite comparée sur les premières
+itérations, à partir du même point :
+
+\begin{enumerate}
+  \item conserver les réglages pour lesquels la perte reste finie et décroît ;
+  \item augmenter $\alpha$ lorsque la baisse est régulière mais très lente ;
+  \item réduire $\alpha$ dès qu'apparaissent remontées ou oscillations ;
+  \item retenir le réglage qui atteint rapidement le plateau sans instabilité.
+\end{enumerate}
+
+Une recherche linéaire par \emph{backtracking} automatise cette opération : elle
+réduit le pas jusqu'à vérifier une baisse suffisante. La borne théorique
+$\alpha<2/L$, lorsque le gradient est $L$-lipschitzien, et l'effet de la
+standardisation sont établis à l'\annexeref{ann:optimisation}. Le choix
+$\alpha=1$ convient ici à une perte \emph{moyenne} et à des variables
+standardisées ; il doit être recontrôlé sur un autre problème.
+
+Le nombre d'itérations est produit par une règle d'arrêt plutôt que fixé comme
+un objectif. Le programme combine une baisse relative de $J$ inférieure à
+$10^{-6}$ et un plafond de $6\,000$ tours. D'autres règles suivent
+$\|\nabla J\|$, le déplacement relatif de $\w$, ou la performance sur un
+ensemble de validation. Plusieurs tours consécutifs doivent confirmer le
+plateau lorsqu'une estimation par mini-lots rend la courbe bruitée.
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\begin{tabularx}{\textwidth}{
+  >{\raggedright\arraybackslash}p{43mm}
+  >{\raggedright\arraybackslash}p{53mm}
+  >{\raggedright\arraybackslash}X}
+\toprule
+signal observé & diagnostic probable & action \\
+\midrule
+$J$ augmente ou oscille &
+  pas trop long, signe du gradient erroné &
+  réduire $\alpha$ ; comparer le gradient à une différence finie \\
+$J$ baisse lentement, gradient encore élevé &
+  pas trop court &
+  augmenter progressivement $\alpha$ \\
+$J$ et $\|\nabla J\|$ se stabilisent &
+  convergence numérique &
+  arrêter selon la tolérance prévue \\
+$J_{\rm train}$ baisse, mesure de validation se dégrade &
+  surapprentissage &
+  arrêter, régulariser ou réduire la complexité \\
+valeur non finie &
+  formule numériquement instable ou déplacement excessif &
+  employer les formes stables et réduire $\alpha$ \\
+plafond atteint, perte en baisse et norme croissante &
+  données possiblement séparables, minimum à l'infini &
+  régulariser et conserver le plafond de sécurité \\
+\bottomrule
+\end{tabularx}
+\caption{Lecture du retour d'entraînement. La courbe de perte sert à régler
+l'optimisation ; l'ensemble de validation sert à choisir la généralisation.}
+\label{tab:diagnostic-descente}
+\end{table}
 
 \section{Déplacement de la frontière}
 
@@ -165,11 +230,11 @@ séparer les trois droites.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\textwidth]{figures/zoom_droite.png}
-\caption{La frontière aux itérations $1$, $10$ et $400$. À l'échelle du nuage,
-les trois droites se confondent ; le rectangle agrandi les sépare. Elles pivotent
-autour d'un point situé vers le centre du nuage, d'où un écart nul en ce point et
-maximal sur les bords. Le déplacement total vaut un tiers d'écart-type.}
+\includegraphics[width=\textwidth,
+  alt={Nuage des notes standardisées avec trois droites de décision quasi confondues, aux itérations 1, 10 et 400 ; un encadré agrandi les sépare et montre un écart maximal sur les bords du nuage.}]{figures/zoom_droite.png}
+\caption{Frontière aux itérations $1$, $10$ et $400$ ; le rectangle agrandi sépare les
+trois droites. Elles pivotent autour d'un point central du nuage, pour un
+déplacement total d'un tiers d'écart-type.}
 \label{fig:zoom}
 \end{figure}
 \FloatBarrier
@@ -188,83 +253,52 @@ définit une surface, que les trois figures suivantes donnent aux itérations $1
 $10$ et $400$.
 
 Le premier tour montre une surface presque plane, traversant le nuage à
-mi-hauteur : le modèle répond $0{,}5$ ou presque en tout point, sans distinguer
-personne. Au dixième, deux plateaux se dégagent, l'un au-dessus du groupe des
+mi-hauteur : la probabilité vaut $0{,}5$ ou presque en tout point. Au dixième,
+deux plateaux se dégagent, l'un au-dessus du groupe des
 \Gryf, l'autre au-dessus des trois autres, séparés par une pente encore large. Au
-quatre centième, les plateaux sont établis et la transition tient sur moins d'un
+quatre-centième, les plateaux sont établis et la transition tient sur moins d'un
 demi-écart-type.
 
 Une chose reste pourtant fixe d'une figure à l'autre : la ligne noire tracée à
 mi-hauteur, où la surface vaut exactement $0{,}5$. Sa projection au sol est la frontière du paragraphe précédent, et c'est de là que
 vient sa quasi-immobilité pendant que la surface, elle, change du tout au tout.
 
-\begin{figure}[p]
+\begin{figure}[htbp]
 \centering
-\makebox[\textwidth][c]{\includegraphics[width=1.28\textwidth]{figures/nappe_it1.png}}
-\caption{Premier tour. La surface est presque plane et traverse le nuage à
-mi-hauteur : le modèle répond $0{,}5$ ou presque en tout point, et la couleur
-reste pâle au-dessus des quatre groupes d'élèves. La ligne noire marque les
-$50\,\%$, le pointillé sa projection dans le plan des notes.}
+\includegraphics[width=\textwidth,
+  alt={Deux surfaces tridimensionnelles de probabilité au-dessus du plan des deux notes. À gauche, après une itération, la surface est presque plane à mi-hauteur. À droite, après 400 itérations, deux plateaux à 0 et 1 séparés par une transition étroite. Une ligne rouge marque le niveau 0,5 sur chacune.}]{figures/nappe3d.png}
+\caption{Surfaces de probabilité après $1$ et $400$ itérations, axes et échelles
+identiques. Trait rouge : niveau $0{,}5$ ; pointillé : sa projection au sol, la
+frontière de décision.}
 \label{fig:champ}
-\end{figure}
-
-\begin{figure}[p]
-\centering
-\makebox[\textwidth][c]{\includegraphics[width=1.28\textwidth]{figures/nappe_it10.png}}
-\caption{Dixième tour. Les deux plateaux apparaissent, la transition s'est
-resserrée d'un facteur cinq, et les couleurs se différencient au-dessus des
-groupes.}
-\label{fig:champ10}
-\end{figure}
-
-\begin{figure}[p]
-\centering
-\makebox[\textwidth][c]{\includegraphics[width=1.28\textwidth]{figures/nappe_it400.png}}
-\caption{Quatre centième tour. Le plateau bleu couvre le groupe des \Gryf,
-le plateau brun les trois autres, et la transition tient sur moins d'un
-demi-écart-type. La couleur indique la maison prédite ; les zones pâles sont
-celles où la probabilité reste proche de $0{,}5$.}
-\label{fig:champ400}
 \end{figure}
 \FloatBarrier
 
 \section{Niveau \texorpdfstring{$0{,}5$}{0,5} de la sigmoïde}
 
-Cette surface est la sigmoïde (ch.~\ref{ch:probabilite}) composée avec le
-score. La frontière tracée jusqu'ici est le lieu où elle vaut exactement
-$0{,}5$.
+Cette surface est la sigmoïde composée avec le score. La frontière de décision
+est sa ligne de niveau $0{,}5$.
 
-Notons $d$ la distance d'un élève à la frontière, comptée perpendiculairement et
+Notons $d$ la distance d'une observation à la frontière, comptée perpendiculairement et
 affectée du signe du côté où il se situe. Alors
 \[
   z=\|w\|\,d
   \qquad\text{donc}\qquad
   p=\sigma\bigl(\|w\|\,d\bigr) .
 \]
-Le rapport des coefficients fixe la position de la frontière (ch.~\ref{ch:nuage})
-et leur norme $\|w\|$ fixe la rapidité avec laquelle la probabilité passe de $0$ à
+Le rapport des coefficients fixe la position de la frontière et leur norme
+$\|w\|$ fixe la rapidité avec laquelle la probabilité passe de $0$ à
 $1$ de part et d'autre : les deux quantités agissent séparément. Relevée le long de cette
 perpendiculaire,
 la probabilité décrit toujours une sigmoïde, d'autant plus comprimée que
 $\|w\|$ est grand.
 
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=\textwidth]{figures/coupe_sigmoide.png}
-\caption{À gauche, le modèle vu de dessus et la direction perpendiculaire à la
-frontière. À droite, la probabilité relevée le long de cette direction, aux
-trois itérations. Les trois courbes passent par $0{,}5$ à la même abscisse : la
-frontière est inchangée. Seule la largeur de la transition varie.}
-\label{fig:coupe}
-\end{figure}
-\FloatBarrier
-
-La largeur de cette transition se mesure par la distance qu'il faut parcourir
-pour que la probabilité passe de $25\,\%$ à $75\,\%$, soit $2\log 3/\|w\|$ : elle
-est inversement proportionnelle à la norme, et se resserre à mesure que celle-ci grandit.
+La largeur de cette transition se mesure par la distance à parcourir pour que la
+probabilité passe de $25\,\%$ à $75\,\%$, soit $2\log 3/\|w\|$ : inversement
+proportionnelle à la norme, elle se resserre à mesure que celle-ci grandit.
 
 \begin{releve}
-$\|w\|$ passe de $0{,}30$ à $4{,}89$ entre le premier tour et le quatre centième,
+$\|w\|$ passe de $0{,}30$ à $4{,}89$ entre le premier tour et le quatre-centième,
 et la largeur de transition de $7{,}35$ écarts-types à $0{,}45$ : divisée par
 seize, comme la norme est multipliée par seize.
 \end{releve}
@@ -275,6 +309,7 @@ tour.
 
 \begin{figure}[htbp]
 \centering
+\begin{graphique}{Deux courbes sur le même axe des itérations, de 0 à 400. En bleu et à gauche, la norme des coefficients, croissante de 0 à 4,89 sans plafonner. En orangé tireté et à droite, la pente de la frontière, qui atteint sa valeur finale vers l'itération 50 puis reste plate autour de 1.}
 \begin{tikzpicture}
 \begin{axis}[width=.82\textwidth,height=6cm,
   axis lines=left,axis line style={ink!40},
@@ -297,197 +332,31 @@ tour.
   \node[font=\small,text=warning,anchor=south west] at (axis cs:150,1.01) {pente};
 \end{axis}
 \end{tikzpicture}
-\caption{La pente de la frontière atteint sa valeur finale en une cinquantaine de
-tours et n'évolue ensuite que dans la troisième décimale, de $1{,}047$ à
-$0{,}996$. tandis que la norme des coefficients croît pendant les trois cent cinquante tours
-suivants, de $2{,}84$ à $4{,}89$. Les trois cent cinquante derniers tours resserrent la sigmoïde autour d'une frontière déjà en place.}
+\end{graphique}
+\caption{La pente atteint $0{,}996$ en une cinquantaine de tours. La norme croît
+ensuite de $2{,}84$ à $4{,}89$ et resserre la sigmoïde autour de cette
+frontière.}
 \label{fig:suite}
 \end{figure}
 \FloatBarrier
 
-\begin{resultat}[Régimes successifs]
-Quelques itérations suffisent à orienter la frontière. Le reste de la descente
-augmente la norme des coefficients, ce qui écarte les probabilités de $0{,}5$ en
-conservant chaque décision. Pourtant le coût continue de décroître, puisqu'il baisse dès que la probabilité
-accordée à la réponse observée augmente : un
-critère d'arrêt fondé sur le coût s'arrête donc bien après que le classement
-s'est stabilisé. Cette croissance de la norme trouve elle-même une limite, que
-l'annexe~\ref{ann:norme} établit.
+\begin{resultat}[Régimes successifs et critère d'arrêt]
+Une cinquantaine d'itérations orientent la frontière. Les suivantes augmentent la
+norme des coefficients, ce qui écarte les probabilités de $0{,}5$ à décisions
+constantes ; le coût continue de décroître, puisqu'il baisse dès que la
+probabilité accordée à la réponse observée augmente. Cette croissance de la norme
+trouve une limite, que l'\annexeref{ann:norme} établit.
+
+L'arrêt combine donc deux critères : une baisse relative passée sous
+$\varepsilon$ --- indice que le dernier pas a peu progressé --- et un plafond
+d'itérations. Sur ces données, la baisse relative passe sous $10^{-6}$ longtemps
+après la stabilisation du classement : la stagnation numérique et la stabilité
+des décisions se produisent à des moments distincts.
 \end{resultat}
 
-\section{Surface du coût}
-
-Chaque couple de coefficients produit un coût, calculable sur les mille six cents
-élèves. Porter ce coût en altitude au-dessus du couple qui le produit définit une
-surface au-dessus du plan $(w_1,w_2)$, dont chaque point représente un modèle
-possible. Le coût dépendant de trois coefficients, sa représentation demanderait
-quatre dimensions ; fixer le biais à sa valeur finale ramène à deux.
-
-La descente se lit sur cette surface : partant d'un point, elle suit la ligne de
-plus grande pente et progresse par pas de longueur proportionnelle à $\alpha$.
-
-Deux propriétés de la surface commandent ce qui précède. Établie par la convexité (ch.~\ref{ch:convexite}), l'unicité du minimum entraîne
-que tout point de départ conduit au même modèle. Sa pente décroît par ailleurs à
-l'approche de ce minimum, ce qui raccourcit les pas successifs et se
-mesure à la figure~\ref{fig:norme}.
-
-\begin{figure}[p]
-\centering
-\vspace*{\fill}
-\makebox[\textwidth][c]{\includegraphics[width=1.12\textwidth]{figures/surface3d.png}}
-\caption{La surface du coût au-dessus du plan $(w_1,w_2)$, le biais étant figé à
-sa valeur finale. Chaque point du plan horizontal est un couple de coefficients,
-et l'altitude au-dessus de lui est le coût que ce couple produit sur les $1\,600$
-élèves. La trajectoire rouge part des coefficients nuls et rejoint le
-fond. Les courbes tracées au sol sont les lignes de niveau, reprises seules à la
-figure~\ref{fig:contours}, où la trajectoire se lit sans perspective.}
-\label{fig:surface}
-\vspace*{\fill}
-\end{figure}
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=.78\textwidth]{figures/contours.png}
-\caption{La même surface vue de dessus. Chaque courbe relie les points de coût
-égal, et la trajectoire les coupe perpendiculairement : c'est la propriété du
-gradient, qui pointe dans la direction de plus forte pente. Les points marquent
-une itération sur vingt-cinq, ce qui rend visible le ralentissement : les
-premiers pas traversent plusieurs niveaux, les derniers se resserrent au fond.}
-\label{fig:contours}
-\end{figure}
-\FloatBarrier
-
-\begin{releve}
-Le coût passe de $0{,}98$ aux coefficients nuls à $0{,}11$ au minimum, le biais
-étant figé à sa valeur finale.
-\end{releve}
-
-\section{Longueur du pas}
-
-À chaque tour, le gradient fournit une direction : celle dans laquelle le coût
-décroît le plus vite depuis le point où l'on se trouve. Il reste muet sur la
-distance à parcourir dans cette direction, et c'est $\alpha$ qui la fixe, en
-multipliant le déplacement. Direction et longueur sont deux décisions séparées :
-la première se calcule, la seconde se règle.
-
-Un pas court avance peu à chaque tour. La correction disponible n'est consommée
-que par fractions, et il en faut d'autant plus pour parcourir la même distance.
-Comme un tour demande un passage complet sur les $1\,600$ élèves, le prix se paie
-en temps de calcul, pour aboutir à la même frontière.
-
-Un pas long expose au dépassement. Or la pente que donne le gradient ne décrit
-fidèlement le terrain qu'au voisinage du point où elle est calculée. Sortir de ce
-voisinage fait passer les coefficients de l'autre côté du minimum, sur la pente
-opposée, si bien que le coût augmente au lieu de baisser
-(figure~\ref{fig:alpha}). Les tours suivants ramènent vers le bas, mais la
-trajectoire a fait un détour.
-
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}
-\begin{axis}[width=.82\textwidth,height=6.8cm,
-  axis lines=left,axis line style={ink!40},
-  grid=major,grid style={gridgray!30},
-  tick label style={font=\small},label style={font=\small},
-  xlabel={itération},ylabel={coût $J$},
-  xmin=0,xmax=40,ymin=0.09,ymax=0.72,
-  legend style={at={(0.98,0.97)},anchor=north east,draw=none,font=\small,
-    fill=white,fill opacity=0.85,text opacity=1}]
-  \addplot[warning,very thick,no markers] table[x=iter,y=a005] {data/alpha.dat};
-  \addlegendentry{$\alpha=0{,}05$}
-  \addplot[huffle,thick,densely dashed,no markers]
-    table[x=iter,y=a03] {data/alpha.dat};
-  \addlegendentry{$\alpha=0{,}3$}
-  \addplot[accent,very thick,no markers] table[x=iter,y=a10] {data/alpha.dat};
-  \addlegendentry{$\alpha=1$}
-  \addplot[slyth,thick,densely dotted,no markers]
-    table[x=iter,y=a1000] {data/alpha.dat};
-  \addlegendentry{$\alpha=100$}
-\end{axis}
-\end{tikzpicture}
-\caption{Quarante itérations sur les $1\,600$ élèves, à partir des mêmes
-coefficients nuls. Le pas le plus court laisse la courbe très au-dessus des
-autres : il lui faudrait des centaines de tours pour les rejoindre. Le pas le
-plus long fait remonter le coût dès le premier déplacement, avant de redescendre.}
-\label{fig:alpha-reel}
-\end{figure}
-\FloatBarrier
-
-\begin{chiffres}[Coût moyen selon le pas]
-\begin{center}
-\begin{tabular}{crrrl}
-\toprule
-$\alpha$ & départ & après un tour & après quarante & \\
-\midrule
-$0{,}05$ & $0{,}693$ & $0{,}684$ & $0{,}467$ & pas trop court \\
-$0{,}3$  & $0{,}693$ & $0{,}642$ & $0{,}238$ & \\
-$1$      & $0{,}693$ & $0{,}539$ & $0{,}153$ & réglage retenu \\
-$100$    & $0{,}693$ & $0{,}408$ & $0{,}112$ & dépassement au premier pas \\
-\bottomrule
-\end{tabular}
-\end{center}
-Les quatre partent du même coût, $\log 2=0{,}693$, puisque les coefficients
-nuls donnent $0{,}5$ à tout le monde. À $\alpha=0{,}05$, atteindre $0{,}15$
-demanderait plusieurs centaines de tours pour la même frontière. À $\alpha=100$,
-le premier pas emmène les coefficients au-delà du minimum, et la trajectoire
-revient ensuite par l'autre versant : quarante tours plus tard, ce réglage a
-rattrapé son détour et devancé $\alpha=1$. Ce rattrapage tient à une propriété
-de ce coût précisément, établie ci-dessous.
-\end{chiffres}
-
-$\alpha$ se règle par essais, en lisant la courbe de coût : un bon réglage la
-fait décroître à chaque tour, vite d'abord puis de moins en moins. On retient ici
-$\alpha=1$.
-
-\begin{vigilance}[Effet d'un pas excessif]
-Le déplacement produit par un pas reste borné quel que soit $\alpha$ : la dérivée
-du coût par rapport au score vaut $p-y$, de valeur absolue inférieure à $1$, et
-la courbure est majorée par $p(1-p)\leq\frac14$. Un $\alpha$ excessif allonge la trajectoire au lieu de faire exploser les valeurs. Sur ces données,
-$\alpha=1\,000$ porte le coût à $6{,}61$ au premier tour, puis le fait
-redescendre tour après tour.
-\end{vigilance}
-
-\begin{figure}[htbp]
-\centering
-\begin{minipage}[t]{.48\textwidth}
-\centering
-\begin{tikzpicture}
-\begin{axis}[width=.95\linewidth,height=5.4cm,axis lines=left,
-  title={$\alpha$ adapté},xlabel={itération},ylabel={$\theta$},
-  xmin=0,xmax=6,ymin=-2.6,ymax=6.6,grid=major,grid style={gridgray!45}]
-  \addplot[accent,very thick,mark=*] coordinates
-    {(0,-2) (1,0) (2,1) (3,1.5) (4,1.75) (5,1.875) (6,1.9375)};
-  \addplot[ink,dashed,thick,domain=0:6]{2};
-\end{axis}
-\end{tikzpicture}
-\end{minipage}\hfill
-\begin{minipage}[t]{.48\textwidth}
-\centering
-\begin{tikzpicture}
-\begin{axis}[width=.95\linewidth,height=5.4cm,axis lines=left,
-  title={$\alpha$ trop grand},xlabel={itération},ylabel={$\theta$},
-  xmin=0,xmax=6,ymin=-2.6,ymax=6.6,grid=major,grid style={gridgray!45}]
-  \addplot[warning,very thick,mark=*] coordinates
-    {(0,-2) (1,6) (2,-2) (3,6) (4,-2) (5,6) (6,-2)};
-  \addplot[ink,dashed,thick,domain=0:6]{2};
-\end{axis}
-\end{tikzpicture}
-\end{minipage}
-\caption{Le cas général, sur une fonction quadratique d'une seule variable dont
-le minimum est en $2$. À gauche le coefficient s'en approche, à droite il oscille
-entre deux valeurs sans converger. Ce second comportement suppose une courbure
-croissant avec la distance ; celle du coût logistique reste majorée par
-$\frac14$.}
-\label{fig:alpha}
-\end{figure}
-\FloatBarrier
-
-\begin{resultat}[Critères d'arrêt]
-Deux critères, employés ensemble. Le premier compare deux coûts successifs : si
-la baisse relative passe sous $\varepsilon$, la descente a convergé. Le
-second est un plafond d'itérations, qui borne le temps de calcul lorsque le
-premier tarde à se déclencher. Sur les $1\,600$ élèves, la baisse relative passe
-sous $10^{-6}$ bien après que la frontière a cessé de se déplacer
-de façon perceptible : convergence numérique et stabilité des décisions sont deux
-choses distinctes.
-\end{resultat}
+\begin{exercice}[Signe d'une composante du gradient]
+Au premier tour, $\partial J/\partial w_1$ vaut $-0{,}2289$ pour \Herb. Retrouver
+ce signe sans calculer la somme, à partir de la seule position des \Gryf dans le
+nuage (figure~\ref{fig:nuage}) et de la formule du gradient. Prédire ensuite le
+signe de $\partial J/\partial w_2$.
+\end{exercice}

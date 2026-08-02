@@ -9,10 +9,12 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, 'tuto'))
 sys.path.insert(0, os.path.join(HERE, '..', '..', '..', 'V.0_Common'))
-from step4_total_cost import load
+from step4_total_cost import load, fit_stats, design
 
 OUT = os.path.join(HERE, '..', 'data')
-X, houses = load()
+columns, houses = load()
+all_rows = list(range(len(houses)))
+X = design(columns, fit_stats(columns, all_rows), all_rows)
 y = [1.0 if house == "Gryffindor" else 0.0 for house in houses]
 m = len(X)
 

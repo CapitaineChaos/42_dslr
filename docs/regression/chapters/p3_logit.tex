@@ -1,12 +1,14 @@
+% !TeX root = ../regression_logistique.tex
 \chapter{Construction de la fonction logistique}
-\label{ch:logit}
+\label{ann:logit}
 
-\begin{lecture}
-Le score $z$ parcourt $\R$, la probabilité est comprise entre $0$ et $1$. Il faut
-une fonction qui relie les deux. Plutôt que d'en postuler une, on procède en sens
-inverse : on transforme la probabilité jusqu'à ce qu'elle parcoure $\R$, et
-l'inversion de cette transformation donne la fonction logistique.
-\end{lecture}
+\orient{%
+construire le logit comme composée de la cote et du logarithme ; inverser
+l'hypothèse~\eqref{eq:logit} pour obtenir $\sigma$ ; énoncer ce que cette
+construction établit et ce qu'elle suppose}{%
+exponentielle, logarithme, cote (\annexeref{ann:prerequis}) ;
+chapitre~\ref{ch:nuage}}{%
+approfondissement ; le fil principal n'emploie que la formule encadrée}
 
 \section{Première transformation : la cote}
 
@@ -41,6 +43,7 @@ La cote atteint ainsi toutes les valeurs positives ; restent les négatives.
 
 \begin{figure}[htbp]
 \centering
+\begin{graphique}{Trois axes superposés reliés par des flèches. Le premier porte l'intervalle de 0 à 1 avec 0,5 au milieu. Le deuxième, le demi-axe des cotes de 0 à l'infini avec 1 au repère. Le troisième, la droite réelle entière avec 0 au repère.}
 \begin{tikzpicture}[font=\small,
   seg/.style={line width=1.4pt},
   bnd/.style={font=\scriptsize,text=ink!75},
@@ -75,10 +78,11 @@ La cote atteint ainsi toutes les valeurs positives ; restent les négatives.
 \draw[arr] (6.4,-2.4) -- (6.4,-3.6);
 \node[op,anchor=west] at (6.6,-3.0) {logarithme};
 \end{tikzpicture}
-\caption{Les trois intervalles. La cote étire $[0,1]$ sur $[0,+\infty[$ en
-envoyant $0{,}5$ sur $1$ ; le logarithme envoie ce demi-axe sur $\R$ tout entier
-en plaçant $1$ à l'origine. La composée est donc une bijection croissante de
-$]0,1[$ sur $\R$, ce qui autorise à poser son égalité avec le score.}
+\end{graphique}
+\caption{Les trois intervalles. La cote étire $]0,1[$ sur $]0,+\infty[$ en envoyant
+$0{,}5$ sur $1$ ; le logarithme envoie ce demi-axe sur $\R$. La composée est une
+bijection croissante de $]0,1[$ sur $\R$, l'une des infinités qui rendent
+l'égalité avec le score possible (section~2).}
 \label{fig:intervalles}
 \end{figure}
 \FloatBarrier
@@ -91,15 +95,32 @@ $0$ en $1$, et croît sans borne. En le composant avec la cote, on obtient la
 \[
   \log\frac{p}{1-p},
 \]
-qui prend toutes les valeurs réelles, exactement comme le score $z$. Rien
-n'empêche plus de poser leur égalité :
+qui prend toutes les valeurs réelles, comme le score $z$. Les deux quantités
+parcourant le même ensemble, poser leur égalité est \emph{possible} :
+% \tag ne fait pas avancer le compteur : sans ce pas, l'ancre PDF de cette
+% équation entre en collision avec celle de la première équation numérotée.
 \begin{equation}
   \boxed{\;\log\frac{p}{1-p}=z=\sum_{j=0}^{n}w_jx_j\;}
   \tag{$\star$}\label{eq:logit}
 \end{equation}
-Cette égalité constitue l'unique hypothèse de la régression logistique : les
-log-cotes sont supposées être une somme pondérée des notes ; les seize pages qui
-suivent n'en font que dérouler les conséquences algébriques.
+\stepcounter{equation}
+
+L'égalité~\eqref{eq:logit} constitue un choix parmi les bijections croissantes
+de $]0,1[$ sur $\R$. La réciproque de la fonction de
+répartition de la loi normale donne le modèle \emph{probit}, celle de la loi de
+Gumbel le modèle \emph{complémentaire log-log} (ch.~\ref{ch:nuage}). Le logit est
+donc une hypothèse de modélisation, retenue pour trois raisons : il donne aux
+coefficients une lecture directe en log-cotes, il est le lien canonique du modèle
+linéaire généralisé binomial, ce qui produit les formules les plus
+simples~\cite{mccullagh1989}, et il conduit à une perte convexe
+(\annexeref{ann:convexite}). Le modèle en compte deux autres, posées ailleurs :
+l'indépendance conditionnelle des observations (\annexeref{ann:cout}) et le choix
+des variables retenues.
+
+Les annexes suivantes tirent les conséquences de~\eqref{eq:logit} : l'expression
+de $p$ en fonction de $z$ ci-dessous, les propriétés de $\sigma$
+(\annexeref{ann:sigmoide}), la perte (\annexeref{ann:cout}) et le gradient
+(\annexeref{ann:gradient}).
 
 \section{Expression de \texorpdfstring{$p$}{p} en fonction de \texorpdfstring{$z$}{z}}
 
@@ -132,7 +153,7 @@ dénominateur par $e^{z}$ :
      = \frac{e^{z}/e^{z}}{(1+e^{z})/e^{z}}
     &&\text{on divise en haut et en bas par } e^{z}\neq0 \notag\\[2pt]
     &= \frac{1}{1/e^{z}+1}
-    &&\text{car } e^{z}/e^{z}=1 \text{ et } e^{z}/e^{z}=1 \notag\\[2pt]
+    &&\text{car } e^{z}/e^{z}=1 \notag\\[2pt]
     &= \frac{1}{1+e^{-z}}
     &&\text{car } 1/e^{z}=e^{-z} \label{eq:sigma}
 \end{align}
@@ -141,8 +162,8 @@ dénominateur par $e^{z}$ :
 \[
   \sigma(z)=\frac{1}{1+e^{-z}}=\frac{e^{z}}{1+e^{z}} .
 \]
-Les deux écritures sont la même fonction, comme le montre le calcul ci-dessus.
-Elle découle de l'hypothèse~\eqref{eq:logit} écrite dans l'autre sens.
+Les deux écritures désignent la même fonction, obtenue en inversant
+l'hypothèse~\eqref{eq:logit}.
 \end{resultat}
 
 Chacune des deux formes échoue là où l'autre tient. Pour $z$ très négatif,
@@ -150,7 +171,7 @@ $e^{-z}$ devient
 gigantesque et $1/(1+e^{-z})$ déborde la capacité de la machine, tandis que
 $e^{z}/(1+e^{z})$ rend $0$. Pour $z$ très positif, c'est
 l'inverse. Le programme utilise donc l'une ou l'autre selon le signe de $z$
-(ch.~\ref{ch:stabilite}).
+(\annexeref{ann:stabilite}).
 
 \section{Vérification numérique}
 
@@ -169,6 +190,7 @@ frontière (ch.~\ref{ch:nuage}) est la ligne de niveau $0{,}5$ du modèle.
 
 \begin{figure}[htbp]
 \centering
+\begin{graphique}{Courbe de la fonction logistique, en S, croissante de 0 vers 1, valant 0,5 à l'origine, avec ses deux asymptotes horizontales en pointillé.}
 \begin{tikzpicture}
 \begin{axis}[courseplot,height=6.4cm,axis lines=middle,
   xlabel={score $z$},ylabel={$\sigma(z)$},
@@ -183,6 +205,7 @@ frontière (ch.~\ref{ch:nuage}) est la ligne de niveau $0{,}5$ du modèle.
   \node[ink,anchor=south west,font=\small] at (axis cs:.15,.5){$\sigma(0)=0{,}5$};
 \end{axis}
 \end{tikzpicture}
+\end{graphique}
 \caption{La fonction logistique envoie $\R$ dans l'intervalle $]0,1[$, sans
 jamais atteindre les bornes, et passe par $0{,}5$ à l'origine.}
 \label{fig:sigmoide}
@@ -191,9 +214,9 @@ jamais atteindre les bornes, et passe par $0{,}5$ à l'origine.}
 
 \begin{vigilance}[Valeurs prises par $\sigma$]
 Pour $z$ fini, $1+e^{-z}$ reste strictement plus grand que $1$, donc $\sigma(z)$
-reste strictement compris entre $0$ et $1$. Toute probabilité annoncée par le
-modèle appartient donc à l'intervalle ouvert $]0,1[$. En
-machine, $\sigma(40)$ vaut pourtant exactement $1$ après arrondi : l'écart
-disparaît à partir d'un score d'environ $37$, avec les conséquences que cela
-entraîne dans un logarithme (ch.~\ref{ch:stabilite}).
+reste strictement compris entre $0$ et $1$. Toute probabilité produite par le
+modèle appartient donc à l'intervalle ouvert $]0,1[$. En machine, $\sigma(40)$
+vaut pourtant exactement $1$ après arrondi : l'écart disparaît à partir d'un
+score d'environ $37$, avec les conséquences que cela entraîne dans un logarithme
+(\annexeref{ann:stabilite}).
 \end{vigilance}

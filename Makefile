@@ -7,7 +7,6 @@ DATASET_TRAIN := ./datasets/dataset_train.csv
 
 .PHONY: install describe histogram scatter pair clean fclean re
 
-
 $(STAMP): requirements.txt
 	python3 -m venv $(VENV)
 	$(PIP) install --upgrade pip

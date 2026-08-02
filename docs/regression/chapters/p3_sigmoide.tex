@@ -1,12 +1,12 @@
+% !TeX root = ../regression_logistique.tex
 \chapter{Propriétés de la fonction logistique}
-\label{ch:sigmoide}
+\label{ann:sigmoide}
 
-\begin{lecture}
-Deux égalités serviront constamment par la suite. La première dit que la
-fonction est symétrique : changer le signe du score revient à échanger les deux
-réponses. Quant à la seconde, elle donne une dérivée qui s'exprime avec la fonction
-elle-même, ce qui simplifiera tout le calcul du gradient.
-\end{lecture}
+\orient{%
+établir $\sigma(-z)=1-\sigma(z)$ et $\sigma'=\sigma(1-\sigma)$ ; distinguer le
+rôle de $\sigma'$ dans la sensibilité de la probabilité et dans le gradient}{%
+règle de chaîne, dérivée d'un inverse (\annexeref{ann:prerequis})}{%
+approfondissement ; le fil principal n'emploie que les deux égalités encadrées}
 
 \section{Symétrie}
 
@@ -87,6 +87,7 @@ frontière, et très peu lorsqu'elle est déjà proche de $0$ ou de $1$.
 
 \begin{figure}[htbp]
 \centering
+\begin{graphique}{Deux courbes superposées : la fonction logistique croissante en S, et sa dérivée en cloche symétrique, maximale à 0,25 à l'origine et tendant vers zéro des deux côtés.}
 \begin{tikzpicture}
 \begin{axis}[courseplot,height=6cm,axis lines=middle,
   xlabel={score $z$},ylabel={},xmin=-6.5,xmax=6.5,ymin=-.08,ymax=1.1,
@@ -100,12 +101,26 @@ frontière, et très peu lorsqu'elle est déjà proche de $0$ ou de $1$.
   \node[ink,anchor=south west,font=\small] at (axis cs:.2,.25){$0{,}25$};
 \end{axis}
 \end{tikzpicture}
+\end{graphique}
 \caption{La dérivée atteint son maximum, $0{,}25$, en $z=0$, et tend vers zéro dès
 que la probabilité approche $0$ ou $1$.}
 \label{fig:derivee-sigmoide}
 \end{figure}
 \FloatBarrier
 
-Cette forme en cloche a une conséquence pratique : un élève déjà correctement
-classé contribue très peu au déplacement de la frontière, tandis qu'un élève
-proche de celle-ci y contribue au maximum. L'ajustement est donc déterminé par les cas limites.
+Cette cloche gouverne deux quantités. La première est la sensibilité de la
+\emph{probabilité} au score : $p$ varie fortement avec $z$ près de la frontière
+et très peu une fois proche de $0$ ou de $1$, ce qui explique qu'agrandir la
+norme des coefficients modifie les probabilités sans déplacer la frontière
+(\annexeref{ann:norme}). La seconde est la \emph{courbure} de la perte, dont
+$\sigma'$ fournit le facteur $s_i$ de la hessienne
+(\annexeref{ann:convexite}).
+
+Le poids d'une observation dans le gradient est en revanche
+$\partial\ell/\partial z=p-y$ (\annexeref{ann:gradient}) : le facteur
+$\sigma(1-\sigma)$ apparaît dans la dérivation, puis se simplifie avec les
+dénominateurs venus du logarithme. Les deux quantités se séparent nettement. Sur
+la frontière, $p=0{,}5$ : $\sigma'$ atteint son maximum $\frac14$ tandis que
+$|p-y|$ vaut $0{,}5$ ; pour une observation d'étiquette $y=1$ classée à
+$p=0{,}02$, $\sigma'$ tombe à $0{,}0196$ tandis que $|p-y|$ monte à $0{,}98$. La
+correction est donc portée par les prédictions incorrectes et assurées.

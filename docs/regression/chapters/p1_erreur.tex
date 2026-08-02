@@ -1,41 +1,44 @@
-\chapter{Coût, mesure de l'erreur}
+% !TeX root = ../regression_logistique.tex
+\chapter{Perte individuelle et coût moyen}
 \label{ch:erreur}
 
-\begin{lecture}
-Déplacer la frontière par le calcul suppose de savoir si elle est mal placée, et de
-combien. Un seul nombre doit résumer les mille six cents prédictions. Ce nombre
-est le coût, et il ne dépend que d'une quantité : la probabilité que le modèle
-accordait à la maison observée.
-\end{lecture}
+\orient{%
+calculer la perte associée à une prédiction et la perte moyenne d'un modèle ;
+comparer erreur de classement, erreur quadratique et perte logistique ;
+expliquer pourquoi la dérivée transforme le critère en correction ; identifier
+ce que la moyenne masque}{%
+logarithme (\annexeref{ann:prerequis}) ; chapitre~\ref{ch:probabilite}}{%
+essentiel ; la dérivation par vraisemblance est reportée à
+l'\annexeref{ann:cout}}
 
-\section{Coût d'un élève}
+\section{Perte associée à une prédiction}
 
-Mesurer l'erreur commise sur un élève demande de comparer ce que le modèle
-annonce à ce que le fichier observe. Le modèle annonce une probabilité
-d'appartenir à \Gryf ; le fichier donne une maison. Entre les deux, une seule quantité fait le lien : la probabilité que le modèle
-accordait à la maison observée. Pour un \Gryf elle vaut $p$, pour un élève des
-trois autres maisons $1-p$, ces deux réponses épuisant les cas.
+Mesurer l'erreur d'une prédiction demande de comparer la sortie du modèle à
+l'étiquette de référence. Le modèle produit une probabilité d'appartenir à
+\Gryf ; le fichier donne une classe. Une seule quantité fait le lien : la
+probabilité que le modèle accordait à la classe observée. Elle vaut $p$ lorsque
+l'étiquette est \Gryf, et $1-p$ sinon, ces deux cas épuisant les possibilités.
 
-Cette probabilité vaut $1$ quand le modèle a vu juste avec certitude, et tend
-vers $0$ quand il s'est trompé avec certitude. Le coût la renverse pour en faire
-une erreur, et prend son logarithme :
+Cette probabilité vaut $1$ pour une prédiction correcte et assurée, et tend vers
+$0$ pour une prédiction incorrecte et assurée. La perte la renverse pour en
+faire une erreur, et prend son logarithme :
 \[
-  \ell=-\log(\text{probabilité accordée à la maison observée}).
+  \ell=-\log(\text{probabilité accordée à la classe observée}).
 \]
-Il vaut zéro pour une probabilité de $1$, croît lentement tant qu'elle reste
-grande, puis sans borne lorsqu'elle approche zéro. Un modèle qui se trompe avec
-assurance paie ainsi beaucoup plus qu'un modèle qui hésite, et la
-figure~\ref{fig:cout-un} donne l'allure exacte de cette croissance.
+Elle vaut zéro pour une probabilité de $1$, croît lentement tant que celle-ci
+reste grande, puis sans borne lorsqu'elle approche zéro. Une prédiction
+incorrecte assortie d'une forte probabilité pèse donc beaucoup plus qu'une
+prédiction incertaine ; la figure~\ref{fig:cout-un} en donne l'allure exacte.
 
 Cette fonction s'appelle l'\emph{entropie croisée binaire}, ou
-log-vraisemblance négative, et le chapitre~\ref{ch:cout} la déduit du calcul des
+log-vraisemblance négative, et l'\annexeref{ann:cout} la déduit du calcul des
 probabilités.
 
 \begin{table}[htbp]
 \centering
 \begin{tabular}{llrrr}
 \toprule
-élève & maison réelle & $p$ (\Gryf) & accordée à sa maison & coût \\
+élève & classe observée & $p$ (\Gryf) & accordée à sa classe & perte $\ell$ \\
 \midrule
 $3$ & \Gryf & $0{,}792$ & $0{,}792$ & $0{,}233$ \\
 $4$ & \Gryf & $0{,}991$ & $0{,}991$ & $0{,}009$ \\
@@ -44,21 +47,26 @@ $0$ & \Rav  & $0{,}001$ & $0{,}999$ & $0{,}001$ \\
 \bottomrule
 \end{tabular}
 \caption{Les quatre élèves du chapitre précédent. La quatrième colonne reprend la
-troisième pour les \Gryf et son complément à $1$ pour les autres.}
+troisième pour les \Gryf, son complément à $1$ pour les autres classes.}
 \label{tab:cout-eleves}
 \end{table}
 
-Les quatre coûts du tableau restent faibles parce que les quatre élèves sont bien
-classés. Une erreur commise avec assurance produit l'effet inverse : la
-probabilité accordée à la maison observée y est proche de zéro, et son logarithme
-s'envole. De ce déséquilibre vient que la descente corrige d'abord les cas qu'elle traite
-le plus mal.
+Les quatre pertes du tableau restent faibles parce que les quatre prédictions
+sont correctes. Une prédiction incorrecte et assurée produit l'effet inverse : la
+probabilité accordée à la classe observée y est proche de zéro, et son logarithme
+diverge.
+
+Cette divergence porte sur la perte seule. La correction appliquée aux
+coefficients dépend de la dérivée de la perte par rapport au score, $p-y$, bornée
+par $1$ en valeur absolue (\annexeref{ann:gradient}) : une perte cent fois
+supérieure à la moyenne contribue au gradient dans un rapport très inférieur.
 
 \begin{figure}[htbp]
 \centering
+\begin{graphique}{Courbe décroissante de la perte en fonction de la probabilité accordée à la classe observée, de 0 à 1. La perte vaut 0 en 1, log 2 soit 0,693 en 0,5, et croît sans borne vers la gauche : 2,303 en 0,1. Trois points sont marqués.}
 \begin{tikzpicture}
 \begin{axis}[courseplot,height=6cm,axis lines=left,
-  xlabel={probabilité accordée à la bonne réponse},ylabel={coût},
+  xlabel={probabilité accordée à la classe observée},ylabel={coût},
   xmin=0,xmax=1,ymin=0,ymax=5,samples=250,domain=.008:1]
   \addplot[accent,very thick]{-ln(x)};
   \addplot[only marks,mark=*,warning,mark size=2.4pt]
@@ -67,60 +75,26 @@ le plus mal.
   \node[warning,anchor=west,font=\small] at (axis cs:.1,2.5){$p=0{,}1$};
 \end{axis}
 \end{tikzpicture}
-\caption{Le coût d'un seul élève. Il vaut $\log 2$ en $0{,}5$, tend vers zéro à
-droite et croît sans borne à gauche.}
+\end{graphique}
+\caption{Perte associée à une prédiction. Elle vaut $\log 2$ en $0{,}5$, tend vers
+zéro à droite et croît sans borne à gauche.}
 \label{fig:cout-un}
 \end{figure}
 \FloatBarrier
 
 \section{Coût moyen sur le fichier}
 
-Le coût précédent juge une prédiction. Placer la frontière demande de juger un
-modèle, c'est-à-dire les mille six cents prédictions qu'il produit, et de le
-comparer à un autre. Mille six cents coûts individuels ne s'y prêtent pas :
-déplacer la frontière améliore en effet les uns et dégrade les autres, et deux
-modèles se retrouvent meilleurs chacun sur une partie du fichier. Il faut une
-quantité unique, qui tranche.
+La perte précédente quantifie une prédiction. Le placement de la frontière
+demande un critère portant sur les $1\,600$ prédictions, afin de comparer deux
+jeux de coefficients. Déplacer la frontière améliore certaines pertes
+individuelles et en dégrade d'autres. Leur moyenne fournit un critère unique.
 
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}[font=\footnotesize,
-  row/.style={anchor=base,font=\footnotesize},
-  val/.style={anchor=base east,font=\footnotesize}]
-\node[row,font=\scriptsize\bfseries] at (0,0.75) {élève};
-\node[val,font=\scriptsize\bfseries] at (2.5,0.75) {$y_i$};
-\node[val,font=\scriptsize\bfseries] at (4.0,0.75) {$p_i$};
-\node[val,font=\scriptsize\bfseries] at (6.0,0.75) {coût $\ell_i$};
-\draw[ink!30] (-0.3,0.55) -- (6.2,0.55);
-\foreach \k/\e/\y/\p/\c in {0/3/1/0{,}792/0{,}233, 1/4/1/0{,}991/0{,}009,
-                            2/1/0/0{,}016/0{,}016, 3/0/0/0{,}001/0{,}001}{
-  \node[row] at (0,-0.52*\k) {$\e$};
-  \node[val] at (2.5,-0.52*\k) {$\y$};
-  \node[val] at (4.0,-0.52*\k) {$\p$};
-  \node[val] at (6.0,-0.52*\k) {$\c$};
-}
-\node[row,text=ink!60] at (0,-2.14) {$\vdots$};
-\node[val,text=ink!60] at (6.0,-2.14) {$\vdots$};
-\node[row,text=ink!70,font=\scriptsize] at (0.35,-2.66) {$1\,600$ lignes};
-\draw[decorate,decoration={brace,amplitude=5pt},ink!45]
-  (6.45,0.35) -- (6.45,-2.8);
-\node[anchor=west,font=\small] at (7.0,-1.2)
-  {$J=\dfrac{1}{m}\displaystyle\sum_{i=1}^{m}\ell_i=0{,}108$};
-\end{tikzpicture}
-\caption{Les quatre élèves du tableau~\ref{tab:cout-eleves}, suivis des mille cinq
-cent quatre-vingt-seize autres. Chacun reçoit son propre coût, et la moyenne les
-réduit à un seul nombre : celui que la descente fait baisser, et le seul qui
-permette de comparer deux jeux de coefficients.}
-\label{fig:agregation}
-\end{figure}
-\FloatBarrier
-
-La moyenne des coûts individuels fournit cette quantité, et convient mieux que
-leur somme : celle-ci croît avec le nombre d'élèves, si bien que le même modèle
-afficherait un coût dix fois plus grand sur un fichier dix fois plus long.
-Divisée par $m$, la valeur se compare d'un fichier à l'autre --- entre
+La moyenne des pertes individuelles fournit cette quantité, et convient mieux que
+leur somme : celle-ci croît avec le nombre d'observations, si bien que le même
+modèle afficherait une valeur dix fois plus grande sur un fichier dix fois plus
+long. Divisée par $m$, la valeur se compare d'un fichier à l'autre --- entre
 l'entraînement et le test, notamment --- et la longueur du pas de la descente
-garde le même sens quel que soit le nombre d'élèves.
+garde le même sens quel que soit l'effectif.
 
 En notant $y_i$ la réponse, valant $1$ pour un \Gryf et $0$ sinon, et $p_i$ la
 probabilité annoncée :
@@ -130,41 +104,47 @@ probabilité annoncée :
     +\ann{warning}{(1-y_i)\log(1-p_i)}{\annl{seul terme retenu}\\ \annl{si $y_i=0$}}\Bigr]
 \]
 
-Un seul des deux termes agit pour chaque élève. Pour un \Gryf, $y_i=1$ : le
-second s'annule et il reste $-\log p_i$. Pour un élève d'une autre maison,
-$y_i=0$ : le premier s'annule et il reste $-\log(1-p_i)$. Le facteur $y_i$ joue
-ainsi le rôle d'un interrupteur, et cette écriture en une seule ligne remplace un
-branchement, ce qui la rend dérivable d'un bout à l'autre --- propriété dont le
-chapitre suivant a besoin.
+Un seul des deux termes agit pour chaque observation. Pour un \Gryf, $y_i=1$ : le
+second s'annule et il reste $-\log p_i$. Pour une autre maison, $y_i=0$ : le
+premier s'annule et il reste $-\log(1-p_i)$. Le facteur $y_i$ joue le rôle d'un
+interrupteur, et cette écriture en une seule ligne remplace un branchement, ce
+qui la rend dérivable d'un bout à l'autre --- propriété dont le chapitre suivant
+a besoin.
 
-La somme qui apparaît ici justifie après coup le logarithme du coût individuel :
-sans lui, les mille six cents probabilités se multiplieraient au lieu de
-s'ajouter, et leur produit passerait sous le plus petit nombre représentable en
-machine (ch.~\ref{ch:cout}).
+La somme justifie après coup le logarithme de la perte individuelle : sans lui,
+les $1\,600$ probabilités se multiplieraient au lieu de s'ajouter. Un produit de
+$1\,600$ facteurs strictement inférieurs à $1$ sous-dépasse le domaine des
+flottants et s'arrondit à zéro (\annexeref{ann:cout}).
 
 \begin{resultat}[Coût au point de départ]
 Si tous les coefficients valent zéro, tous les scores valent zéro, donc toutes
-les probabilités valent $0{,}5$. Chaque élève coûte alors $-\log(0{,}5)$, et la
-moyenne aussi :
+les probabilités valent $0{,}5$. Chaque prédiction contribue alors pour
+$-\log(0{,}5)$, et la moyenne aussi :
 \[
   J=\log 2=0{,}693147 .
 \]
-C'est la première valeur qu'affiche n'importe quel entraînement partant de zéro.
-Une autre valeur situe l'erreur dans le calcul du score ou dans
-l'initialisation.
+C'est la première valeur qu'affiche un entraînement partant de zéro ; toute autre
+valeur situe l'erreur dans le calcul du score ou dans l'initialisation.
 \end{resultat}
 
-Ce nombre dépend des coefficients, seule chose qui varie une fois le fichier
+Cette valeur dépend des coefficients, seule chose qui varie une fois le fichier
 fixé : les probabilités $p_i$ viennent des scores, les scores viennent des
-coefficients. Déplacer la frontière change les mille six cents probabilités,
-partant les mille six cents coûts, et avec eux leur moyenne. Le coût s'écrit
-ainsi comme une fonction des trois coefficients, et se note $J(w)$.
+coefficients. Déplacer la frontière change les $1\,600$ probabilités, donc les
+$1\,600$ pertes, et avec elles leur moyenne. Le coût s'écrit ainsi comme une
+fonction des trois coefficients, et se note $J(w)$.
 
-Cette dépendance transforme la question de départ. Placer une frontière dans un
-nuage de points est un problème de géométrie, sans procédé de résolution évident ;
-chercher les trois nombres qui rendent $J(w)$ minimal est une minimisation de
-fonction à trois variables, pour laquelle il existe des méthodes. Les deux
-questions ont la même réponse, et c'est la seconde que le programme résout.
+Cette dépendance convertit le placement géométrique de la frontière en une
+minimisation de fonction à trois variables : le programme cherche les trois
+coefficients qui rendent $J(w)$ minimal.
+
+Les deux questions ont des réponses distinctes : le minimum de $J$ et le minimum
+du nombre d'erreurs à seuil fixé tombent à des endroits différents, ce que le
+tableau~\ref{tab:comparaison} et la figure~\ref{fig:deux-mesures} mesurent sur
+ces données. La portée de $J$ tient à trois propriétés : c'est l'estimateur du
+maximum de vraisemblance sous le modèle posé, c'est une
+règle de score propre, minimisée par les probabilités conditionnelles exactes, et
+c'est une fonction dérivable, donc optimisable. L'exactitude relève d'un autre
+critère, mesuré séparément (ch.~\ref{ch:predire}).
 
 \begin{resultat}[Formulation du problème]
 \[
@@ -172,94 +152,102 @@ questions ont la même réponse, et c'est la seconde que le programme résout.
   \qquad\longrightarrow\qquad
   \underbrace{\text{quel } w \text{ minimise } J(w)\text{ ?}}_{\text{calcul}}
 \]
-La surface que définit $J(w)$ au-dessus des couples de coefficients possibles
-apparaît à la figure~\ref{fig:surface}, et la méthode consiste à en suivre la
-pente vers le bas.
+La méthode suit la pente de $J(w)$ vers le bas ; la surface correspondante est
+tracée à l'\annexeref{ann:optimisation}.
 \end{resultat}
 
-\section{Répartition du coût}
+\section{Répartition de la perte}
 
-Le coût moyen final vaut $0{,}108$, valeur qui agrège mille six cents nombres
-très inégaux entre eux. L'inégalité tient à la forme du coût individuel. Loin de
-la frontière et du bon côté, un élève reçoit une probabilité proche de $1$, dont
-le logarithme est proche de zéro : sa contribution s'éteint. Du mauvais côté au
-contraire, la probabilité décroît à mesure qu'on s'éloigne, et $-\log p$ croît
-alors sans borne. De là vient que la moyenne soit portée par les quelques élèves
-que le modèle place du mauvais côté avec assurance.
+La perte moyenne de \Mquatre vaut $0{,}108$, valeur qui agrège $1\,600$ nombres
+très inégaux. L'inégalité tient à la forme de la perte individuelle. Loin de la
+frontière, dans le demi-plan de la classe observée, la probabilité associée à
+cette classe approche $1$ et la contribution tend vers zéro. Dans le demi-plan
+opposé, cette probabilité décroît avec la distance et $-\log p$ croît sans
+borne. Quelques prédictions incorrectes assorties d'une probabilité élevée
+portent donc l'essentiel de la moyenne.
 
-\begin{figure}[htbp]
-\centering
-\begin{tikzpicture}
-\begin{axis}[cloud,height=8cm,
-  xlabel={\Herb, en écarts-types},ylabel={\Runes, en écarts-types},
-  xmin=-2.8,xmax=2.8,ymin=-2.8,ymax=2.8,
-  colorbar,colorbar style={ylabel={coût de l'élève},font=\small},
-  colormap={cout}{color=(gridgray!45) color=(warning!60) color=(warning)},
-  point meta min=0,point meta max=3,legend style={draw=none}]
-  \addplot[scatter,only marks,mark size=1.5pt,scatter src=explicit,opacity=.85]
-    table[x=x,y=y,meta=cost] {data/cout_eleves.dat};
-  \addplot[ink,very thick,domain=-2.8:2.8]{(4.7454+3.4535*x)/3.4688};
-\end{axis}
-\end{tikzpicture}
-\caption{Chaque élève, coloré par son coût dans le modèle final ; le trait noir
-est la frontière de ce modèle. La quasi-totalité du nuage est grise, ces élèves
-contribuant de façon négligeable. Seuls quelques points, tous situés du côté
-opposé à leur maison, portent une couleur.}
-\label{fig:cout-nuage}
-\end{figure}
-\FloatBarrier
-
-\begin{chiffres}[Concentration du coût]
+\begin{chiffres}[Concentration de la perte, état \Mquatre]
 \begin{center}
 \begin{tabular}{lr}
 \toprule
-part du coût portée par les $2\,\%$ les plus coûteux & $60{,}5\,\%$ \\
-coût de l'élève le plus coûteux & $11{,}1$ \\
-coût moyen & $0{,}108$ \\
+part de $J$ portée par les $2\,\%$ de pertes individuelles les plus élevées & $60{,}5\,\%$ \\
+perte maximale sur une prédiction & $11{,}1$ \\
+perte moyenne & $0{,}108$ \\
 \bottomrule
 \end{tabular}
 \end{center}
-Cet élève est un \Gryf dont la note d'\Herb dépasse la moyenne et dont celle
-d'\Runes lui est inférieure : il se tient là où le modèle attend les trois
-autres maisons.
+L'observation concernée porte une étiquette \Gryf alors que sa note d'\Herb
+dépasse la moyenne et que celle d'\Runes lui est inférieure : elle se situe dans
+la région associée aux trois autres classes.
 \end{chiffres}
 
 \begin{resultat}[Conséquence sur l'entraînement]
-Le coût, et donc la correction qui en découle, dépend principalement d'un petit
-nombre d'élèves atypiques. Déplacer la frontière pour reclasser ces quelques points
-fait baisser $J$ davantage qu'augmenter la probabilité accordée aux mille cinq
-cents autres. De là vient sa sensibilité aux valeurs aberrantes, ce qui impose
-d'examiner les élèves mal classés et pas seulement la moyenne.
+La valeur de $J$ est portée par un petit nombre d'observations atypiques au
+regard des deux variables employées : le critère est sensible aux valeurs
+extrêmes. La correction, elle, pondère chaque observation par $p-y$, borné par
+$1$ (\annexeref{ann:gradient}). L'examen des prédictions incorrectes une à une
+complète donc la lecture de la moyenne.
 \end{resultat}
 
 \section{Comptage et coût}
 
-Savoir si une frontière est bien placée admet deux réponses. Compter les élèves
-du bon côté est la plus directe : le résultat est un nombre entier, qui se lit
-sans convention. Faire la moyenne des coûts individuels donne un nombre réel,
-dont la valeur ne s'interprète pas seule. C'est pourtant la seconde qui sert à
-l'entraînement, et la raison tient à la manière dont chacune réagit lorsque la
-frontière se déplace.
+Deux mesures caractérisent le placement d'une frontière. Le nombre
+d'observations correctement classées est un entier directement interprétable.
+La moyenne des pertes est un nombre réel employé par l'entraînement en raison de
+sa variation continue lorsque la frontière se déplace.
 
-Le comptage change par sauts. Tant que la frontière se déplace sans que personne
-ne la traverse, il garde en effet la même valeur, et il saute d'une unité à
-l'instant où un élève passe de l'autre côté. Sur tout l'intervalle qui sépare
-deux sauts, il rend la même réponse pour des frontières différentes, et un
+Le comptage change par sauts. Il garde la même valeur tant qu'aucune observation
+ne traverse la frontière, puis saute d'une unité. Sur tout l'intervalle qui
+sépare deux sauts, il rend la même réponse pour des frontières différentes, et un
 calcul qui chercherait à l'améliorer recevrait partout la même information.
 
-Le coût répond à tout déplacement. Chaque élève y contribue par la probabilité
-que le modèle lui accorde, et cette probabilité change dès que la frontière
-bouge, fût-ce d'un millième d'écart-type. Bougeant avec elles, la moyenne indique
-par son sens de variation celui du déplacement à faire.
+La perte moyenne répond à tout déplacement. Chaque observation y contribue par la
+probabilité que le modèle lui accorde, et cette probabilité change dès que la
+frontière bouge, fût-ce d'un millième d'écart-type ; le sens de variation de la
+moyenne indique celui du déplacement à faire.
 
-Trois jeux de coefficients, mesurés sur les mêmes $1\,600$ élèves, donnent à voir
-cette différence.
+\begin{table}[htbp]
+\centering
+\footnotesize
+\begin{tabularx}{\textwidth}{
+  >{\raggedright\arraybackslash}p{29mm}
+  >{\raggedright\arraybackslash}p{49mm}
+  >{\raggedright\arraybackslash}X}
+\toprule
+critère & propriété & usage \\
+\midrule
+erreur $0$--$1$ &
+  vaut $0$ ou $1$ après application du seuil ; constante entre deux
+  franchissements de la frontière &
+  mesure finale de classement, accompagnée de la matrice de confusion \\
+erreur quadratique $(p-y)^2$ &
+  continue ; avec une sigmoïde, son gradient contient le facteur
+  $p(1-p)$ et le coût peut perdre sa convexité &
+  critère calculable, mais moins adapté à la vraisemblance d'une réponse
+  de Bernoulli \\
+perte logistique &
+  continue, convexe pour un score affine, forte sur une probabilité assurée
+  incorrecte ; gradient $p-y$ &
+  critère d'ajustement retenu dans ce cours \\
+perte logistique pondérée &
+  multiplie les contributions selon la classe ou le type d'erreur &
+  apprentissage sensible à un coût asymétrique ou à un plan
+  d'échantillonnage documenté \\
+\bottomrule
+\end{tabularx}
+\caption{Un critère d'ajustement fournit une direction de calcul ; une mesure
+d'évaluation décrit la décision obtenue. Les deux fonctions peuvent différer.}
+\label{tab:criteres-erreur}
+\end{table}
+
+Trois jeux de coefficients, mesurés sur les mêmes $1\,600$ observations, séparent
+les deux mesures.
 
 \begin{table}[htbp]
 \centering
 \begin{tabular}{lccc}
 \toprule
-coefficients & frontière & élèves bien classés & coût $J$ \\
+coefficients & frontière & prédictions correctes & coût $J$ \\
 \midrule
 $w$ au $50^{\text{e}}$ tour    & \multicolumn{1}{c}{---}        & $1\,563$ & $0{,}1438$ \\
 $w$ au $400^{\text{e}}$ tour   & voisine de la précédente       & $1\,564$ & $0{,}1081$ \\
@@ -277,12 +265,14 @@ d'une unité et le coût d'un quart de sa valeur : trois cent cinquante tours de
 travail apparaissent dans une seule des deux mesures. En multipliant les trois
 coefficients par un même facteur, la troisième garde la frontière exactement où
 elle était, puisque $w$ et $\lambda w$ s'annulent aux mêmes points. Les mêmes
-élèves sont du bon côté, le comptage rend le même nombre, et le coût distingue
-pourtant les deux modèles : l'écartement des probabilités profite peu aux élèves
-déjà bien classés et pénalise lourdement les trente-six autres.
+observations restent dans le demi-plan de leur classe et le comptage rend le
+même nombre ; le coût
+distingue les deux modèles, l'écartement des probabilités profitant peu aux
+observations déjà correctement classées et beaucoup aux trente-six autres.
 
 \begin{figure}[htbp]
 \centering
+\begin{graphique}{Deux courbes sur le même axe horizontal, le biais de -6,5 à -2,6. En bleu et à gauche, le coût, courbe lisse en cuvette dont le minimum est vers -4,80. En orangé et à droite, le nombre de prédictions incorrectes, escalier à paliers dont le minimum est vers -5,68.}
 \begin{tikzpicture}
 \begin{axis}[width=.80\textwidth,height=6.4cm,
   axis lines=left,axis line style={ink!40},
@@ -299,23 +289,23 @@ déjà bien classés et pénalise lourdement les trente-six autres.
   axis lines=right,axis line style={warning!50},
   tick label style={font=\small,text=warning},
   label style={font=\small,text=warning},
-  ylabel={élèves mal classés},
+  ylabel={prédictions incorrectes},
   xmin=-6.5,xmax=-2.6,ymin=25,ymax=150,
   axis x line=none,axis y line*=right]
     \addplot[warning,thick,no markers,const plot]
     table[x=w0,y=wrong] {data/comparaison.dat};
-  \node[warning,anchor=east,font=\small] at (axis cs:-5.75,88) {élèves mal classés};
+  \node[warning,anchor=east,font=\small] at (axis cs:-5.75,88) {prédictions incorrectes};
 \end{axis}
 \end{tikzpicture}
-\caption{Les deux mesures le long d'un déplacement du biais, les deux autres
-coefficients restant à leur valeur finale. Le nombre de mal classés progresse par
-paliers --- $68$ valeurs distinctes sur les $161$ positions essayées --- et reste
-plat sur des intervalles entiers : aucune correction ne s'en déduit. Le coût
-varie à chaque déplacement, ce qui permet d'en tirer une direction. Les deux minima tombent à des endroits différents : le coût est le plus bas en $w_0=-4{,}80$, les erreurs les moins nombreuses en $w_0=-5{,}68$.}
+\end{graphique}
+\caption{Coût et nombre d'erreurs selon le biais, à $w_1,w_2$ fixés. Leurs
+minima diffèrent : $w_0=-4{,}80$ pour le coût, $-5{,}68$ pour les erreurs.}
 \label{fig:deux-mesures}
 \end{figure}
 \FloatBarrier
 
-C'est cette sensibilité que le chapitre suivant exploite : une quantité qui
-répond à tout déplacement, si petit soit-il, se dérive, et sa dérivée indique
-dans quel sens déplacer les coefficients.
+La valeur $J(w)$ classe un jeu de coefficients selon sa qualité moyenne. Sa
+dérivée ajoute l'information opératoire : $\partial J/\partial w_j$ mesure
+l'effet local d'une variation de $w_j$. Le gradient réunit ces sensibilités et
+donne ainsi une direction et une amplitude de correction ; la dérivation
+convertit le critère d'erreur en règle de mise à jour.

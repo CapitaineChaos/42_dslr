@@ -1,10 +1,2 @@
-1280 students to learn from, 320 set aside
-
-  Gryffindor   cost 0.1087    657 iterations
-  Hufflepuff   cost 0.1467    494 iterations
-  Ravenclaw    cost 0.1309    561 iterations
-  Slytherin    cost 0.1429    529 iterations
-
-on students already seen : 0.9609
-on students never seen   : 0.9719
-everyone into Hufflepuff : 0.3312
+1600 students, 3 columns (bias included)
+cost with zero weights: 0.693147

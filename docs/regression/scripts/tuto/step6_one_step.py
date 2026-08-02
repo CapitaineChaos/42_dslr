@@ -1,4 +1,4 @@
-from step4_total_cost import load, total_cost
+from step4_total_cost import load, fit_stats, design, total_cost
 from step5_gradient import gradient
 
 ALPHA = 1.0
@@ -10,7 +10,9 @@ def one_step(weights, X, target):
 
 
 if __name__ == "__main__":
-    X, houses = load()
+    columns, houses = load()
+    rows = list(range(len(houses)))
+    X = design(columns, fit_stats(columns, rows), rows)
     target = [1.0 if house == "Gryffindor" else 0.0 for house in houses]
     weights = [0.0, 0.0, 0.0]
     for turn in range(4):

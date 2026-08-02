@@ -7,10 +7,12 @@ sys.path.insert(0, os.path.join(HERE, 'tuto'))
 sys.path.insert(0, os.path.join(HERE, '..', '..', '..', 'V.0_Common'))
 from dataset import HOUSES
 
-from step4_total_cost import load
+from step4_total_cost import load, fit_stats, design
 from step9_holdout import split
 
-X, houses = load()
+columns, houses = load()
+all_rows = list(range(len(houses)))
+X = design(columns, fit_stats(columns, all_rows), all_rows)
 learn, test = split(houses)
 print(f"{len(X)} students")
 for house in HOUSES:

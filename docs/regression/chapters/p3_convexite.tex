@@ -1,12 +1,29 @@
-\chapter{Unicité du minimum}
-\label{ch:convexite}
+% !TeX root = ../regression_logistique.tex
+\chapter{Convexité, existence et unicité du minimum}
+\label{ann:convexite}
 
-\begin{lecture}
-La descente de gradient suppose un minimum unique. Sur une surface qui en compte
-plusieurs, elle s'arrête au premier atteint et le résultat dépend du point de
-départ. Le coût de la régression logistique n'en admet qu'un, ce qui se démontre
-en vérifiant que sa courbure ne change jamais de signe.
-\end{lecture}
+\orient{%
+établir la convexité de la perte logistique ; énoncer séparément ce que garantit
+la convexité, ce qu'exige l'unicité, ce qu'exige l'existence, et ce que garantit
+l'algorithme}{%
+dérivée seconde, hessienne, forme quadratique (\annexeref{ann:prerequis}) ;
+\annexeref{ann:gradient}}{%
+approfondissement ; le fil principal n'emploie que la conclusion encadrée}
+
+\begin{resultat}[Portée des quatre propriétés]
+\begin{enumerate}
+  \item \textbf{Convexité.} $J$ est convexe sans condition ; tout minimum local
+        est global. Démonstration ci-dessous.
+  \item \textbf{Unicité.} Le rang plein de $\X$ en colonnes assure la stricte
+        convexité. Des colonnes proportionnelles produisent plusieurs minima.
+  \item \textbf{Existence à distance finie.} Elle correspond aux données
+        non séparables et non quasi-séparables~\cite{albert1984}.
+  \item \textbf{Convergence de l'algorithme.} Elle dépend en outre du pas
+        $\alpha$ et du critère d'arrêt (ch.~\ref{ch:descente}).
+\end{enumerate}
+Les points 2 et 3 sont indépendants : un minimum unique peut se situer à
+l'infini ; un minimum fini peut former tout un sous-espace.
+\end{resultat}
 
 \section{Courbure d'une fonction d'une variable}
 
@@ -16,20 +33,26 @@ dépend du point de départ, et deux exécutions du même programme peuvent rend
 deux modèles.
 
 La dérivée seconde répond à cette question, car elle mesure la variation de la
-pente. Supposons-la strictement positive partout : la pente croît alors sur tout
-l'intervalle, donc elle passe au plus une fois par zéro. Un seul point critique
-existe, et c'est un minimum, la pente y passant du négatif au positif.
+pente. Deux cas sont à distinguer, et c'est leur confusion qui produit la plupart
+des énoncés faux sur ce sujet.
 
-Une fonction dont la dérivée seconde reste positive ou nulle est dite
-\emph{convexe}. Deux minimums séparés par un maximum local exigeraient que la
-pente monte, redescende, puis remonte : sa dérivée changerait de signe, ce que la
-convexité interdit.
+Si la dérivée seconde est \emph{strictement} positive partout, la pente est
+strictement croissante, donc elle traverse zéro au plus une fois : il existe au
+plus un point critique, et c'est un minimum. On dit alors la fonction
+\emph{strictement convexe}, et le minimum, s'il existe, est unique.
+
+Si la dérivée seconde est seulement \emph{positive ou nulle}, la fonction est
+dite \emph{convexe}. Sa pente est croissante : tout minimum local est global.
+L'ensemble des minima peut toutefois former un intervalle entier, par exemple le
+palier horizontal d'une fonction affine par morceaux, ou être vide, comme pour
+$x\mapsto e^{x}$.
 
 \begin{figure}[htbp]
 \centering
+\begin{graphique}{Deux courbes. À gauche, une fonction strictement convexe avec un unique minimum. À droite, une fonction non convexe avec deux minima locaux séparés par un maximum.}
 \begin{minipage}[t]{.48\textwidth}
 \centering
-\begin{tikzpicture}
+\begin{tikzpicture}[alt={Courbe strictement convexe avec un unique minimum.}]
 \begin{axis}[width=.95\linewidth,height=4.8cm,axis lines=middle,
   title={convexe},xmin=-2.4,xmax=2.4,ymin=-.4,ymax=4,xtick=\empty,ytick=\empty,
   samples=120]
@@ -40,7 +63,7 @@ convexité interdit.
 \end{minipage}\hfill
 \begin{minipage}[t]{.48\textwidth}
 \centering
-\begin{tikzpicture}
+\begin{tikzpicture}[alt={Courbe non convexe présentant deux minima locaux séparés par un maximum.}]
 \begin{axis}[width=.95\linewidth,height=4.8cm,axis lines=middle,
   title={non convexe},xmin=-2.4,xmax=2.4,ymin=-.4,ymax=4,xtick=\empty,ytick=\empty,
   samples=160]
@@ -50,15 +73,16 @@ convexité interdit.
 \end{axis}
 \end{tikzpicture}
 \end{minipage}
-\caption{À gauche, un minimum unique, atteint quel que soit le point de départ. À
-droite, deux minimums locaux : la descente s'arrête dans celui vers lequel le
-gradient initial la dirige, et ignore l'autre.}
+\end{graphique}
+\caption{Fonction strictement convexe à minimum unique, à gauche ; fonction à
+deux minima locaux, à droite. La stricte convexité de la perte logistique
+demande une condition supplémentaire (section~3).}
 \label{fig:convexe}
 \end{figure}
 
 \section{Courbure du coût logistique}
 
-Reprenons la dérivée première (ch.~\ref{ch:gradient}) :
+Reprenons la dérivée première (\annexeref{ann:gradient}) :
 \[
   \frac{\partial J}{\partial w_j}
   =\frac{1}{m}\sum_{i=1}^{m}\bigl(\sigma(z_i)-y_i\bigr)x_{ij}.
@@ -74,14 +98,25 @@ Dérivons une seconde fois, par rapport à un autre coefficient $w_k$ :
      \frac{\partial z_i}{\partial w_k}
     &&\text{chaîne, et } y_i \text{ est constant} \notag\\[2pt]
   &= \frac{1}{m}\sum_{i=1}^{m}x_{ij}\,\sigma(z_i)\bigl(1-\sigma(z_i)\bigr)x_{ik}
-    &&\text{chapitre~\ref{ch:sigmoide}, et } \partial z_i/\partial w_k=x_{ik}
+    &&\text{\annexeref{ann:sigmoide}, et } \partial z_i/\partial w_k=x_{ik}
     \label{eq:hess}
 \end{align}
 
 Ces nombres, rangés dans un tableau carré dont la case $(j,k)$ porte
-$\partial^2 J/\partial w_j\partial w_k$, forment la \emph{Hessienne} de $J$ : la
-matrice de ses dérivées secondes. Posons
-$s_i=\sigma(z_i)(1-\sigma(z_i))$, qui est le facteur commun à chaque terme.
+$\partial^2 J/\partial w_j\partial w_k$, forment la \emph{hessienne} de $J$ : la
+matrice de ses dérivées secondes. Posons $s_i=\sigma(z_i)(1-\sigma(z_i))$,
+facteur commun à chaque terme. En notation matricielle, avec $S$ la matrice
+diagonale des $s_i$,
+\[
+  H=\frac{1}{m}\,\X^{\!\top}S\,\X .
+\]
+
+Chaque $s_i$ vérifie $0<s_i\leq\frac14$, $\sigma$ étant strictement comprise
+entre $0$ et $1$ ; cette borne porte sur $S$ seule. La hessienne fait intervenir
+$\X$ de part et d'autre, de sorte que sa plus grande valeur propre est majorée
+par $\tfrac{1}{4m}\|\X\|^2$ et dépend de l'échelle et des corrélations des
+colonnes. C'est cette quantité qui gouverne le pas admissible
+(ch.~\ref{ch:descente}).
 
 \section{Positivité de la courbure}
 
@@ -104,34 +139,56 @@ quantités positives ou nulles : un carré, toujours positif ou nul, et $s_i$, q
 vaut $\sigma(z_i)(1-\sigma(z_i))$ avec $\sigma$ strictement comprise entre $0$ et
 $1$, donc lui aussi positif.
 
-\begin{resultat}[Unicité du minimum]
+\begin{resultat}[Convexité]
 La courbure de $J$ est positive ou nulle dans toutes les directions, quelle que
-soit la position des coefficients. Le coût est donc convexe et n'admet pas de
-minimum local secondaire. Tout point où le gradient s'annule est un minimum
-global, et la descente y conduit quel que soit son point de départ : partir de
-zéro relève de la reproductibilité, non de la qualité du résultat.
+soit la position des coefficients. La perte est donc convexe : tout point
+stationnaire est un minimum global et tout minimum local est global. L'existence
+et l'unicité demandent deux hypothèses supplémentaires, examinées dans les
+sections suivantes. Le départ en zéro fixe seulement la reproductibilité du
+calcul.
 \end{resultat}
 
-\section{Directions de courbure nulle}
+\section{Rang déficient et multiplicité des minima}
 
-Positif \emph{ou nul} : la nuance a des conséquences. La courbure s'annule dans
-une direction $\mathbf v$ dès que $\sum_j v_jx_{ij}=0$ pour tous les élèves,
-c'est-à-dire lorsqu'une combinaison des notes est identiquement nulle. L'ensemble
-des minima est alors une droite, ou un sous-espace de dimension supérieure.
+Positive \emph{ou nulle} : la nuance a des conséquences. La courbure s'annule
+dans une direction $\mathbf v$ dès que $\sum_j v_jx_{ij}=0$ pour toutes les
+observations, c'est-à-dire lorsque les colonnes de $\X$ sont linéairement
+dépendantes et que $\X$ n'est pas de rang plein en colonnes.
+$J$ est alors constante le long de $\mathbf v$, et l'ensemble des minima est une
+droite, ou un sous-espace de dimension supérieure.
 
-Deux colonnes proportionnelles produisent exactement ce cas. Si
-Astronomy vaut $-100$ fois Defense Against the Dark Arts, augmenter un
-coefficient et diminuer l'autre dans le bon rapport laisse tous les scores
-inchangés : les prédictions restent identiques, mais les coefficients dérivent
-sans se stabiliser.
+Deux colonnes proportionnelles produisent ce cas. Si \emph{Astronomy} vaut
+$-100$ fois \emph{Defense Against the Dark Arts}, augmenter un coefficient et
+diminuer l'autre dans le rapport correspondant laisse tous les scores inchangés.
+Les prédictions sont identiques, la perte aussi ; les coefficients, eux, ne sont
+pas identifiables.
 
-\begin{vigilance}[Séparation complète]
-Un second cas éloigne le minimum à l'infini. Si une droite sépare parfaitement
-les deux groupes --- on dit alors que les données sont \emph{linéairement
-séparables} --- multiplier tous les coefficients par $10$ rapproche encore les
-probabilités de $0$ et de $1$, et fait donc encore baisser le coût. Chaque jeu de
-coefficients en admet un meilleur et la suite diverge. La convexité établie
-ci-dessus reste vraie : elle garantit l'unicité du minimum lorsqu'il existe, et
-c'est son existence à distance finie que ce cas met en défaut
-(annexe~\ref{ann:norme}).
+La descente reste pourtant stable le long de cette direction plate. Le gradient
+de $J$ est orthogonal à toute direction où $J$ est constante : une descente de
+gradient exacte partie de $\mathbf 0$ ne se déplace jamais selon $\mathbf v$, et
+s'arrête sur un point particulier du sous-espace des minima --- celui de plus
+petite norme parmi ceux atteignables. La difficulté porte donc sur
+l'interprétation et non sur la convergence : les coefficients obtenus sont
+déterminés par l'implémentation autant que par les données, et un autre ordre de
+colonnes ou une régularisation en donneraient d'autres, tout aussi optimaux. Lire
+l'importance d'une variable dans un tel coefficient n'a pas de sens.
+
+\section{Séparation linéaire et minimum à l'infini}
+
+\begin{vigilance}[Séparation complète et quasi-séparation]
+Un second cas éloigne le minimum à l'infini. Si un hyperplan sépare parfaitement
+les deux classes --- les données sont alors dites \emph{linéairement séparables}
+--- multiplier tous les coefficients par $10$ rapproche encore les probabilités
+de $0$ et de $1$, et fait donc encore baisser la perte. Chaque jeu de
+coefficients en admet un meilleur, l'infimum vaut $0$ et n'est pas atteint : le
+maximum de vraisemblance n'existe pas à distance finie~\cite{albert1984}.
+
+La quasi-séparation --- séparation parfaite sur un sous-ensemble des
+observations, avec les autres exactement sur l'hyperplan --- produit le même
+effet sur une partie des coefficients.
+
+La convexité persiste dans ces deux cas, tandis que l'infimum reste hors de
+l'espace des coefficients finis. Le comportement de la descente dans cette
+situation et le rôle du plafond d'itérations sont traités à
+l'\annexeref{ann:norme}.
 \end{vigilance}

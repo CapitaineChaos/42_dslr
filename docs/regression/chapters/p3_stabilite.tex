@@ -1,13 +1,14 @@
+% !TeX root = ../regression_logistique.tex
 \chapter{Réécritures pour la stabilité numérique}
-\label{ch:stabilite}
+\label{ann:stabilite}
 
-\begin{lecture}
-Les formules démontrées jusqu'ici sont exactes en arithmétique réelle. Sur une
-machine, les nombres ont une taille finie, et deux expressions mathématiquement
-égales n'y sont pas équivalentes : l'une rend un résultat, l'autre échoue. Les
-deux réécritures établies ici conservent chaque valeur et modifient seulement la
-suite d'opérations qui y conduit.
-\end{lecture}
+\orient{%
+réécrire la perte à partir du score seul ; écrire des formes protégées de
+$\operatorname{softplus}$ et de $\sigma$ ; contrôler une implémentation en
+$z=\pm1000$}{%
+logarithme (\annexeref{ann:prerequis}) ; \annexeref{ann:cout}}{%
+approfondissement ; la recette employée par le programme figure au
+chapitre~\ref{ch:donnees}, c'est sa démonstration qui est ici}
 
 \section{Coût exprimé à partir du score}
 
@@ -22,7 +23,7 @@ c'est exactement le cas que le coût doit signaler.
 $\log(a/b)=\log a-\log b$, et $\log(e^{b})=b$.
 \end{rappel}
 
-Reprenons le coût d'un élève et remplaçons $p$ par $\sigma(z)$ :
+Reprenons la perte d'une prédiction et remplaçons $p$ par $\sigma(z)$ :
 
 \begin{align}
   \ell &= -\bigl[y\log\sigma(z)+(1-y)\log(1-\sigma(z))\bigr] \notag\\[4pt]
@@ -59,8 +60,13 @@ en celui d'un produit, puis en développant : $e^{z}\cdot e^{-z}=e^{0}=1$.
   \ell(y,z)=\operatorname{softplus}(z)-yz,
   \qquad \operatorname{softplus}(z)=\log(1+e^{z}).
 \]
-Cette forme se calcule à partir du score seul, hors d'atteinte des arrondis qui
-produisent $\log 0$.
+Cette forme se calcule directement à partir du score et exclut l'opération
+$\log 0$ qui met en défaut l'écriture fondée sur $\sigma(z)$.
+
+Pour $z$ très négatif, la précision finie de
+$\operatorname{softplus}(z)$ affecte une valeur de l'ordre de $e^z$,
+négligeable dans la moyenne. Cette forme est employée par
+\texttt{step3\_single\_cost.py}, puis par tout le programme de la partie~II.
 \end{resultat}
 
 \begin{releve}
@@ -82,7 +88,7 @@ $z<0$, $\max(z,0)=0$ et $|z|=-z$, il reste $\log(1+e^{z})$, qui est la
 définition.
 
 La sigmoïde reçoit le même traitement, avec ses deux écritures
-(ch.~\ref{ch:logit}) :
+(\annexeref{ann:logit}) :
 \[
   \sigma(z)=
   \begin{cases}
@@ -95,6 +101,7 @@ exposant très négatif s'arrondit à zéro sans dommage ; un exposant très pos
 
 \begin{figure}[htbp]
 \centering
+\begin{graphique}{Deux courbes de la perte en fonction du score, pour les deux étiquettes possibles. Chacune est nulle d'un côté et croît linéairement de l'autre, la transition se faisant autour de zéro.}
 \begin{tikzpicture}[font=\small,x=0.0083cm]
 % Axe des scores, de -900 a 900 ; 1 unite = 0,0083 cm, soit 14,9 cm au total.
 \fill[warning!18] (-900,-0.28) rectangle (-710,0.28);
@@ -123,39 +130,41 @@ exposant très négatif s'arrondit à zéro sans dommage ; un exposant très pos
 \node[font=\scriptsize,text=warning,align=center,anchor=north]
   at (-805,-1.6) {$e^{|z|}$\\ déborde};
 \end{tikzpicture}
-\caption{Les trois régimes du calcul en double précision. La zone centrale seule
-tolère l'écriture directe ; les formes protégées rendent des valeurs finies sur
-tout l'axe. Un score de $\pm800$ apparaît dès que les coefficients divergent
-(ch.~\ref{ch:convexite}).}
+\end{graphique}
+\caption{Trois régimes du calcul en double précision. L'écriture directe tient
+dans la zone centrale ; les formes protégées restent finies sur tout l'axe.}
 \label{fig:regimes}
 \end{figure}
 \FloatBarrier
 
 \begin{table}[htbp]
 \centering
-\begin{tabular}{rll}
+\begin{tabular}{rrll}
 \toprule
-$z$ & écriture directe & écriture protégée \\
+$y$ & $z$ & écriture directe & écriture protégée \\
 \midrule
-$-800$ & $e^{800}$ déborde & $0{,}0$ \\
-$+800$ & $\log(1+e^{800})$ déborde & $800{,}0$ \\
-$+40$  & $\log(1-\sigma(40))=\log 0$ & $0{,}0$ \\
+$0$ & $-800$ & $-\log(1-\sigma(-800))=\log 0$ & $0{,}0$ \\
+$1$ & $-800$ & $-\log(\sigma(-800))=\log 0$   & $800{,}0$ \\
+$0$ & $+40$  & $-\log(1-\sigma(40))=\log 0$   & $40{,}0$ \\
+$1$ & $+40$  & $-\log(\sigma(40))$            & $0{,}0$ \\
 \bottomrule
 \end{tabular}
-\caption{En double précision, l'exponentielle déborde au-delà de
-$|z|\approx710$ et la sigmoïde s'arrondit à $1$ dès $z\approx37$. Les formes
-protégées rendent des valeurs finies dans les trois cas.}
+\caption{Pertes aux scores extrêmes. Dès $|z|\approx37$, l'écriture directe
+échoue sur trois lignes ; $\operatorname{softplus}(z)-yz$ reste définie sur les
+quatre.}
 \label{tab:stabilite}
 \end{table}
 
 \begin{vigilance}[Contrôles numériques]
-Le premier coût vaut $\log 2=0{,}693147$ quand les coefficients partent de zéro.
-Toute autre valeur signale une erreur dans le score ou l'initialisation.
+La première perte vaut $\log 2=0{,}693147$ quand les coefficients partent de
+zéro. Toute autre valeur signale une erreur dans le score ou l'initialisation.
 
 Le gradient calculé par la formule, comparé à
 $\bigl(J(\w+h\mathbf e_j)-J(\w-h\mathbf e_j)\bigr)/2h$ sur un cas de petite
 taille, doit coïncider à $10^{-6}$ près. Ce test détecte un signe inversé, un
 facteur $1/m$ oublié, un indice décalé.
 
-La sigmoïde et le coût, évalués en $z=\pm1000$, doivent rendre des nombres finis.
+La sigmoïde et la perte, évaluées en $z=\pm1000$ pour $y=0$ puis $y=1$, doivent
+rendre des nombres finis dans les quatre cas. C'est le test que
+\texttt{step3\_single\_cost.py} exécute.
 \end{vigilance}

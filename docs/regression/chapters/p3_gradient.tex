@@ -1,16 +1,18 @@
+% !TeX root = ../regression_logistique.tex
 \chapter{Calcul du gradient}
-\label{ch:gradient}
+\label{ann:gradient}
 
-\begin{lecture}
-Le coût est un nombre qui dépend des coefficients. Pour le faire baisser, il faut
-savoir comment il varie quand chaque coefficient varie : c'est sa dérivée
-partielle. Le calcul se décompose en deux dérivées enchaînées, et le résultat se
-réduit à l'erreur commise, multipliée par la note.
-\end{lecture}
+\orient{%
+dériver la perte par rapport à un coefficient en enchaînant deux dérivées ;
+établir $\partial\ell/\partial z=p-y$ ; en déduire la formule du gradient
+employée par le fil principal}{%
+règle de chaîne (\annexeref{ann:prerequis}) ; \annexeref{ann:sigmoide},
+\annexeref{ann:cout}}{%
+approfondissement ; le fil principal n'emploie que la formule encadrée}
 
 \section{Composition à dériver}
 
-Le coefficient $w_j$ n'apparaît pas directement dans $J$. Il agit par étapes :
+La dépendance de $J$ envers le coefficient $w_j$ suit la composition :
 \[
   w_j \;\longrightarrow\; z_i=\sum_j w_jx_{ij}
   \;\longrightarrow\; p_i=\sigma(z_i)
@@ -21,6 +23,7 @@ facteur se calcule séparément, puis les facteurs se multiplient.
 
 \begin{figure}[htbp]
 \centering
+\begin{graphique}{Chaîne de dérivation en trois maillons reliés par des flèches : le coefficient w indice j agit sur le score z, le score sur la probabilité p, la probabilité sur la perte. Les deux dérivées intermédiaires sont encadrées et se multiplient.}
 \begin{tikzpicture}[
   bx/.style={draw=ink!30,rounded corners=2.5pt,align=center,font=\small,
     inner sep=5pt,minimum width=17mm,minimum height=10mm},
@@ -44,16 +47,16 @@ facteur se calcule séparément, puis les facteurs se multiplient.
 \node[der,text=warning,below=6mm of p,anchor=north]
   {$\dfrac{\partial \ell_i}{\partial z_i}=p_i-y_i$};
 \end{tikzpicture}
-\caption{Le coefficient n'agit sur le coût que par cette chaîne. Les deux
-dérivées encadrées se multiplient, et la moyenne sur les élèves donne
-$\partial J/\partial w_j$. Le passage par $p_i$ disparaît du résultat : la
-propriété $\sigma'=\sigma(1-\sigma)$ fait que les deux dérivées intermédiaires se
-simplifient en un seul facteur $p_i-y_i$.}
+\end{graphique}
+\caption{Le coefficient agit sur le coût par cette seule chaîne. Les deux dérivées
+encadrées se multiplient, et la moyenne donne $\partial J/\partial w_j$. La
+propriété $\sigma'=\sigma(1-\sigma)$ réduit les deux facteurs intermédiaires à
+$p_i-y_i$.}
 \label{fig:chaine}
 \end{figure}
 \FloatBarrier
 
-\section{Première dérivée : le coût d'un élève par rapport au score}
+\section{Première dérivée : la perte par rapport au score}
 
 Posons, pour un élève dont on omet l'indice,
 \[
@@ -81,17 +84,23 @@ Posons, pour un élève dont on omet l'indice,
 \end{align}
 
 Le troisième passage repose entièrement sur la propriété
-$\sigma'=\sigma(1-\sigma)$ (ch.~\ref{ch:sigmoide}) : c'est elle qui fait
+$\sigma'=\sigma(1-\sigma)$ (\annexeref{ann:sigmoide}) : c'est elle qui fait
 disparaître les dénominateurs.
 
 \begin{resultat}[Résidu]
 \[
   \frac{\partial \ell}{\partial z}=\sigma(z)-y=p-y .
 \]
-La pente du coût par rapport au score est simplement l'écart entre ce que le
-modèle annonce et ce qui est observé. Pour un \Gryf ($y=1$) auquel le modèle accorde $0{,}1$, elle vaut $-0{,}9$ ; pour
-le même élève, déjà classé à $0{,}99$, elle tombe à $-0{,}01$. La correction issue d'un élève correctement classé est donc
-négligeable.
+La pente de la perte par rapport au score est l'écart entre la probabilité
+produite et l'étiquette observée. Pour une observation d'étiquette $y=1$, elle
+vaut $-0{,}9$ lorsque la probabilité produite vaut $0{,}1$, puis $-0{,}01$
+lorsque cette probabilité atteint $0{,}99$.
+
+Deux conséquences en découlent. La contribution d'une prédiction correcte
+et assurée est négligeable. Cette pente est \emph{bornée} : $|p-y|<1$ toujours,
+même lorsque la perte $\ell$ diverge. Le facteur $\sigma'$ a disparu du résultat
+en se simplifiant avec les dénominateurs du logarithme
+(\annexeref{ann:sigmoide}).
 \end{resultat}
 
 \section{Seconde dérivée : le score par rapport à un coefficient}
@@ -141,10 +150,12 @@ le gradient cherché.
 \]
 C'est la formule du sujet, $\frac{1}{m}\sum(h_\theta(x^i)-y^i)x^i_j$, obtenue sans
 hypothèse supplémentaire. Le gradient $\nabla J$ est le vecteur de ces $n+1$
-dérivées partielles, une par coefficient.
+dérivées partielles, une par coefficient. Pour $j=0$, $x_{i0}=1$ : la dérivée
+du biais est la moyenne des résidus.
 \end{resultat}
 
 \section{Facteurs du gradient}
+\enlargethispage{\baselineskip}
 
 Chaque élève contribue au gradient du coefficient $j$ par le produit de deux
 facteurs : son erreur $p_i-y_i$, et sa note $x_{ij}$.
@@ -157,14 +168,3 @@ Le second répartit la correction entre les coefficients. Un élève dont la not
 d'\Herb est extrême pèse fortement sur $w_1$, tandis qu'un élève de note
 moyenne, dont la valeur standardisée est proche de zéro, n'y contribue presque
 pas.
-
-\begin{vigilance}[Cas du biais]
-Pour $j=0$, la note $x_{i0}$ vaut $1$ pour tout le monde. La formule devient
-\[
-  \frac{\partial J}{\partial w_0}=\frac{1}{m}\sum_{i=1}^{m}(p_i-y_i),
-\]
-soit la moyenne des erreurs. Le biais s'ajuste donc sur la fréquence globale : il
-se déplace jusqu'à ce que la proportion moyenne annoncée égale la proportion
-réelle de \Gryf, ce que la première itération vérifie
-(ch.~\ref{ch:descente}).
-\end{vigilance}

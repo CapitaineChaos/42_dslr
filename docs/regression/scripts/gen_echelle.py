@@ -7,11 +7,13 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, 'tuto'))
 sys.path.insert(0, os.path.join(HERE, '..', '..', '..', 'V.0_Common'))
-from step4_total_cost import load
+from step4_total_cost import load, fit_stats, design
 
 OUT = os.path.join(HERE, '..', 'data')
 W = (-4.7454, -3.4535, 3.4688)
-X, houses = load()
+columns, houses = load()
+all_rows = list(range(len(houses)))
+X = design(columns, fit_stats(columns, all_rows), all_rows)
 y = [1.0 if house == "Gryffindor" else 0.0 for house in houses]
 
 
@@ -28,8 +30,7 @@ with open(f'{OUT}/echelle.dat', 'w') as f:
         good = bad = 0.0
         for x, target in zip(X, y):
             z = scale * (W[0] + W[1] * x[1] + W[2] * x[2])
-            p = sigmoid(z)
-            cost = -(target * math.log(p) + (1 - target) * math.log(1 - p))
+            cost = max(z, 0.0) + math.log1p(math.exp(-abs(z))) - target * z
             if (z >= 0) == (target == 1.0):
                 good += cost
             else:

@@ -1,34 +1,32 @@
+% !TeX root = ../regression_logistique.tex
 \chapter{Croissance de la norme des coefficients}
 \label{ann:norme}
 
-\begin{lecture}
-Le plafond d'itérations du chapitre~\ref{ch:entrainer} paraît arbitraire tant
-qu'on ignore le cas qu'il traite. La norme des coefficients cesse de croître par un équilibre entre deux effets, et
-cet équilibre disparaît lorsque les deux groupes sont parfaitement séparables.
-\end{lecture}
+\orient{%
+expliquer pourquoi la norme des coefficients cesse de croître sur des données
+non séparables ; décrire ce qui se passe lorsqu'elles le sont ; justifier la
+présence de deux conditions d'arrêt}{%
+chapitres~\ref{ch:descente} et~\ref{ch:entrainer} ; \annexeref{ann:convexite}}{%
+approfondissement}
 
 \section{Équilibre qui arrête la croissance}
 
-Les coefficients grandissent à chaque tour : leur norme passe de $0{,}30$ au
-premier tour à $4{,}89$ au quatre centième, alors que la frontière est en place
-depuis longtemps et que plus aucune décision ne change. Pourquoi ne
-grandissent-ils pas indéfiniment ?
-
-La réponse commande un morceau du programme. Tant qu'il reste des élèves mal
-classés, la croissance s'arrête d'elle-même et le critère de stagnation termine
-la boucle. Lorsque tous sont bien classés, elle se poursuit indéfiniment et seul
-le plafond d'itérations arrête la descente : c'est la raison pour laquelle le
-code de la deuxième partie porte ces deux conditions d'arrêt plutôt qu'une
-seule.
+La norme du vecteur normal passe de $0{,}30$ au premier tour à $4{,}89$ au
+quatre-centième, alors que la frontière est en place depuis longtemps et
+qu'aucune décision ne change plus. Sur les données non séparables, les
+prédictions incorrectes imposent un minimum fini et le critère de stagnation
+termine la boucle. Sur des données séparables, la norme croît sans limite ; le
+plafond d'itérations devient alors la seule condition d'arrêt effective.
 
 Agrandir les coefficients raidit la sigmoïde autour de la frontière, sans
 déplacer celle-ci. Les probabilités s'écartent donc de $0{,}5$, ce qui produit
-deux effets opposés : les $1\,564$ élèves bien classés voient la leur tendre vers
+deux effets opposés : les $1\,564$ prédictions correctes voient la leur tendre vers
 $1$ et leur coût vers $0$ ; les $36$ autres voient la leur tendre vers $0$ et leur
 coût vers l'infini.
 
 \begin{figure}[htbp]
 \centering
+\begin{graphique}{Deux séries de trois barres verticales, pour un multiplicateur de norme de 1, 2 puis 3. À gauche, une observation correctement classée : les barres décroissent vers zéro depuis 0,233. À droite, une observation incorrectement classée : les barres croissent sans plafonner.}
 \begin{tikzpicture}[font=\footnotesize,y=2.3cm]
 \draw[ink!35] (-0.4,0) -- (9.6,0);
 \node[anchor=east,font=\scriptsize,text=ink!70] at (-0.45,0) {coût $0$};
@@ -47,23 +45,22 @@ coût vers l'infini.
     {norme $\times\m$};
 }
 \node[anchor=north,align=center,text=ink] at (1.2,-0.16)
-  {élève $3$, \Gryf, bien classé\\ \scriptsize son coût tend vers $0$};
+  {prédiction correcte\\ \scriptsize élève $3$, sa perte tend vers $0$};
 \node[anchor=north,align=center,text=ink] at (6.5,-0.16)
-  {élève $1239$, mal classé\\ \scriptsize son coût croît sans limite};
+  {prédiction incorrecte\\ \scriptsize élève $1239$, sa perte croît sans limite};
 \draw[ink!30,dashed] (2.9,-0.05) -- (2.9,1.35);
 \end{tikzpicture}
-\caption{Le coût de deux élèves lorsque la norme des coefficients est multipliée
-par $1$, $2$ puis $3$, la frontière restant fixe. À gauche, un élève du bon côté :
-son coût se rapproche de zéro et ne peut pas descendre plus bas, si bien que tout
-le gain possible tient dans les $0{,}233$ de départ. À droite, un élève du
-mauvais côté : le sien augmente à chaque fois, et rien ne le borne. Multiplier
-encore par dix porterait le premier à $0{,}000$ et le second à $2{,}99$.}
+\end{graphique}
+\caption{Perte de deux prédictions quand la norme est multipliée par $1$, $2$
+puis $3$, à frontière fixe. La perte tend vers zéro pour l'observation
+correctement classée et croît sans borne pour l'autre.}
 \label{fig:deux-eleves}
 \end{figure}
 \FloatBarrier
 
 \begin{figure}[htbp]
 \centering
+\begin{graphique}{Deux courbes en fonction de la norme des coefficients. La part des prédictions correctes décroît vers zéro ; celle des 36 autres croît régulièrement. Leur somme forme une cuvette dont le minimum est atteint pour une norme de 5,38.}
 \begin{tikzpicture}
 \begin{axis}[width=.82\textwidth,height=7cm,
   axis lines=left,axis line style={ink!40},
@@ -77,10 +74,10 @@ encore par dix porterait le premier à $0{,}000$ et le second à $2{,}99$.}
   \addlegendentry{coût total}
   \addplot[accent,thick,densely dashed,no markers]
     table[x=norme,y=right] {data/echelle.dat};
-  \addlegendentry{part des $1\,564$ élèves bien classés}
+  \addlegendentry{part des $1\,564$ prédictions correctes}
   \addplot[warning,thick,densely dotted,no markers]
     table[x=norme,y=wrong] {data/echelle.dat};
-  \addlegendentry{part des $36$ élèves mal classés}
+  \addlegendentry{part des $36$ prédictions incorrectes}
   \addplot[only marks,mark=*,ink,mark size=2.2pt] coordinates {(5.384,0.1073)};
   \draw[ink!55,thin,-{Latex[length=1.6mm]}]
     (axis cs:8.2,0.055) -- (axis cs:5.7,0.101);
@@ -88,11 +85,9 @@ encore par dix porterait le premier à $0{,}000$ et le second à $2{,}99$.}
     {minimum en $\|w\|=5{,}38$};
 \end{axis}
 \end{tikzpicture}
-\caption{Les deux parts du coût lorsque les coefficients sont agrandis, la
-frontière restant fixe. Celle des élèves bien classés décroît vers zéro sans
-jamais passer dessous ; celle des $36$ autres croît sans borne, puisque
-$-\log p$ diverge quand leur probabilité tend vers $0$. La somme atteint son
-minimum en $\|w\|=5{,}38$.}
+\end{graphique}
+\caption{Coût à frontière fixe selon la norme. La part des prédictions correctes
+décroît ; celle des $36$ autres croît. Minimum en $\|w\|=5{,}38$.}
 \label{fig:deux-parts}
 \end{figure}
 \FloatBarrier
@@ -101,7 +96,7 @@ minimum en $\|w\|=5{,}38$.}
 \centering
 \begin{tabular}{cccc l}
 \toprule
-$\|w\|$ & $1\,564$ bien classés & $36$ mal classés & total & \\
+$\|w\|$ & $1\,564$ correctes & $36$ incorrectes & total & \\
 \midrule
 $0{,}49$  & $0{,}445$ & $0{,}019$ & $0{,}464$ & transition très étalée \\
 $4{,}89$  & $0{,}041$ & $0{,}067$ & $0{,}108$ & modèle de ce chapitre \\
@@ -109,8 +104,8 @@ $5{,}38$  & $0{,}034$ & $0{,}073$ & $0{,}107$ & minimum \\
 $14{,}68$ & $0{,}005$ & $0{,}189$ & $0{,}194$ & transition abrupte \\
 \bottomrule
 \end{tabular}
-\caption{Entre la première ligne et la dernière, la part des élèves bien classés
-est divisée par quatre-vingt-neuf, celle des mal classés multipliée par dix.}
+\caption{Entre la première ligne et la dernière, la part des prédictions correctes
+est divisée par quatre-vingt-neuf, celle des incorrectes multipliée par dix.}
 \label{tab:deux-parts}
 \end{table}
 
@@ -120,27 +115,48 @@ de le faire. La descente l'atteint en suivant le gradient. Le
 modèle de ce chapitre s'arrête un peu avant, à $4{,}89$, parce que le compteur
 est coupé au quatre centième tour.
 
-Ce mécanisme disparaît lorsqu'une droite sépare parfaitement les deux groupes ---
-les données sont alors dites \emph{linéairement séparables}. La part des mal
-classés est vide, la courbe orange de la figure~\ref{fig:deux-parts} est
-identiquement nulle, et il ne reste que la courbe bleue, décroissante : le coût
-diminue indéfiniment, $\|w\|$ diverge, et seul le plafond d'itérations arrête la
-descente (ch.~\ref{ch:convexite}).
+Ce mécanisme disparaît lorsqu'un hyperplan sépare parfaitement les deux classes
+--- les données sont alors dites \emph{linéairement séparables}. La part des
+prédictions incorrectes est vide, la courbe orange de la
+figure~\ref{fig:deux-parts} est identiquement nulle, et il ne reste que la courbe
+bleue, décroissante : la perte diminue indéfiniment sans jamais atteindre son
+infimum, et $\|\w\|$ diverge (\annexeref{ann:convexite}).
+
+Sur des données séparables, deux mécanismes distincts peuvent alors terminer la
+descente. Le premier est le plafond d'itérations. Le second est le critère de
+stagnation, qui compare la \emph{baisse} de la perte à un seuil relatif : cette
+baisse tend vers zéro même quand $\|\w\|$ diverge, la perte décroissant de plus
+en plus lentement vers son infimum, de sorte que le critère se déclenche alors
+qu'aucun minimum fini n'existe et que les coefficients continuent de croître. Un
+critère fondé sur la norme du gradient se comporte de même, le gradient tendant
+lui aussi vers zéro. Diagnostiquer la séparabilité demande donc de surveiller
+$\|\w\|$ elle-même plutôt que la vitesse de convergence.
 
 \begin{vigilance}[Reconnaître et traiter la divergence]
-Ce cas se diagnostique à trois signes conjoints : la descente consomme tout son
-plafond d'itérations sans jamais déclencher son critère d'arrêt, les coefficients
-continuent de croître régulièrement, et les probabilités affichées valent
-exactement $0$ ou $1$ après arrondi. La cause est alors dans les données, pas
-dans le programme.
+Ce cas se reconnaît à trois signes conjoints : la descente consomme son plafond
+d'itérations, ou s'arrête sur une stagnation avec une norme anormalement grande ;
+les coefficients croissent régulièrement sans se stabiliser ; et les probabilités
+produites valent exactement $0$ ou $1$ après arrondi.
 
-Deux remèdes existent. Le plus simple est d'arrêter sur un nombre de tours fixé,
-ce que fait le plafond : la frontière obtenue est correcte, seule sa raideur est
-arbitraire. Le second, dit \emph{régularisation}, ajoute au coût un terme
-$\frac{\mu}{2}\|w\|^2$ qui croît avec la norme. Relevée par une parabole, la courbe bleue de la figure~\ref{fig:deux-parts}
-laisse alors réapparaître un minimum, même sur des données séparables, et le
-paramètre $\mu$ fixe où il tombe. La bibliothèque \texttt{scikit-learn} l'applique par défaut, ce qui
-explique qu'elle converge sur des données où une implémentation directe diverge.
+Ces trois signes n'établissent pas à eux seuls que la cause est dans les
+données. Un pas trop long, un signe inversé dans la correction, un gradient mal
+calculé ou une perte instable produisent des symptômes voisins. L'ordre de
+diagnostic est donc : contrôler le gradient par différences finies
+(ch.~\ref{ch:entrainer}), vérifier la perte en $z=\pm1000$
+(\annexeref{ann:stabilite}), réduire $\alpha$, et seulement ensuite conclure à la
+séparabilité --- qui se vérifie directement, en cherchant si un hyperplan sépare
+les deux classes sans erreur.
+
+Une fois la séparabilité établie, deux traitements existent. Le plus simple est
+d'arrêter sur un nombre de tours fixé, ce que fait le plafond : la frontière
+obtenue est correcte, seule sa raideur est arbitraire, et les probabilités
+produites sont alors sans valeur informative. Le second, la
+\emph{régularisation}, ajoute à la perte un terme $\frac{\mu}{2}\|\w\|^2$ qui
+croît avec la norme. La courbe bleue de la figure~\ref{fig:deux-parts}, relevée
+par une parabole, laisse réapparaître un minimum fini et unique, même sur des
+données séparables ; le paramètre $\mu$ fixe où il tombe. La bibliothèque
+\texttt{scikit-learn} l'applique par défaut, ce qui explique qu'elle converge sur
+des données où une implémentation directe diverge.
 \end{vigilance}
 
 \begin{resultat}[Interprétation de la norme finale]
@@ -150,4 +166,3 @@ recouvrement des deux populations la maintient basse et laisse une transition
 une certitude que les données ne soutiennent pas, et une probabilité de $0{,}99$
 sur un cas limite est une information fausse.
 \end{resultat}
-

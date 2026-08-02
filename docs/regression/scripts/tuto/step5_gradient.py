@@ -1,5 +1,7 @@
+from step0_prepare import load, fit_stats, design
+from step1_score import score_of
 from step2_sigmoid import sigmoid
-from step4_total_cost import load, score_of, total_cost
+from step4_total_cost import total_cost
 
 
 def gradient(weights, X, target):
@@ -20,9 +22,11 @@ def measured_slope(weights, X, target, column, h=1e-5):
 
 
 if __name__ == "__main__":
-    X, houses = load()
+    columns, houses = load()
+    rows = list(range(len(houses)))
+    X = design(columns, fit_stats(columns, rows), rows)
     target = [1.0 if house == "Gryffindor" else 0.0 for house in houses]
-    weights = [0.3, -0.7, 0.4]          # any point away from zero
+    weights = [0.3, -0.7, 0.4]
     computed = gradient(weights, X, target)
     print("column    from the formula        measured             gap")
     for column in range(3):

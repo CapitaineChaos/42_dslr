@@ -1,11 +1,14 @@
+% !TeX root = ../regression_logistique.tex
 \chapter{Notes brutes et standardisation}
 \label{ch:standardisation}
 
-\begin{lecture}
-Deux opérations transforment les notes d'examen du fichier en valeurs
-standardisées : le remplacement des notes absentes, puis le changement d'unité.
-Les axes gradués en écarts-types en sont le résultat.
-\end{lecture}
+\orient{%
+justifier le choix d'une valeur d'imputation ; calculer une cote standard ;
+délimiter ce que la standardisation conserve du nuage ; dire sur quelles lignes
+ces statistiques doivent être ajustées}{%
+moyenne, médiane, écart-type (\annexeref{ann:prerequis}) ;
+chapitre~\ref{ch:probleme}}{%
+essentiel}
 
 \section{Fichier d'entraînement}
 
@@ -15,9 +18,11 @@ main directrice ; les treize suivantes donnent une note par matière. La maison
 est renseignée pour les $1\,600$ élèves : c'est la réponse que le modèle doit
 retrouver.
 
-Deux d'entre elles servent ici, \Herb et \Runes :
-leurs distributions par maison se recouvrent peu, et elles suffisent à isoler les
-\Gryf (ch.~\ref{ch:nuage}). Le modèle complet en retient dix.
+Deux d'entre elles servent ici, \Herb et \Runes : leurs distributions par maison
+se recouvrent peu, et elles suffisent à isoler les \Gryf (ch.~\ref{ch:nuage}).
+Le modèle complet en retient dix. Ce choix de deux matières a été fait après
+examen du fichier étiqueté entier ; sa portée méthodologique est discutée au
+chapitre~\ref{ch:probleme}.
 
 \begin{table}[htbp]
 \centering
@@ -37,22 +42,22 @@ donc sur les $1\,600$ lignes.}
 
 \section{Notes absentes}
 
-Certaines cases du fichier sont vides : la note n'a pas été enregistrée pour cet
-élève dans cette matière. Le calcul qui suit exige une valeur pour chaque terme,
-puisque le score est une somme de produits ; une case vide arrête donc le
-traitement de la ligne entière.
+Certaines cases du fichier sont vides. Le score étant une somme de produits, il
+exige une valeur pour chaque terme : une case vide arrête le traitement de la
+ligne entière.
 
-Deux voies s'ouvrent : écarter les élèves incomplets, au prix du nombre d'élèves
-et d'une hypothèse invérifiable sur leur ressemblance avec les autres, ou
-attribuer une valeur à chaque case vide, au prix de mesures fabriquées. C'est
-cette seconde voie, l'\emph{imputation}, qui est retenue ici.
+Deux traitements existent. Écarter les lignes incomplètes coûte de l'effectif et
+suppose que les lignes écartées ressemblent aux lignes conservées, hypothèse
+invérifiable. Attribuer une valeur à chaque case vide --- l'\emph{imputation} ---
+fabrique des mesures. Ce cours retient l'imputation par la médiane : coupant la
+colonne en deux moitiés de même effectif, elle résiste au déplacement des valeurs
+extrêmes, que la moyenne suit.
 
-Reste à choisir la valeur. Deux candidates centrales se présentent, et la médiane
-l'emporte pour deux raisons. Coupant la colonne en deux moitiés de même effectif,
-elle reste identique si l'on déplace la plus haute note mille points au-dessus,
-là où la moyenne suivrait ce déplacement. Et puisque la moyenne sert au calcul de
-la section suivante, remplir les cases vides avec elle reviendrait à la calculer
-à partir d'elle-même.
+Toute imputation par une constante concentre les lignes incomplètes en un point
+du nuage et resserre la dispersion de la colonne. Sa validité tient à deux
+conditions : des cases vides rares, et une absence indépendante de la valeur
+qu'elles auraient prise. La seconde reste invérifiable sur les seules
+données~\cite{littlerubin2019}.
 
 \begin{chiffres}[Cases vides des deux colonnes]
 \begin{center}
@@ -72,11 +77,6 @@ Le remplissage déplace chaque moyenne de moins d'un centième d'écart-type :
 $0{,}009$ pour \Herb, $0{,}007$ pour \Runes. Les $68$ élèves concernés le sont
 chacun sur une seule des deux colonnes.
 \end{chiffres}
-
-Un élève ainsi complété occupe dans le nuage une position que ses résultats
-scolaires ne justifient pas. La méthode tient parce que les cases vides sont
-rares ; sur une colonne à moitié vide, elle empilerait la moitié des élèves sur
-un même point.
 
 \begin{releve}
 L'élève $21$, dont la note d'\Runes est absente, reçoit $463{,}918$, soit
@@ -99,19 +99,16 @@ $500$, et les secondes sont vingt fois plus dispersées : dans $w_1x_1+w_2x_2$, 
 $w_2$ de $1$ produit donc un effet vingt fois plus grand qu'un $w_1$ de $1$.
 \end{releve}
 
-Ramener les deux colonnes à une échelle commune supprime cette dépendance, et
-demande deux décisions.
+Ramener les deux colonnes à une échelle commune demande de fixer une origine et
+une unité pour chacune d'elles.
 
-D'abord, à partir d'où compter. Une note de $463$ en \Runes ne dit rien tant
-qu'on ignore le niveau de la promotion ; ce qui situe un élève, c'est son écart à
-la moyenne de sa colonne, $v-\mu$. Cette soustraction, le \emph{centrage}, place
-le zéro sur l'élève moyen : les notes deviennent positives au-dessus de la
-moyenne, négatives en dessous.
+Le \emph{centrage} soustrait la moyenne $\mu$ : l'écart $v-\mu$ situe chaque
+note par rapport à la promotion, avec des valeurs positives au-dessus de la
+moyenne et négatives en dessous.
 
-Ensuite, avec quelle unité mesurer cet écart. Il en faut une propre à chaque
-colonne, et l'écart-type $\sigma$ la fournit : il mesure la dispersion typique
-des notes autour de leur moyenne. Diviser par lui, la \emph{réduction}, exprime
-tout écart en nombre de dispersions typiques.
+La \emph{réduction} divise cet écart par l'écart-type $\sigma$, mesure de la
+dispersion des notes autour de leur moyenne. Chaque valeur s'exprime alors en
+nombre d'écarts-types.
 
 \[
   x=\frac{\annup{accent}{v-\mu}{\annl{écart à la moyenne}\\ \annl{de la colonne}}}
@@ -128,6 +125,7 @@ colonnes deviennent comparables terme à terme.
 
 \begin{figure}[htbp]
 \centering
+\begin{graphique}{Deux règles graduées superposées, reliées par des flèches verticales. En haut, la note brute d'Herbology de -10,30 à 11,61, moyenne à 1,189. En bas, la même note standardisée, de -2,22 à +2,01, zéro à la position de la moyenne. L'élève 3, en rouge, passe de -6,497 à -1,485.}
 \begin{tikzpicture}[font=\small,
   grad/.style={ink!45},
   lab/.style={font=\scriptsize,text=ink},
@@ -154,18 +152,32 @@ colonnes deviennent comparables terme à terme.
 \draw[warning] (2.349,-2.12) -- (2.349,-1.88);
 \node[lab,text=warning,anchor=north] at (2.349,-2.18) {$-1{,}485$};
 \end{tikzpicture}
-\caption{La transformation est affine : elle déplace l'origine et change l'unité,
-sans modifier l'ordre des élèves ni les rapports de distances. En rouge,
-l'élève $3$.}
+\end{graphique}
+\caption{Sur un seul axe, la transformation est affine croissante : elle déplace
+l'origine et change l'unité, sans modifier l'ordre des élèves. En rouge,
+l'élève~$3$.}
 \label{fig:graduation}
 \end{figure}
 \FloatBarrier
 
-Le nuage conserve sa forme, seules ses graduations changent.
+Chaque axe est divisé par un nombre différent --- $5{,}175$ d'un côté,
+$105{,}186$ de l'autre. La transformation conserve donc la structure affine du
+nuage : l'ordre sur chaque coordonnée, l'alignement des points, la position
+intermédiaire d'un point entre deux autres, et la correspondance terme à terme
+entre un modèle affine sur les notes standardisées et un modèle affine sur les
+notes brutes.
+
+Distances euclidiennes, rapports de distances et angles relèvent en revanche du
+plan standardisé seul, où les deux axes portent la même unité. Les notions
+d'angle, de perpendiculaire et de distance employées au chapitre~\ref{ch:nuage}
+s'entendent dans ce plan. La standardisation installe une géométrie, choisie
+parce qu'elle rend les coefficients comparables entre eux.
 
 \begin{figure}[htbp]
 \centering
-\begin{tikzpicture}[baseline=(current bounding box.north)]
+\begin{graphique}{Deux nuages de points côte à côte, mêmes 534 élèves. À gauche, notes brutes : l'axe horizontal va de -12 à 13, l'axe vertical de 270 à 760. À droite, notes standardisées : les deux axes vont de -2,8 à 2,8. Dans les deux, les Gryffindor en disques bleus occupent la zone en haut à gauche, les autres maisons en croix orangées le reste.}
+\begin{tikzpicture}[baseline=(current bounding box.north),
+  alt={Nuage des notes brutes de 534 élèves. Herbology va de -12 à 13 et Ancient Runes de 270 à 760 ; les Gryffindor se concentrent en haut à gauche.}]
 \begin{axis}[width=.42\textwidth,height=6.2cm,
   axis lines=box,axis line style={ink!35},
   grid=major,grid style={gridgray!35},
@@ -173,13 +185,14 @@ Le nuage conserve sa forme, seules ses graduations changent.
   title style={font=\small},title={notes brutes},
   xlabel={\Herb},ylabel={\Runes},
   xmin=-12,xmax=13,ymin=270,ymax=760,ytick={300,450,600,750}]
-  \addplot[only marks,mark=*,mark size=1.1pt,warning!70,opacity=.4]
+  \addplot[only marks,mark=x,mark size=1.3pt,line width=.35pt,warning!85,opacity=.55]
     table[x=x,y=y] {data/brut_autres.dat};
   \addplot[only marks,mark=*,mark size=1.1pt,accent,opacity=.75]
     table[x=x,y=y] {data/brut_gryffindor.dat};
 \end{axis}
 \end{tikzpicture}\hfill
-\begin{tikzpicture}[baseline=(current bounding box.north)]
+\begin{tikzpicture}[baseline=(current bounding box.north),
+  alt={Même nuage après standardisation. Les deux axes vont de -2,8 à 2,8 ; la position relative des points et la séparation des groupes sont conservées.}]
 \begin{axis}[width=.42\textwidth,height=6.2cm,
   axis lines=box,axis line style={ink!35},
   grid=major,grid style={gridgray!35},
@@ -188,17 +201,16 @@ Le nuage conserve sa forme, seules ses graduations changent.
   xlabel={\Herb, en écarts-types},
   ylabel={\Runes, en écarts-types},
   xmin=-2.8,xmax=2.8,ymin=-2.8,ymax=2.8,xtick={-2,0,2},ytick={-2,0,2}]
-  \addplot[only marks,mark=*,mark size=1.1pt,warning!70,opacity=.4]
+  \addplot[only marks,mark=x,mark size=1.3pt,line width=.35pt,warning!85,opacity=.55]
     table[x=x,y=y] {data/autres.dat};
   \addplot[only marks,mark=*,mark size=1.1pt,accent,opacity=.75]
     table[x=x,y=y] {data/gryffindor.dat};
 \end{axis}
 \end{tikzpicture}
-\caption{Les mêmes $534$ élèves, un sur trois pour la lisibilité : en bleu les
-\Gryf, en orangé pâle les trois autres maisons. Les deux nuages se déduisent l'un
-de l'autre par changement de graduation, la forme et les positions relatives
-restant identiques. Seule change la lecture des axes, désormais en écarts-types
-sur les deux matières.}
+\end{graphique}
+\caption{$534$ élèves : \Gryf en bleu, autres maisons en orangé. Les
+transformations affines des axes préservent l'ordre et les alignements ; les
+distances et les angles changent.}
 \label{fig:brut-vs-standard}
 \end{figure}
 \FloatBarrier
@@ -218,10 +230,8 @@ plan $(x_1,x_2)$. La première le situe à un écart-type et demi au-dessous de 
 moyenne en \Herb, la seconde à un quart d'écart-type au-dessus en \Runes.
 
 \begin{resultat}[Statistiques à conserver]
-La médiane, la moyenne et l'écart-type sont calculés une fois, sur les élèves
-d'entraînement, et font partie du modèle au même titre que les coefficients. Un
-élève inconnu se standardise avec ces trois nombres-là, jamais avec ceux de son
-propre fichier : recalculer une moyenne sur de nouvelles données placerait les
-scores dans une autre échelle, et sur un fichier d'un seul élève, l'écart-type
-serait nul.
+La médiane, la moyenne et l'écart-type sont ajustés une fois, sur les seules
+lignes d'apprentissage, et font partie du modèle au même titre que les
+coefficients. Une observation nouvelle se standardise avec ces trois nombres
+figés (ch.~\ref{ch:predire}).
 \end{resultat}

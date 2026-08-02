@@ -1,0 +1,212 @@
+% !TeX root = ../regression_logistique.tex
+\chapter{Corrigés}
+\label{ann:corriges}
+
+\orient{%
+comparer une tentative au code de référence et aux réponses attendues}{%
+la tâche correspondante a été tentée}{%
+à consulter après avoir écrit puis exécuté sa propre version}
+
+Cette annexe porte le code des douze tâches du cahier pratique et les réponses
+aux exercices du fil principal. Chaque section porte le nom du fichier ou le
+numéro de l'exercice qu'elle corrige.
+
+\section{Cahier pratique}
+
+\subsection*{\texttt{step0\_prepare.py} --- préparation des données}
+
+\codefile[firstline=13,lastline=39]{scripts/tuto/step0_prepare.py}
+
+\textbf{Transfert.} Avec $40\,\%$ de valeurs absentes, la médiane reste une
+statistique correcte de la colonne observée, mais l'écart-type calculé après
+imputation s'effondre : $40\,\%$ des lignes reçoivent exactement la même valeur.
+Le nuage montrerait une barre verticale dense à l'abscisse de la médiane, et le
+coefficient de cette variable serait tiré par un groupe artificiel.
+
+\subsection*{\texttt{step1\_score.py} --- le score}
+
+\codefile[firstline=4,lastline=8]{scripts/tuto/step1_score.py}
+
+\textbf{Transfert.} Sans colonne de $1$, le gradient (ch.~\ref{ch:entrainer})
+devrait traiter $\partial J/\partial w_0$ à part, avec $x_{i0}$ implicitement
+égal à $1$ ; \texttt{one\_step} et \texttt{descend} hériteraient du même cas
+particulier, et l'extension à dix matières multiplierait les branches.
+
+\subsection*{\texttt{step2\_sigmoid.py} --- la sigmoïde protégée}
+
+\codefile[firstline=4,lastline=7]{scripts/tuto/step2_sigmoid.py}
+
+\textbf{Transfert.} À $z=-800$, la sigmoïde protégée rend exactement $0{,}0$.
+Pour une étiquette valant $1$, la perte directe demanderait $\log 0$ ; la forme
+stable de l'étape suivante rend $800$, valeur finie qui laisse la descente
+continuer.
+
+\subsection*{\texttt{step3\_single\_cost.py} --- la perte d'une prédiction}
+
+\codefile[firstline=1,lastline=10]{scripts/tuto/step3_single_cost.py}
+
+\textbf{Transfert.} Pour $z\to-\infty$ et $y=1$,
+$\operatorname{softplus}(z)-z\to-z=|z|$ : la perte croît linéairement. Une
+croissance quadratique donnerait un gradient non borné ; une croissance bornée
+rendrait la correction insensible aux prédictions les plus fausses. La dérivée
+$p-y$ reste ici comprise entre $-1$ et $1$ (\annexeref{ann:gradient}).
+
+\subsection*{\texttt{step4\_total\_cost.py} --- la perte moyenne}
+
+\codefile[firstline=6,lastline=10]{scripts/tuto/step4_total_cost.py}
+
+\textbf{Transfert.} Un fichier deux fois plus long, de même composition, double
+la somme et laisse la moyenne inchangée. Seule la moyenne compare les deux
+fichiers. Le pas $\alpha$ multiplie le gradient : avec une somme, la longueur du
+déplacement croîtrait avec l'effectif, et un $\alpha$ réglé sur $1\,600$ lignes
+ferait diverger la descente sur $3\,200$.
+
+\subsection*{\texttt{step5\_gradient.py} --- gradient et contrôle numérique}
+
+\codefile[firstline=7,lastline=21]{scripts/tuto/step5_gradient.py}
+
+\textbf{Transfert.} En $(0,0,0)$, tous les scores valent zéro et
+$p_i-y_i=\pm0{,}5$ ; un facteur $1/m$ omis multiplie les trois composantes par
+$m$, ce qu'une comparaison à la mesure détecte --- mais la mesure elle-même
+emploie \texttt{total\_cost}, affecté du même facteur, et les deux erreurs se
+compensent. Un point d'évaluation à composantes distinctes, comme
+$(0{,}3\,;-0{,}7\,;0{,}4)$, sépare les trois colonnes et révèle un indice
+décalé, que $(0,0,0)$ laisse invisible puisque les colonnes y jouent des rôles
+symétriques.
+
+\subsection*{\texttt{step6\_one\_step.py} --- un pas}
+
+\codefile[firstline=4,lastline=9]{scripts/tuto/step6_one_step.py}
+
+\textbf{Transfert.} Les \Gryf occupent la région $x_1<0$, $x_2>0$
+(figure~\ref{fig:nuage}). Au premier tour, $p_i-y_i$ vaut $-0{,}5$ sur eux et
+$+0{,}5$ ailleurs ; la composante $\partial J/\partial w_1$ est donc dominée par
+des produits $(-0{,}5)\times(\text{$x_1$ négatif})$, positifs, d'où une pente
+positive et un $w_1$ qui diminue. Le raisonnement symétrique donne $w_2$
+croissant. La trace du tableau~\ref{tab:trace} confirme : $-0{,}2289$ et
+$+0{,}1924$.
+
+\subsection*{\texttt{step7\_loop.py} --- la boucle et ses deux arrêts}
+
+\codefile[firstline=4,lastline=17]{scripts/tuto/step7_loop.py}
+
+\textbf{Transfert.} Un critère portant sur les décisions comparerait le vecteur
+des prédictions à celui du tour précédent et s'arrêterait après $k$ tours sans
+changement. Il coûte un passage supplémentaire sur les lignes pour former les
+prédictions, plus le stockage du vecteur précédent. Sur ces données il se
+déclencherait quelques centaines de tours avant le critère de perte, au prix
+d'une frontière moins nette : les probabilités resteraient plus proches de
+$0{,}5$.
+
+\subsection*{\texttt{step8\_four\_houses.py} --- quatre descentes et l'argmax}
+
+\codefile[firstline=12,lastline=22]{scripts/tuto/step8_four_houses.py}
+
+\textbf{Transfert.} Cinq classes demandent cinq descentes et
+$5\times(n+1)$ coefficients, soit $55$ pour dix matières. Les statistiques de
+préparation restent au nombre de $3n$. Aucune ligne de \texttt{train} ni de
+\texttt{predict} ne change : la première itère sur \texttt{HOUSES}, la seconde
+prend le maximum de la liste des scores.
+
+\subsection*{\texttt{step9\_holdout.py} --- découpage stratifié}
+
+\codefile[firstline=12,lastline=23]{scripts/tuto/step9_holdout.py}
+
+\codefile[firstline=32,lastline=41]{scripts/tuto/step9_holdout.py}
+
+\textbf{Transfert.} \Slyth, la plus petite classe avec $60$ lignes de test sur
+$300$ attendues, subit la variation relative la plus large : un tirage global
+laisse son effectif de test fluctuer d'environ $\pm7$ lignes d'une graine à
+l'autre. L'intervalle de Wilson global change peu --- il dépend de $n=320$, non
+de la composition --- mais les rappels par classe deviennent instables, celui de
+\Slyth pouvant varier de plusieurs points sans que le modèle ait changé.
+
+\subsection*{\texttt{step10\_evaluation.py} --- matrice et incertitude}
+
+\codefile[firstline=14,lastline=30]{scripts/tuto/step10_evaluation.py}
+
+\textbf{Transfert.} Rappel $0{,}55$ pour précision $0{,}98$ : le modèle ne
+désigne cette classe qu'à coup sûr et en manque près de la moitié. La ligne de
+la classe dans la matrice le révèle --- ses effectifs sont dispersés sur les
+autres colonnes --- alors que sa colonne reste presque vide hors diagonale. En
+binaire, abaisser le seuil rééquilibrerait les deux mesures ; sous la règle du
+maximum, il faudrait agir sur le biais du modèle concerné, ce qui déplace la
+limite avec les trois autres régions à la fois.
+
+\subsection*{\texttt{transfert\_micro.py} --- douze pièces}
+
+\codefile[firstline=23,lastline=54]{scripts/tuto/transfert_micro.py}
+
+\textbf{Transfert.} Les douze pièces étant séparables, il existe un $w$ qui
+classe tout correctement ; multiplier ce $w$ par $\lambda>1$ laisse la frontière
+en place et rapproche chaque probabilité de son étiquette, donc fait décroître la
+perte. Aucun minimum fini n'existe, la norme croît sans borne
+(\annexeref{ann:norme}) et la baisse relative reste au-dessus de $10^{-6}$ :
+seul le plafond arrête la boucle. Un plafond dix fois plus grand laisserait la
+frontière à la même position et ne ferait que resserrer la transition, comme au
+chapitre~\ref{ch:descente}. La pièce de $10{,}20$~mm et $133$~HV donne
+$z=+2{,}775>0$ : rebut.
+
+\section{Exercices du fil principal}
+
+\subsection*{Exercice~4.1 --- vecteur normal et distance}
+
+\begin{align*}
+\|w\| &= \sqrt{3{,}454^2+3{,}469^2}=4{,}895,\\
+-\frac{w_0}{\|w\|} &= \frac{4{,}745}{4{,}895}=0{,}969.
+\end{align*}
+La distance signée de l'origine à la frontière vaut donc $0{,}969$ écart-type.
+Le score de $x=(0\,;0)$ vaut $w_0=-4{,}745$ : l'observation moyenne appartient
+au demi-plan des trois autres classes. Les \Gryf occupent le quadrant
+$x_1<0$, $x_2>0$, éloigné du centre.
+
+\subsection*{Exercice~5.1 --- probabilité de bout en bout}
+
+$x_1=(4{,}12-1{,}189)/5{,}175=+0{,}566$. La note d'\Runes étant absente, elle
+reçoit la médiane $463{,}918$, d'où
+$x_2=(463{,}918-495{,}052)/105{,}186=-0{,}296$. Alors
+\[
+  z=-4{,}745+(-3{,}454)(0{,}566)+3{,}469(-0{,}296)=-7{,}724,
+  \qquad p=0{,}00044 .
+\]
+Le score est négatif : l'observation appartient au demi-plan des autres classes,
+loin de la frontière. L'écart avec l'élève~$3$ ($z=+1{,}34$) vient d'\Herb : le terme
+passe de $+5{,}13$ à $-1{,}96$, soit sept unités, quand celui d'\Runes n'en
+change que d'une seule.
+
+\subsection*{Exercice~7.1 --- signe d'une composante du gradient}
+
+Voir le transfert de \texttt{step6\_one\_step.py} ci-dessus : $\partial
+J/\partial w_1$ est positive et $\partial J/\partial w_2$ négative, d'où un $w_1$
+décroissant et un $w_2$ croissant dès le premier tour.
+
+\subsection*{Exercice~8.1 --- lecture d'un coefficient}
+
+Un modèle ajusté sur les notes brutes vérifie
+$w_2^{\text{brut}}\,v = w_2^{\text{std}}\,(v-\mu)/\sigma$ à un terme constant
+près, absorbé par le biais : $w_2^{\text{brut}}=w_2^{\text{std}}/\sigma
+=3{,}469/105{,}186=0{,}033$. Les deux décrivent la même frontière. Seul
+$w_2^{\text{std}}$ se compare à celui d'\Herb, les deux étant exprimés par
+écart-type. Un écart-type de plus en \Runes multiplie la cote par
+$e^{3{,}469}=32$ dans les deux paramétrages : l'exposant est le produit
+coefficient $\times$ variation, invariant par changement d'échelle.
+
+\subsection*{Exercice~9.1 --- portée des quatre sorties}
+
+$0{,}952$ répond à « cette observation appartient-elle à \Gryf, oui ou non ? » et
+$0{,}899$ à « appartient-elle à \Rav ? ». Les deux questions sont séparées et
+leurs réponses ne se partagent aucun budget : leur somme, $1{,}851$ pour cet
+élève, dépasse $1$. Seule la seconde phrase est autorisée. La première supposerait
+une distribution sur les quatre classes, c'est-à-dire une somme égale à $1$, que
+la construction un-contre-tous n'impose pas.
+
+\subsection*{Exercice~I.1 --- pas critique d'une quadratique}
+
+Pour $f(\theta)=\tfrac{c}{2}(\theta-2)^2$, $f'(\theta)=c(\theta-2)$ et
+l'itération $\theta_{t+1}=\theta_t-\alpha c(\theta_t-2)$ donne
+\[
+  \theta_{t+1}-2=(1-\alpha c)\,(\theta_t-2).
+\]
+La suite converge si $|1-\alpha c|<1$, soit $0<\alpha<2/c$ ; elle oscille sans
+converger en $\alpha=2/c$ et diverge au-delà. Avec $c=4$, le pas critique vaut
+$0{,}5$. La figure~\ref{fig:ann-opt-alpha-quadratique} montre les deux régimes.

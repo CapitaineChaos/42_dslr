@@ -1,40 +1,64 @@
-\chapter{Recherche de meilleurs coefficients}
+% !TeX root = ../regression_logistique.tex
+\chapter{Optimisation des coefficients}
 \label{ch:entrainer}
 
-\begin{lecture}
-Le chapitre précédent s'arrête sur une fonction qui évalue un jeu de
-coefficients. Les trois étapes qui suivent produisent la pente du coût, la
-contrôlent contre une mesure indépendante, puis l'appliquent en boucle jusqu'à
-stabilisation.
-\end{lecture}
+\orient{%
+écrire le gradient et le contrôler contre une mesure par différences finies ;
+écrire un pas ; écrire une boucle dont le critère d'arrêt teste une baisse et
+rend des coefficients cohérents avec la perte retournée}{%
+chapitre~\ref{ch:donnees} ; \annexeref{ann:gradient}}{%
+cahier pratique}
 
-Un jeu de coefficients étant jugé, vient la question du sens dans lequel les
-déplacer, et à vérifier que cette direction est la bonne avant d'en tirer une
-boucle d'entraînement.
+Un jeu de coefficients étant évalué, trois étapes séparent ce point d'une boucle
+d'entraînement : la direction du déplacement, sa vérification, puis son
+itération.
 
-\section{Étape 5 : la pente et sa vérification}
+\section{La pente et sa vérification}
 
 La pente du coût par rapport à chaque coefficient s'obtient par une formule
-démontrée au chapitre~\ref{ch:gradient}. Les trois pentes sortent ensemble d'un
-seul passage sur les élèves.
-
-\codefile[firstline=5,lastline=11]{scripts/tuto/step5_gradient.py}
+démontrée à l'\annexeref{ann:gradient}. Les trois pentes sortent ensemble d'un
+seul passage sur les observations.
 
 Une erreur de signe ou un indice décalé produit ici un programme qui s'exécute,
-converge lentement et reste silencieux. La formule se contrôle sans démonstration,
-en mesurant ce qu'elle prétend calculer : une pente est un rapport
+converge lentement et reste silencieux. La formule se contrôle sans
+démonstration, en mesurant ce qu'elle prétend calculer : une pente est un rapport
 d'accroissements, obtenu en déplaçant un coefficient dans les deux sens et en
 divisant l'écart de coût par la distance parcourue.
 
-\codefile[firstline=14,lastline=19]{scripts/tuto/step5_gradient.py}
+\begin{tache}{Gradient et contrôle numérique}
+\tlab{Contrat} \texttt{gradient(weights, X, target)} rend la liste des
+$\partial J/\partial w_j$, calculée en un seul passage sur \texttt{X}.
+\texttt{measured\_slope(weights, X, target, j, h)} rend la même dérivée par
+différence centrée, en appelant deux fois \texttt{total\_cost}.
 
-Cette seconde fonction ignore tout de la régression logistique. Elle appelle deux
-fois le coût de l'étape~4 et divise, ce qui représente deux passages complets sur
-les $1\,600$ élèves pour un seul coefficient : inutilisable dans une boucle
-d'entraînement, mais indépendant de la formule qu'elle contrôle.
+\tlab{Contrôle} En $(0{,}3\,;-0{,}7\,;0{,}4)$ et $h=10^{-5}$ :
+\begin{center}\ttfamily\footnotesize
+\begin{tabular}{@{}rrr@{}}
+colonne & formule & mesure\\
+0 & +0.358202569 & +0.358202569\\
+1 & +0.071184453 & +0.071184453\\
+2 & -0.098350181 & -0.098350181\\
+\end{tabular}
+\end{center}
+Écart attendu : de l'ordre de $10^{-10}$.
+
+\tlab{Indice 1} La formule est
+$\frac{1}{m}\sum_i (p_i-y_i)\,x_{ij}$ : accumuler un résidu par ligne, puis le
+répartir sur les colonnes de cette ligne.
+
+\tlab{Indice 2} \texttt{measured\_slope} ignore tout de la régression
+logistique : elle déplace \texttt{weights[j]} de $\pm h$, rappelle
+\texttt{total\_cost}, et divise par $2h$.
+
+\tlab{Transfert} Le point d'évaluation est choisi loin de zéro. Montrer qu'en
+$(0,0,0)$ un facteur $1/m$ omis passerait inaperçu, et proposer un second point
+de contrôle qui révélerait un indice décalé.
+\corrige{step5\_gradient.py}
+\end{tache}
 
 \begin{figure}[htbp]
 \centering
+\begin{graphique}{Un bloc d'entrée se sépare en deux chemins : à gauche la fonction gradient, un passage sur les observations ; à droite measured_slope, deux coûts complets. Les deux convergent vers un bloc de comparaison indiquant que les valeurs coïncident sur neuf décimales.}
 \begin{tikzpicture}[
   box/.style={rounded corners=2.5pt,inner sep=6pt,align=center,font=\small,
     text width=62mm,draw=ink!30},
@@ -42,7 +66,7 @@ d'entraînement, mais indépendant de la formule qu'elle contrôle.
 \node[box,fill=gridgray!20] (in)
   {\texttt{weights} $=(0{,}3\,;-0{,}7\,;0{,}4)$\\ \texttt{X}, \texttt{target}};
 \node[box,fill=accentlight,below=11mm of in,xshift=-34mm] (form)
-  {\texttt{gradient}\\[2pt] la formule,\\ un passage sur les élèves};
+  {\texttt{gradient}\\[2pt] la formule,\\ un passage sur les observations};
 \node[box,fill=rulelight,below=11mm of in,xshift=34mm] (mes)
   {\texttt{measured\_slope}\\[2pt] deux coûts complets,\\ déplacement de $\pm10^{-5}$};
 \coordinate (mid) at ($(form.south)!0.5!(mes.south)$);
@@ -53,24 +77,18 @@ d'entraînement, mais indépendant de la formule qu'elle contrôle.
 \draw[arr] (form) -- (cmp);
 \draw[arr] (mes) -- (cmp);
 \end{tikzpicture}
-\caption{Le point d'évaluation est choisi loin de zéro. Plusieurs erreurs
-classiques --- facteur $1/m$ omis, indice décalé --- rendent zéro des deux côtés
-en $(0,0,0)$ et passeraient inaperçues.}
-\label{fig:juge}
+\end{graphique}
+\caption{Deux chemins indépendants vers la même dérivée. Le point d'évaluation
+est choisi loin de zéro, où plusieurs erreurs classiques rendent zéro des deux
+côtés.}
+\label{fig:controle-gradient}
 \end{figure}
 \FloatBarrier
 
-\begin{console}
-column    from the formula        measured             gap
-   0         +0.358202569     +0.358202569     9.04e-11
-   1         +0.071184453     +0.071184453     3.30e-11
-   2         -0.098350181     -0.098350181     3.91e-11
-\end{console}
-
-L'écart résiduel vient de la mesure, pas de la formule. Centrée sur un pas $h$, une différence commet une erreur en $h^2$, soit
-$10^{-10}$ pour $h=10^{-5}$, ce que les trois lignes retrouvent. Un $h$ plus grand mesurerait une corde au lieu
-d'une tangente ; un $h$ plus petit ferait perdre à la soustraction ses décimales
-significatives.
+L'écart résiduel vient de la mesure. Centrée sur un pas $h$, une différence
+commet une erreur en $h^2$, soit $10^{-10}$ pour $h=10^{-5}$, ce que les trois
+lignes retrouvent. Un $h$ plus grand mesurerait une corde au lieu d'une tangente ;
+un $h$ plus petit ferait perdre à la soustraction ses décimales significatives.
 
 \begin{vigilance}[Ordre de grandeur de l'écart]
 Un écart de l'ordre de $10^{-10}$ valide la formule. Un écart de $10^{-2}$
@@ -78,25 +96,45 @@ désigne un facteur oublié, un signe opposé désigne une soustraction inversé
 une seule colonne fausse désigne l'indice.
 \end{vigilance}
 
-\section{Étape 6 : un pas}
+\section{Un pas}
 
 Descendre consiste à retrancher la pente, multipliée par la longueur du pas.
 
-\codefile[firstline=4,lastline=9]{scripts/tuto/step6_one_step.py}
+\begin{tache}{Un pas de descente}
+\tlab{Contrat} \texttt{one\_step(weights, X, target)} rend une \emph{nouvelle}
+liste de coefficients, chacun diminué de \texttt{ALPHA} fois sa dérivée.
 
-\begin{console}
-turn 0   cost 0.693147   weights +0.0000  +0.0000  +0.0000
-turn 1   cost 0.538507   weights -0.2956  -0.2289  +0.1924
-turn 2   cost 0.449297   weights -0.5194  -0.4005  +0.3364
-turn 3   cost 0.393020   weights -0.6955  -0.5348  +0.4500
-\end{console}
+\tlab{Contrôle} À partir de coefficients nuls et $\alpha=1$ :
+\begin{center}\ttfamily\footnotesize
+\begin{tabular}{@{}llll@{}}
+turn 0 & cost 0.693147 & weights & +0.0000 +0.0000 +0.0000\\
+turn 1 & cost 0.538507 & weights & -0.2956 -0.2289 +0.1924\\
+turn 2 & cost 0.449297 & weights & -0.5194 -0.4005 +0.3364\\
+turn 3 & cost 0.393020 & weights & -0.6955 -0.5348 +0.4500\\
+\end{tabular}
+\end{center}
+Le premier biais, $-0{,}2956$, se recalcule à la main : voir ci-dessous.
 
-Le premier biais se recalcule à la main, et c'est le contrôle à faire ici. Les coefficients étant nuls, le modèle annonce $0{,}5$ pour les $1\,600$ élèves,
-et la pente du biais vaut la moyenne des écarts $\sigma(z)-y$, où $y$ vaut $1$ pour les
-\Gryf et $0$ pour les autres.
+\tlab{Indice 1} Construire la liste neuve plutôt que modifier en place.
+Corriger \texttt{weights[0]} avant de calculer la correction de
+\texttt{weights[1]} évaluerait les deux pentes en deux points différents.
+
+\tlab{Indice 2} Le signe est un moins : on se déplace à l'opposé de la pente.
+Si le coût monte au premier tour, la cause est le signe ou la valeur d'\texttt{ALPHA}.
+
+\tlab{Transfert} Prédire, sans exécuter, le signe de $w_1$ et de $w_2$ après le
+premier tour, à partir de la position des \Gryf dans le nuage
+(figure~\ref{fig:nuage}).
+\corrige{step6\_one\_step.py}
+\end{tache}
+
+Les coefficients étant nuls, le modèle produit $0{,}5$ pour les $1\,600$ lignes,
+et la pente du biais vaut la moyenne des résidus $\sigma(z)-y$, où $y$ vaut $1$
+pour les \Gryf et $0$ pour les autres.
 
 \begin{figure}[htbp]
 \centering
+\begin{graphique}{Une barre horizontale partagée en deux : un segment bleu de 327 Gryffindor à gauche, un segment gris de 1273 élèves des autres maisons à droite. Sous chaque segment, le résidu correspondant, -0,5 et +0,5, puis le calcul de leur moyenne pondérée, égale à 0,2956.}
 \begin{tikzpicture}[font=\small]
 \fill[accent!65] (0,0) rectangle (2.45,0.72);
 \fill[gridgray!45] (2.45,0) rectangle (12,0.72);
@@ -113,32 +151,67 @@ et la pente du biais vaut la moyenne des écarts $\sigma(z)-y$, où $y$ vaut $1$
 \node[anchor=north,font=\small] at (6,-1.05)
   {moyenne $=\dfrac{1\,273\times0{,}5-327\times0{,}5}{1\,600}=0{,}2956$};
 \end{tikzpicture}
+\end{graphique}
 \caption{Le pas retranche cette moyenne au biais, d'où $-0{,}2956$ au premier
-tour. Le biais se déplace donc vers la valeur qui fait annoncer $20{,}44\,\%$ à
-tout le monde, ce que peut faire de mieux un modèle réduit à son biais.}
+tour : le biais rejoint la valeur qui fait annoncer $20{,}44\,\%$ à toutes les
+observations.}
 \label{fig:premierpas}
 \end{figure}
 \FloatBarrier
 
-\texttt{ALPHA} est le taux d'apprentissage $\alpha$. À $1$ sur des colonnes
-standardisées, le coût baisse dès le premier tour ; s'il augmentait, la cause serait un pas trop
-long ou un signe inversé dans la correction.
+\section{Itération jusqu'à stagnation}
 
-La nouvelle liste de coefficients est construite, non modifiée en place.
-Corriger \texttt{weights[0]} avant de calculer la correction de
-\texttt{weights[1]} évaluerait les deux pentes en deux points différents, faute
-qu'une liste neuve rend impossible.
+Un pas isolé fait baisser la perte d'une fraction. La descente répète ce pas
+jusqu'à ce que la baisse devienne négligeable, ce qui demande une boucle et deux
+conditions d'arrêt.
 
-\section{Étape 7 : itération jusqu'à stabilisation}
+\begin{tache}{La boucle et ses deux arrêts}
+\tlab{Contrat} \texttt{descend(X, target)} rend le couple
+\texttt{(weights, cost)} correspondant au même état, ainsi que le nombre de tours
+consommés. La boucle s'arrête sur une baisse relative inférieure à
+\texttt{EPSILON} $=10^{-6}$, ou sur un plafond de $6\,000$ tours.
 
-Un pas isolé fait baisser le coût d'une fraction. La descente consiste à répéter
-ce pas jusqu'à ce que la baisse devienne négligeable, ce qui demande une boucle
-et deux conditions d'arrêt.
+\tlab{Contrôle}
+\begin{center}\ttfamily\footnotesize
+stopped after 983 iterations, cost 0.107257\\
+weights: -5.1755 -3.7460 +3.7874
+\end{center}
+Le nombre d'itérations se lit en premier : à $983$ pour un plafond de $6\,000$,
+c'est le critère de stagnation qui a mis fin à la boucle. Une valeur égale au
+plafond signalerait un pas trop court, ou l'absence de minimum fini
+(\annexeref{ann:norme}).
 
-\codefile[firstline=4,lastline=16]{scripts/tuto/step7_loop.py}
+\tlab{Indice 1} Le test doit porter sur \texttt{previous - cost}, une baisse, et
+non sur \texttt{abs(previous - cost)}.
+
+\tlab{Indice 2} Appliquer le pas \emph{avant} de calculer la perte retournée :
+les deux valeurs décrivent alors le même état.
+
+\tlab{Transfert} Le seuil relatif $10^{-6}$ est atteint après $983$ tours, alors
+que la frontière a cessé de se déplacer bien avant (ch.~\ref{ch:descente}).
+Proposer un critère d'arrêt qui testerait la stabilité des \emph{décisions}, et
+dire ce qu'il coûterait par tour.
+\corrige{step7\_loop.py}
+\end{tache}
+
+\begin{vigilance}[Trois pièges du critère d'arrêt]
+\textbf{Valeur absolue.} Écrire \texttt{abs(previous - cost) < seuil} accepte
+aussi une hausse faible de la perte et peut donc arrêter à tort une boucle
+instable.
+
+\textbf{Relatif ou absolu.} Écrire \texttt{... / max(1, abs(cost))} ne
+normalise pas le coût lorsqu'il est inférieur à $1$. La forme
+\texttt{previous - cost < EPSILON * abs(previous)} conserve une interprétation
+relative.
+
+\textbf{Cohérence entre retours.} La perte et les coefficients retournés
+doivent décrire le même état ; appliquer un pas après le dernier calcul de perte
+les décale d'une itération.
+\end{vigilance}
 
 \begin{figure}[htbp]
 \centering
+\begin{graphique}{Trois blocs empilés reliés en boucle : total_cost, gradient, one_step, la sortie de one_step revenant sur total_cost avec la mention au plus 6000 tours. Une flèche latérale sort de total_cost vers le retour des coefficients et du coût, sous condition d'une baisse relative inférieure à 10 puissance -6.}
 \begin{tikzpicture}[
   st/.style={draw=ink!30,rounded corners=2.5pt,align=center,font=\small,
     inner sep=6pt,text width=34mm},
@@ -157,35 +230,20 @@ et deux conditions d'arrêt.
 \draw[arr] (c) -- node[lab,above=1mm,align=center]
   {baisse relative\\ sous $10^{-6}$} (out);
 \end{tikzpicture}
+\end{graphique}
 \caption{Le coût est calculé une fois par tour, pour le seul test d'arrêt. Le
-gradient constitue un second passage sur les $1\,600$ élèves : une itération en
-coûte donc deux.}
+gradient constitue un second passage sur les $1\,600$ lignes : une itération en
+coûte deux.}
 \label{fig:boucle}
 \end{figure}
 \FloatBarrier
 
-Les deux conditions d'arrêt sont nécessaires l'une comme l'autre. La première
-compare la baisse du coût à sa valeur, en relatif : sous \texttt{EPSILON}, les
-tours suivants ne déplacent plus la frontière de façon mesurable. Plafond d'itérations, la seconde est indispensable : dans certaines configurations, la première
-ne se déclenche jamais parce que les coefficients divergent
-(annexe~\ref{ann:norme}).
+Le seuil relatif arrête les itérations lorsque la baisse du coût devient
+négligeable. Le plafond couvre les configurations où les coefficients divergent
+et où ce seuil n'est jamais atteint (\annexeref{ann:norme}).
 
-\begin{console}
-stopped after 652 iterations, cost 0.107387
-weights: -5.0360  -3.6513  +3.6841
-\end{console}
-
-Le nombre d'itérations se lit en premier. À $652$ pour un plafond de $6\,000$,
-c'est le critère de stagnation qui a mis fin à la boucle. Une valeur égale au
-plafond signalerait un pas trop court, ou l'absence de minimum.
-
-Les figures de la première partie s'arrêtent au quatre-centième tour et donnent
-$-4{,}745$, $-3{,}454$, $+3{,}469$. Les rapports entre coefficients y sont déjà
-ceux d'ici à trois millièmes près : la frontière est en place bien avant que le coût
-cesse de baisser, et les $252$ derniers tours ne font qu'accentuer la pente de la
-sigmoïde de part et d'autre.
-
-\begin{resultat}[Fonction d'entraînement]
-Une fonction qui prend un tableau de notes et une colonne de réponses, et rend
-trois nombres. Elle s'emploie ensuite quatre fois.
-\end{resultat}
+Ces coefficients constituent l'état \Mstop. Les figures de la partie~I emploient
+\Mquatre, arrêté au quatre-centième tour : $-4{,}745$, $-3{,}454$, $+3{,}469$.
+Les deux états diffèrent d'environ $9\,\%$ en norme, et leurs rapports coïncident
+à trois millièmes près : la frontière se stabilise avant la perte, tandis que
+les derniers tours resserrent la sigmoïde.
