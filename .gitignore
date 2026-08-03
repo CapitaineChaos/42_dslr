@@ -17,7 +17,6 @@ __pycache__/
 *.vrb
 *.nav
 *.snm
-docs/regression/regression_logistique_slides_body.tex
 
 weights.csv
 
