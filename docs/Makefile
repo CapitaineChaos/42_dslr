@@ -5,9 +5,11 @@ STAMP    := $(VENV)/.installed
 REQUIREMENTS := $(ROOT)/requirements.txt
 DOCDIR   := regression
 MASTER   := regression_logistique.tex
+SLIDES   := regression_logistique_slides.tex
+SLIDES_BODY := $(DOCDIR)/regression_logistique_slides_body.tex
 TUTO     := $(DOCDIR)/scripts/tuto
 
-.PHONY: all install tuto verify figures labels tex-memory doc doc-tag-check clean
+.PHONY: all install tuto verify figures labels tex-memory doc slides doc-tag-check clean
 
 all: doc
 
@@ -50,10 +52,19 @@ doc:
 	cd $(DOCDIR) && latexmk -synctex=1 -pdf -interaction=nonstopmode \
 	  -file-line-error $(MASTER)
 
+$(SLIDES_BODY): $(DOCDIR)/scripts/gen_slides_source.py $(DOCDIR)/chapters/*.tex
+	$(PY) $(DOCDIR)/scripts/gen_slides_source.py
+
+slides: $(SLIDES_BODY)
+	cd $(DOCDIR) && latexmk -synctex=1 -pdf -interaction=nonstopmode \
+	  -file-line-error $(SLIDES)
+
 # Contrôle d'accessibilité : PDF balisé, et une alternative par figure.
 doc-tag-check: labels doc
 	$(PY) $(DOCDIR)/scripts/verifie_alt.py
 
 clean:
 	cd $(DOCDIR) && latexmk -C $(MASTER)
+	cd $(DOCDIR) && latexmk -C $(SLIDES)
+	rm -f $(SLIDES_BODY)
 	rm -f $(DOCDIR)/chapters/*.aux

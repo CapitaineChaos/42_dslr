@@ -241,23 +241,23 @@ convexe, intersection finie de demi-plans, donc un polyèdre convexe du plan. Il
 peut être vide, borné ou non borné. Trois propriétés en découlent, énoncées avec
 leurs conditions.
 
-\begin{enumerate}
-  \item \textbf{Convexité.} Deux points d'une même région ont tout le segment
-        qui les joint dans cette région. Une classe ne peut donc pas occuper
-        deux zones séparées.
-  \item \textbf{Bords.} Les bords sont portés par les droites d'égalité
-        $z_G=z_j$, distinctes des quatre frontières binaires $z_k=0$. Un bord
-        s'interrompt là où un troisième modèle prend le dessus. Si la région est
-        bornée, ses arêtes sont de longueur finie ; si elle ne l'est pas ---
-        ce qui arrive dès que la région contient une demi-droite --- au moins
-        une arête est infinie. Sur les quatre modèles employés ici, les quatre
-        régions sont non bornées.
-  \item \textbf{Départage.} En cas d'égalité exacte entre deux scores maximaux,
-        $\arg\max$ ne désigne pas une classe : il faut une convention. Le code
-        de la partie~II retient le premier maximum rencontré dans l'ordre de la
-        liste des classes. Cet événement est de probabilité nulle sur des
-        données continues, mais se produit sur des valeurs arrondies.
-\end{enumerate}
+\begin{panelenumerate}[rulecolor]
+  \panelitem{\textbf{Convexité.} Deux points d'une même région ont tout le
+    segment qui les joint dans cette région. Une classe ne peut donc pas occuper
+    deux zones séparées.}
+  \panelitem{\textbf{Bords.} Les bords sont portés par les droites d'égalité
+    $z_G=z_j$, distinctes des quatre frontières binaires $z_k=0$. Un bord
+    s'interrompt là où un troisième modèle prend le dessus. Si la région est
+    bornée, ses arêtes sont de longueur finie ; si elle ne l'est pas --- ce qui
+    arrive dès que la région contient une demi-droite --- au moins une arête est
+    infinie. Sur les quatre modèles employés ici, les quatre régions sont non
+    bornées.}
+  \panelitem[warning]{\textbf{Départage.} En cas d'égalité exacte entre deux
+    scores maximaux, $\arg\max$ ne désigne pas une classe : il faut une
+    convention. Le code de la partie~II retient le premier maximum rencontré
+    dans l'ordre de la liste des classes. Cet événement est de probabilité nulle
+    sur des données continues, mais se produit sur des valeurs arrondies.}
+\end{panelenumerate}
 
 \begin{figure}[htbp]
 \centering

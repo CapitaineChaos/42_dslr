@@ -189,15 +189,15 @@ Avec dix matières au lieu de deux, chaque modèle a onze coefficients au lieu d
 trois, sans autre modification. Le fichier enregistré est celui de la
 figure~\ref{fig:contenu-modele}, répliqué quatre fois :
 
-\begin{itemize}
-  \item quatre vecteurs de onze coefficients, soit $44$ nombres ;
-  \item la liste ordonnée des dix matières, qui dit à quelle note s'applique
-        chaque coefficient ;
-  \item la liste ordonnée des quatre maisons, qui dit quel vecteur correspond à
-        quelle réponse ;
-  \item pour chaque matière, la valeur d'imputation, la moyenne et l'écart-type
-        appris à l'entraînement.
-\end{itemize}
+\begin{panelitemize}
+  \panelbullet{quatre vecteurs de onze coefficients, soit $44$ nombres ;}
+  \panelbullet{la liste ordonnée des dix matières, qui dit à quelle note
+    s'applique chaque coefficient ;}
+  \panelbullet{la liste ordonnée des quatre maisons, qui dit quel vecteur
+    correspond à quelle réponse ;}
+  \panelbullet{pour chaque matière, la valeur d'imputation, la moyenne et
+    l'écart-type appris à l'entraînement.}
+\end{panelitemize}
 
 \begin{vigilance}[Ordre des colonnes et des maisons]
 Un vecteur de coefficients s'applique aux notes dans l'ordre où il a été ajusté,
@@ -271,7 +271,7 @@ vérifier la calibration sur des données mises de côté, ou employer un modèl
 multiclasses cohérent --- la régression \emph{softmax}, qui ajuste les quatre
 jeux de coefficients ensemble sous la contrainte d'une somme égale à $1$. Le
 périmètre de ce cours retient ces quatre nombres pour leur ordre seul
-(ch.~\ref{ch:contrat}).
+(repère~\ref{ch:contrat}).
 
 \begin{resultat}[Paramètres du classifieur]
 Quatre modèles binaires ajustés indépendamment sur les mêmes notes, et une

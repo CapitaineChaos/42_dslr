@@ -12,23 +12,35 @@ cours ; le reste est supposé acquis.
 
 \begin{table}[htbp]
 \centering
-\footnotesize
-\begin{tabular}{>{\raggedright\arraybackslash}p{32mm}>{\raggedright\arraybackslash}p{56mm}>{\raggedright\arraybackslash}p{36mm}}
-\toprule
-domaine & attendu à l'entrée & rappel disponible \\
-\midrule
-statistique descriptive & moyenne, médiane, écart-type, valeur manquante
-  & \annexeref{ann:prerequis} \\
-analyse & exponentielle, logarithme, fonction croissante
-  & \annexeref{ann:prerequis} \\
-géométrie & repère, droite, produit scalaire, norme
-  & \annexeref{ann:prerequis}, \annexeref{ann:geometrie} \\
-calcul différentiel & dérivée d'une fonction d'une variable
-  & \annexeref{ann:prerequis} \\
-programmation & Python : fonctions, listes, boucles, imports
-  & aucun \\
-\bottomrule
-\end{tabular}
+\small
+\begin{tabularx}{\textwidth}{@{\hspace{1mm}}%
+  >{\raggedright\arraybackslash}m{34mm}%
+  >{\raggedright\arraybackslash}X%
+  >{\raggedright\arraybackslash}m{35mm}@{\hspace{1mm}}}
+{\sffamily\scriptsize\bfseries\color{ink!58}DOMAINE} &
+{\sffamily\scriptsize\bfseries\color{ink!58}ATTENDU À L'ENTRÉE} &
+{\sffamily\scriptsize\bfseries\color{ink!58}RAPPEL DISPONIBLE} \\
+\noalign{\vskip2pt}
+\paneltablerow{statistique descriptive}
+  {moyenne, médiane, écart-type, valeur manquante}
+  {\annexeref{ann:prerequis}}
+\noalign{\vskip2pt}
+\paneltablerow{analyse}
+  {exponentielle, logarithme, fonction croissante}
+  {\annexeref{ann:prerequis}}
+\noalign{\vskip2pt}
+\paneltablerow{géométrie}
+  {repère, droite, produit scalaire, norme}
+  {\annexeref{ann:prerequis}, \annexeref{ann:geometrie}}
+\noalign{\vskip2pt}
+\paneltablerow{calcul différentiel}
+  {dérivée d'une fonction d'une variable}
+  {\annexeref{ann:prerequis}}
+\noalign{\vskip2pt}
+\paneltablerow[warning]{programmation}
+  {Python : fonctions, listes, boucles, imports}
+  {aucun}
+\end{tabularx}
 \caption{Prérequis. Les mathématiques couvrent la partie~I et les annexes de
 démonstration ; la programmation intervient dans la partie~II.}
 \label{tab:prerequis}
@@ -36,19 +48,21 @@ démonstration ; la programmation intervient dans la partie~II.}
 
 \textbf{Objectifs évaluables de la partie~I.}
 
-\begin{enumerate}
-  \item calculer le score et la probabilité d'une observation à partir des
-        coefficients et des statistiques de préparation ;
-  \item écrire la perte d'entropie croisée sous une forme stable en double
-        précision, et la contrôler en $z=\pm1000$ ;
-  \item prédire le signe et l'ordre de grandeur d'une composante du gradient ;
-  \item distinguer un protocole d'évaluation valide d'un protocole entaché de
-        fuite du jeu de test ;
-  \item lire une matrice de confusion et l'assortir d'une incertitude ;
-  \item énoncer la portée exacte de la convexité ;
-  \item dire à quelles conditions les sorties d'un classifieur un-contre-tous
-        se lisent comme des probabilités de classe.
-\end{enumerate}
+\begin{panelenumerate}
+  \panelitem{calculer le score et la probabilité d'une observation à partir des
+    coefficients et des statistiques de préparation ;}
+  \panelitem{écrire la perte d'entropie croisée sous une forme stable en double
+    précision, et la contrôler en $z=\pm1000$ ;}
+  \panelitem{prédire le signe et l'ordre de grandeur d'une composante du
+    gradient ;}
+  \panelitem[warning]{distinguer un protocole d'évaluation valide d'un protocole
+    entaché de fuite du jeu de test ;}
+  \panelitem[warning]{lire une matrice de confusion et l'assortir d'une
+    incertitude ;}
+  \panelitem[rulecolor]{énoncer la portée exacte de la convexité ;}
+  \panelitem[rulecolor]{dire à quelles conditions les sorties d'un classifieur
+    un-contre-tous se lisent comme des probabilités de classe.}
+\end{panelenumerate}
 
 La partie~II écrit le programme correspondant et suppose la partie~I. Les
 annexes portent les démonstrations et supposent la partie~I ainsi que les

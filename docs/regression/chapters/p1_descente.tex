@@ -162,12 +162,16 @@ La standardisation précède le réglage. Une série de valeurs de $\alpha$ espa
 sur une échelle logarithmique est ensuite comparée sur les premières
 itérations, à partir du même point :
 
-\begin{enumerate}
-  \item conserver les réglages pour lesquels la perte reste finie et décroît ;
-  \item augmenter $\alpha$ lorsque la baisse est régulière mais très lente ;
-  \item réduire $\alpha$ dès qu'apparaissent remontées ou oscillations ;
-  \item retenir le réglage qui atteint rapidement le plateau sans instabilité.
-\end{enumerate}
+\begin{panelenumerate}[rulecolor]
+  \panelitem{conserver les réglages pour lesquels la perte reste finie et
+    décroît ;}
+  \panelitem{augmenter $\alpha$ lorsque la baisse est régulière mais très
+    lente ;}
+  \panelitem[warning]{réduire $\alpha$ dès qu'apparaissent remontées ou
+    oscillations ;}
+  \panelitem{retenir le réglage qui atteint rapidement le plateau sans
+    instabilité.}
+\end{panelenumerate}
 
 Une recherche linéaire par \emph{backtracking} automatise cette opération : elle
 réduit le pas jusqu'à vérifier une baisse suffisante. La borne théorique
@@ -185,7 +189,7 @@ plateau lorsqu'une estimation par mini-lots rend la courbe bruitée.
 
 \begin{table}[htbp]
 \centering
-\footnotesize
+\small
 \begin{tabularx}{\textwidth}{
   >{\raggedright\arraybackslash}p{43mm}
   >{\raggedright\arraybackslash}p{53mm}
@@ -292,6 +296,22 @@ $1$ de part et d'autre : les deux quantités agissent séparément. Relevée le 
 perpendiculaire,
 la probabilité décrit toujours une sigmoïde, d'autant plus comprimée que
 $\|w\|$ est grand.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth,
+  alt={À gauche, la surface de probabilité du modèle vue de profil dans la
+  direction perpendiculaire à la frontière. À droite, trois profils sigmoïdes
+  aux itérations 1, 10 et 400 : ils passent tous par la probabilité 0,5 à la
+  distance nulle, mais leur transition devient de plus en plus étroite.}]
+  {figures/coupe_sigmoide.png}
+\caption{À gauche, la surface de probabilité vue dans l'axe de la frontière.
+À droite, son profil sigmoïde dans la direction perpendiculaire, aux
+itérations $1$, $10$ et $400$. Les trois courbes passent par $0{,}5$ à la même
+abscisse : la frontière reste en place tandis que la transition se resserre.}
+\label{fig:coupe}
+\end{figure}
+\FloatBarrier
 
 La largeur de cette transition se mesure par la distance à parcourir pour que la
 probabilité passe de $25\,\%$ à $75\,\%$, soit $2\log 3/\|w\|$ : inversement

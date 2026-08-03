@@ -5,11 +5,12 @@
   pdfstandard = ua-2,
   testphase   = {phase-III,math,table,firstaid},
 }
-\documentclass[12pt,a4paper,openany]{report}
+\documentclass[11pt,a4paper,openany]{report}
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[french]{babel}
+\frenchsetup{SmallCapsFigTabCaptions=false}
 \usepackage{csquotes}
 \usepackage{libertinus}
 \usepackage{microtype}
@@ -48,7 +49,14 @@
 \usepackage{enumitem}
 \usepackage{tcolorbox}
 \tcbuselibrary{breakable,skins,listings}
-\usepackage[margin=2.45cm,headheight=23pt,headsep=13pt]{geometry}
+\usepackage[
+  left=2.8cm,
+  right=2.8cm,
+  top=2.55cm,
+  bottom=2.8cm,
+  headheight=22pt,
+  headsep=10pt
+]{geometry}
 \usepackage{listings}
 \lstset{basicstyle=\ttfamily\small,keywordstyle=\color{accent}\bfseries,
   commentstyle=\color{rulecolor},stringstyle=\color{warning},
@@ -63,10 +71,9 @@
 \AtEveryBibitem{\clearfield{urldate}}
 \usepackage{fancyhdr}
 \usepackage{hyperref}
-% Les legendes se distinguent du corps : corps plus petit, marges laterales,
-% numero en gras colore suivi d'un point.
-\usepackage[font={small,color=ink!88},labelfont={bf,color=accent},
-  labelsep=period,margin=9mm,skip=7pt,justification=justified]{caption}
+% Compatibilité des noms et séparateurs français ; le rendu est piloté plus
+% bas par les mécanismes de balisage PDF/UA.
+\usepackage{caption}
 
 \definecolor{ink}{HTML}{18212B}
 \definecolor{accent}{HTML}{155E75}
@@ -84,6 +91,26 @@
 % Deux teintes libres, distinctes des quatre maisons.
 \definecolor{herbo}{HTML}{9D174D}
 \definecolor{runes}{HTML}{1D4ED8}
+
+% Les légendes restent des métadonnées du visuel, pas un second niveau de
+% texte courant. Le balisage PDF/UA fournit désormais sa propre fabrique de
+% légendes : son hook et son socket sont donc la source effective du style.
+\setlength{\abovecaptionskip}{12pt}
+\setlength{\belowcaptionskip}{2pt}
+% Une lettre distingue immédiatement une figure ou un tableau d'une section :
+% « figure 5-C » ne peut pas être confondue avec « section 5.3 ».
+\renewcommand{\thefigure}{\thechapter-\Alph{figure}}
+\renewcommand{\thetable}{\thechapter-\Alph{table}}
+\AddToHookWithArguments{cmd/@makecaption/before}{%
+  \small\color{ink!68}\raggedright
+  \advance\leftskip by 13mm
+  \advance\rightskip by 13mm}
+\ExplSyntaxOn
+\NewSocketPlug{caption/label}{course}{%
+  {\normalfont\sffamily\mdseries\color{accent!65!ink}#1}\quad}
+\AssignSocketPlug{caption/label}{course}
+\ExplSyntaxOff
+
 \hypersetup{colorlinks=true,linkcolor=accent!85!ink,citecolor=accent,urlcolor=accent,
   pdftitle={Régression logistique --- modèle, optimisation et évaluation},
   pdfauthor={Sylvain Maitre},
@@ -96,27 +123,76 @@
 % la largeur est donnée explicitement.
 \setlist{nosep,leftmargin=1.7em,labelsep=0.5em}
 \setlength{\parindent}{0pt}
-\linespread{1.08}
-\setlength{\parskip}{0.72em}
-\setlength{\abovedisplayskip}{0.9em}
-\setlength{\belowdisplayskip}{0.9em}
-\setlength{\abovedisplayshortskip}{0.65em}
-\setlength{\belowdisplayshortskip}{0.65em}
-\setlength{\textfloatsep}{1.25em plus 0.25em minus 0.2em}
-\renewcommand{\arraystretch}{1.16}
+\linespread{1.05}
+\setlength{\parskip}{0.50em}
+\setlength{\abovedisplayskip}{0.78em}
+\setlength{\belowdisplayskip}{0.78em}
+\setlength{\abovedisplayshortskip}{0.55em}
+\setlength{\belowdisplayshortskip}{0.55em}
+\setlength{\textfloatsep}{1.05em plus 0.25em minus 0.2em}
+\renewcommand{\arraystretch}{1.12}
 \setcounter{tocdepth}{1}
 \raggedbottom
 \widowpenalty=10000
 \clubpenalty=10000
 
-\newtcolorbox{resultat}[1][]{enhanced,colback=accentlight,colframe=accent,
-  boxrule=0.7pt,arc=1mm,left=2mm,right=2mm,top=1.5mm,bottom=1.5mm,
-  title={#1},fonttitle=\bfseries,coltitle=white}
-\newtcolorbox{vigilance}[1][]{enhanced,colback=warninglight,colframe=warning,
-  boxrule=0.7pt,arc=1mm,left=2mm,right=2mm,top=1.5mm,bottom=1.5mm,
-  title={#1},fonttitle=\bfseries,coltitle=white}
-\newtcolorbox{lecture}{enhanced,colback=gridgray!12,colframe=ink!55,
-  boxrule=0.55pt,arc=1mm,left=2mm,right=2mm,top=1.5mm,bottom=1.5mm}
+% Une hiérarchie de livre plutôt que les proportions très démonstratives
+% de la classe report : les titres structurent sans écraser la page.
+\makeatletter
+\def\@makechapterhead#1{%
+  \vspace*{30pt}%
+  {\parindent\z@\raggedright\normalfont
+    {\sffamily\large\bfseries\color{ink!62}\@chapapp\space\thechapter\par}%
+    \vspace{8pt}%
+    {\huge\bfseries\color{ink}#1\par\nobreak}%
+    \vspace{24pt}%
+  }}
+\def\@makeschapterhead#1{%
+  \vspace*{30pt}%
+  {\parindent\z@\raggedright\normalfont
+    {\huge\bfseries\color{ink}#1\par\nobreak}%
+    \vspace{24pt}%
+  }}
+\renewcommand\section{\@startsection{section}{1}{\z@}%
+  {-2.6ex \@plus -.7ex \@minus -.2ex}%
+  {.9ex \@plus .2ex}%
+  {\normalfont\Large\bfseries\color{ink}}}
+\renewcommand\subsection{\@startsection{subsection}{2}{\z@}%
+  {-2.1ex \@plus -.6ex \@minus -.2ex}%
+  {.7ex \@plus .15ex}%
+  {\normalfont\large\bfseries\color{ink}}}
+\renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}%
+  {-1.7ex \@plus -.5ex \@minus -.2ex}%
+  {.55ex \@plus .1ex}%
+  {\normalfont\normalsize\bfseries\color{ink}}}
+\makeatother
+
+\tcbset{
+  coursencadre/.style={
+    enhanced,
+    breakable,
+    frame hidden,
+    boxrule=0pt,
+    arc=.5mm,
+    left=3mm,
+    right=3mm,
+    top=1.8mm,
+    bottom=1.8mm,
+    before skip=.72em,
+    after skip=.72em,
+    fontupper=\normalsize\color{ink!94},
+    fonttitle=\small\sffamily\bfseries,
+    attach title to upper={\par\nobreak\smallskip}
+  }
+}
+\newtcolorbox{resultat}[1][]{coursencadre,
+  colback=accent!4,borderline west={1.25pt}{0pt}{accent!58},
+  title={#1},coltitle=accent!74!ink}
+\newtcolorbox{vigilance}[1][]{coursencadre,
+  colback=warning!4,borderline west={1.25pt}{0pt}{warning!58},
+  title={#1},coltitle=warning!72!ink}
+\newtcolorbox{lecture}{coursencadre,
+  colback=gridgray!10,borderline west={1.25pt}{0pt}{ink!30}}
 % Un relevé numérique pèse moins que la prose qui l'explique : corps réduit,
 % teinte adoucie, retrait à gauche, sans cadre ni fond qui appellent l'œil.
 \newtcolorbox{chiffres}[1][]{blank,
@@ -132,35 +208,101 @@
   {\par\endgroup\addvspace{6pt}}
 
 % Une règle de calcul est rappelée là où le texte s'en sert, jamais avant.
-\newtcolorbox{rappel}[1][]{enhanced,colback=rulelight,colframe=rulecolor,
-  boxrule=0.6pt,arc=1mm,left=2mm,right=2mm,top=1.5mm,bottom=1.5mm,
-  title={#1},fonttitle=\bfseries,coltitle=white}
+\newtcolorbox{rappel}[1][]{coursencadre,
+  colback=rulecolor!4,borderline west={1.25pt}{0pt}{rulecolor!58},
+  title={#1},coltitle=rulecolor!70!ink}
 
-% Contrat d'ouverture de chapitre : objectifs observables, prérequis, parcours.
-% Trois champs, toujours dans cet ordre.
-\newtcolorbox{orientation}{enhanced,colback=white,colframe=ink!35,
-  boxrule=0.55pt,arc=1mm,left=2mm,right=2mm,top=1.5mm,bottom=1.5mm,
-  fontupper=\small\color{ink!92},
-  borderline west={2.2pt}{0pt}{accent!45}}
-\newcommand{\orientlab}[1]{\textcolor{accent}{\footnotesize\bfseries\scshape #1}\quad}
+% Contrat d'ouverture de chapitre : ce sont des repères de navigation, pas un
+% paragraphe encadré. Les objectifs deviennent une vraie liste ; les deux
+% métadonnées restantes sont plus discrètes et alignées sous elle.
+\newenvironment{orientation}
+  {\par\addvspace{.65em}\begingroup
+   \setlength{\parskip}{0pt}\color{ink!94}\noindent}
+  {\par\endgroup\addvspace{1em}}
+\newcommand{\orientlab}[1]{%
+  {\small\sffamily\bfseries\color{accent!78!ink}#1}}
+\NewDocumentCommand{\orientobjective}{m}{\item #1}
+\NewDocumentCommand{\orientobjectives}{>{\SplitList{;}}m}{%
+  \begin{itemize}[
+    label=\textcolor{accent!58}{\textbullet},
+    leftmargin=1.25em,
+    labelsep=.5em,
+    itemsep=.28em,
+    topsep=.28em,
+    parsep=0pt,
+    partopsep=0pt]
+  \ProcessList{#1}{\orientobjective}
+  \end{itemize}}
+\newcommand{\orientmeta}[2]{%
+  \par\addvspace{2.5pt}\noindent
+  \hangindent=25mm\hangafter=1
+  \makebox[25mm][l]{\orientlab{#1}}%
+  {\small\color{ink!72}#2}\par}
 \newcommand{\orient}[3]{%
   \begin{orientation}
-  \orientlab{Objectifs}#1\par
-  \orientlab{Prérequis}#2\par
-  \orientlab{Parcours}#3
+  \orientlab{Objectifs}
+  \orientobjectives{#1}
+  \orientmeta{Prérequis}{#2}
+  \orientmeta{Parcours}{#3}
   \end{orientation}}
+
+% Listes de synthèse : la surface reste neutre pour privilégier la lecture ;
+% seule la petite étiquette porte la couleur et signale le rôle de l'entrée.
+\newcommand{\panelentry}[3]{%
+  \item
+  \begin{tcolorbox}[enhanced,breakable,
+    colback=gridgray!10,colframe=white,boxrule=0pt,arc=.7mm,
+    left=9.8mm,right=1.5mm,top=.75mm,bottom=.75mm,
+    before skip=0pt,after skip=0pt,
+    fontupper=\normalsize\color{ink!96},
+    overlay unbroken={%
+      \node[fill=#1!16,text=#1!78!ink,rounded corners=.8mm,
+        minimum width=6.2mm,minimum height=6.2mm,
+        font=\sffamily\bfseries\footnotesize]
+        at ([xshift=4.5mm]frame.west) {#2};},
+    overlay first={%
+      \node[fill=#1!16,text=#1!78!ink,rounded corners=.8mm,
+        minimum width=6.2mm,minimum height=6.2mm,
+        font=\sffamily\bfseries\footnotesize,anchor=north]
+        at ([xshift=4.5mm,yshift=-1.5mm]frame.north west) {#2};}]
+    #3
+  \end{tcolorbox}}
+
+\newcounter{panelitem}
+\NewDocumentEnvironment{panelenumerate}{O{accent}}
+  {\def\panelcolor{#1}\setcounter{panelitem}{0}%
+   \begin{enumerate}[label={},leftmargin=0pt,labelwidth=0pt,labelsep=0pt,
+     itemindent=0pt,itemsep=2.5pt,topsep=4pt,partopsep=0pt,parsep=0pt]}
+  {\end{enumerate}}
+\NewDocumentCommand{\panelitem}{O{\panelcolor}m}
+  {\stepcounter{panelitem}%
+   \edef\panelbadge{\noexpand\panelentry{#1}{\arabic{panelitem}}}%
+   \panelbadge{#2}}
+
+\NewDocumentEnvironment{panelitemize}{O{accent}}
+  {\def\panelcolor{#1}%
+   \begin{itemize}[label={},leftmargin=0pt,labelwidth=0pt,labelsep=0pt,
+     itemindent=0pt,itemsep=2.5pt,topsep=4pt,partopsep=0pt,parsep=0pt]}
+  {\end{itemize}}
+\NewDocumentCommand{\panelbullet}{O{\panelcolor}m}
+  {\panelentry{#1}{\textbullet}{#2}}
+
+% Variante tabulaire : la couleur se concentre sur le libellé, comme dans une
+% liste de diapositives ; les explications reposent sur un fond presque blanc.
+\NewDocumentCommand{\paneltablerow}{O{accent}mmm}{%
+  \cellcolor{#1!13}\rule[-1.15ex]{0pt}{4.1ex}%
+    {\sffamily\bfseries\color{#1!78!ink}#2} &
+  \cellcolor{gridgray!8}\rule[-1.15ex]{0pt}{4.1ex}%
+    {\color{ink!94}#3} &
+  \cellcolor{gridgray!8}\rule[-1.15ex]{0pt}{4.1ex}%
+    {\color{ink!68}#4} \\}
 
 % Tâche laissée au lecteur : énoncé seul, corrigé reporté à l'annexe des
 % corrigés. Le compteur suit les chapitres pour que la référence soit stable.
 \newcounter{exo}[chapter]
-\newtcolorbox[use counter=exo]{exercice}[1][]{enhanced,
-  colback=white,colframe=rulecolor!70,boxrule=0.6pt,arc=1mm,
-  left=2mm,right=2mm,top=1.5mm,bottom=1.5mm,
-  borderline west={2.2pt}{0pt}{rulecolor!55},
-  fontupper=\small,
-  title={Exercice~\theexo\ --- #1},fonttitle=\footnotesize\bfseries,
-  coltitle=rulecolor,colbacktitle=rulelight,
-  attach title to upper={\par\nobreak\addvspace{3pt}}}
+\newtcolorbox[use counter=exo]{exercice}[1][]{coursencadre,
+  colback=rulecolor!3,borderline west={1.25pt}{0pt}{rulecolor!58},
+  title={Exercice~\theexo\ --- #1},coltitle=rulecolor!70!ink}
 \counterwithin{exo}{chapter}
 \renewcommand{\theexo}{\thechapter.\arabic{exo}}
 
@@ -176,11 +318,9 @@
 % et question de transfert ; le corrigé est reporté à l'annexe des corrigés,
 % pour qu'une tentative précède la lecture de la solution.
 \newcounter{tache}
-\newtcolorbox[use counter=tache]{tache}[1][]{enhanced,breakable,
-  colback=white,colframe=accent!80,boxrule=0.7pt,arc=1mm,
-  left=2.5mm,right=2mm,top=1.8mm,bottom=1.8mm,
-  fontupper=\small,
-  title={Étape~\thetache\ --- #1},fonttitle=\bfseries\small,coltitle=white}
+\newtcolorbox[use counter=tache]{tache}[1][]{coursencadre,
+  colback=accent!3,borderline west={1.25pt}{0pt}{accent!58},
+  title={Étape~\thetache\ --- #1},coltitle=accent!74!ink}
 \newcommand{\tlab}[1]{\par\addvspace{3.5pt}%
   \textcolor{accent!80!ink}{\footnotesize\bfseries\scshape #1}\quad\ignorespaces}
 \newcommand{\corrige}[1]{\par\addvspace{4pt}%
@@ -188,18 +328,16 @@
    \texttt{#1}.}}
 
 % Sortie vers une annexe : le fil principal ne porte que le résultat employé.
-\newtcolorbox{approfondir}[1][]{enhanced,colback=gridgray!8,colframe=ink!30,
-  boxrule=0.5pt,arc=1mm,left=2mm,right=2mm,top=1.2mm,bottom=1.2mm,
-  fontupper=\small\color{ink!85},
-  title={#1},fonttitle=\footnotesize\bfseries,coltitle=ink!70,
-  colbacktitle=gridgray!22}
+\newtcolorbox{approfondir}[1][]{coursencadre,
+  colback=gridgray!10,borderline west={1.25pt}{0pt}{ink!30},
+  title={#1},coltitle=ink!68}
 
 \pagestyle{fancy}
 \fancyhf{}
 \renewcommand{\headrulewidth}{0.4pt}
 \renewcommand{\headrule}{\hbox to\headwidth{\color{ink!25}\leaders\hrule height \headrulewidth\hfill}}
-\fancyhead[L]{\footnotesize\color{ink!62}\nouppercase{\leftmark}}
-\fancyhead[R]{\footnotesize\color{ink!62}\thepage}
+\fancyhead[L]{\small\color{ink!62}\nouppercase{\leftmark}}
+\fancyhead[R]{\small\color{ink!62}\thepage}
 \fancypagestyle{plain}{\fancyhf{}\renewcommand{\headrulewidth}{0pt}%
   \fancyfoot[C]{\footnotesize\color{ink!62}\thepage}}
 \renewcommand{\chaptermark}[1]{\markboth{\thechapter.\ #1}{}}
@@ -212,13 +350,15 @@
 \providecommand{\SuspendTagging}[1]{}
 \providecommand{\ResumeTagging}[1]{}
 \newtcbinputlisting{\codefilebox}[2][firstline=1]{enhanced,listing only,listing file={#2},
-  colback=white,colframe=ink!20,boxrule=0.5pt,arc=1mm,
-  borderline west={2pt}{0pt}{accent!55},
-  left=3.5mm,right=2mm,top=1.4mm,bottom=1.4mm,
+  colback=gridgray!8,frame hidden,boxrule=0pt,arc=.5mm,
+  borderline west={1.25pt}{0pt}{accent!58},
+  left=3.5mm,right=2mm,top=1.6mm,bottom=1.6mm,
+  before skip=.72em,after skip=.72em,
   listing options={style=code,xleftmargin=0pt,aboveskip=0pt,belowskip=0pt,#1}}
 
 \newtcblisting{consolebox}{enhanced,listing only,colback=ink!5,colframe=ink!5,
-  boxrule=0pt,arc=1mm,left=3.5mm,right=2mm,top=1.4mm,bottom=1.4mm,
+  boxrule=0pt,arc=.5mm,left=3.5mm,right=2mm,top=1.6mm,bottom=1.6mm,
+  before skip=.72em,after skip=.72em,
   listing options={language=,basicstyle=\ttfamily\small,
     columns=fullflexible,keepspaces=true}}
 \newcommand{\codefile}[2][firstline=1]{%
@@ -285,7 +425,7 @@ quelconque et les questions de stabilité numérique.
 
 Les valeurs numériques citées proviennent d'exécutions sur le fichier
 d'entraînement ; les conventions de reproduction figurent au
-chapitre~\ref{ch:contrat}.
+repère~\ref{ch:contrat}.
 
 Document rédigé avec l'assistance de modèles de langage (GPT, Claude) sur la base
 de mes instructions, de mon code et de mes données ; la sélection, la
@@ -298,9 +438,20 @@ Diffusé sous licence CC-BY-SA 4.0.
 \pagenumbering{arabic}
 \hypersetup{pageanchor=true}
 
-\part{Modèle et interprétation}
+% Le cadrage précède le cours : il possède sa propre série romaine. Le premier
+% chapitre de contenu repart ensuite de 1.
+\renewcommand{\chaptername}{Repère}
+\renewcommand{\thechapter}{\Roman{chapter}}
+\renewcommand{\theHchapter}{repere.\arabic{chapter}}
+\part*{Repères avant le cours}
 \include{chapters/p0_contrat}
 \include{chapters/p0_probleme}
+
+\setcounter{chapter}{0}
+\renewcommand{\chaptername}{Chapitre}
+\renewcommand{\thechapter}{\arabic{chapter}}
+\renewcommand{\theHchapter}{cours.\arabic{chapter}}
+\part{Modèle et interprétation}
 \include{chapters/p1_standardisation}
 \include{chapters/p1_nuage}
 \include{chapters/p1_probabilite}
@@ -315,6 +466,7 @@ Diffusé sous licence CC-BY-SA 4.0.
 \include{chapters/p2_predire}
 
 \appendix
+\renewcommand{\theHchapter}{annexe.\arabic{chapter}}
 \part{Fondements, démonstrations et compléments}
 \include{chapters/annexe_notation}
 \include{chapters/annexe_prerequis}

@@ -2,10 +2,27 @@
 
 Source LaTeX du cours, ses scripts, ses données intermédiaires et ses figures.
 
-Le document se lit en trois parties : un tronc commun de 45 pages (partie I), un
-cahier pratique où chaque fonction est à écrire avant d'ouvrir son corrigé
-(partie II), et douze annexes portant les démonstrations, les rappels et les
-corrigés.
+Deux repères de lecture précèdent le cours. Le chapitre 1 commence avec la
+standardisation, puis le document se lit en trois parties : un tronc commun
+(partie I), un cahier pratique où chaque fonction est à écrire avant d'ouvrir
+son corrigé (partie II), et douze annexes portant les démonstrations, les
+rappels et les corrigés. Les figures et tableaux portent une lettre dans leur
+chapitre (`figure 5-C`, `tableau 5-A`) afin de ne pas être confondus avec les
+sections numérotées (`section 5.3`).
+
+## Règle de travail sur la mise en page
+
+Pendant les retouches de fond et de design, le nombre total de pages, les
+changements de pagination et les déplacements de flottants ne constituent pas
+des contraintes. La pagination finale est ajustée uniquement lorsque le
+contenu et le système visuel sont stabilisés.
+
+Le confort se juge sur une suite de pages, pas sur une capture isolée. La grille
+actuelle privilégie une largeur de lecture modérée, un corps courant unique et
+une hiérarchie de titres contenue. Les encadrés conservent le corps du texte :
+un fond presque blanc et un filet latéral indiquent leur fonction sans créer
+une seconde échelle de lecture. Les corps réduits sont réservés aux légendes,
+aux relevés secondaires et au code.
 
 ## Reproduire
 
@@ -37,8 +54,9 @@ supprimant ce fichier.
 
 ## Accessibilité
 
-Le PDF est balisé, en version 2.0, langue déclarée `fr-FR`. Ses 65 éléments
-graphiques — images et dessins TikZ — portent chacun une alternative textuelle.
+Le PDF est balisé, en version 2.0, langue déclarée `fr-FR`. Ses 66 occurrences
+graphiques, issues de 65 sources — images et dessins TikZ — portent chacune une
+alternative textuelle.
 `alt=` traite les images ; l'environnement `graphique` transmet la description
 au mécanisme de balisage TikZ natif de LaTeX. Les panneaux d'une même figure
 possèdent des descriptions distinctes. Le balisage est suspendu autour des

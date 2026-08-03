@@ -17,8 +17,8 @@ règle qui, appliquée aux seules notes d'un élève, annonce sa maison.
 
 \begin{table}[htbp]
 \centering
-\footnotesize
-\setlength{\tabcolsep}{5pt}
+\small
+\setlength{\tabcolsep}{7pt}
 \begin{tabular}{rlrrrl}
 \toprule
 index & maison observée & \textcolor{herbo}{Herbology} & \textcolor{runes}{Ancient Runes}
@@ -38,12 +38,12 @@ inaccessible à la règle au moment de prédire.}
 
 L'évaluation d'une telle règle porte sur trois quantités :
 
-\begin{enumerate}
-  \item la proportion de prédictions correctes \emph{sur des observations qui
-        n'ont pas servi à la construire} ;
-  \item la comparaison de cette proportion à celle d'une règle triviale ;
-  \item la répartition des erreurs restantes, que le taux global agrège.
-\end{enumerate}
+\begin{panelenumerate}[warning]
+  \panelitem{la proportion de prédictions correctes \emph{sur des observations
+    qui n'ont pas servi à la construire} ;}
+  \panelitem{la comparaison de cette proportion à celle d'une règle triviale ;}
+  \panelitem{la répartition des erreurs restantes, que le taux global agrège.}
+\end{panelenumerate}
 
 \section{Régression linéaire et régression logistique}
 
@@ -198,7 +198,7 @@ pertes définit la surface dont le gradient corrige les coefficients.}
 
 \begin{table}[htbp]
 \centering
-\footnotesize
+\small
 \begin{tabularx}{\textwidth}{
   >{\raggedright\arraybackslash}p{29mm}
   >{\raggedright\arraybackslash}X
