@@ -13,6 +13,10 @@ __pycache__/
 *.bcf*
 *.blg
 *.toc
+*.synctex*
+*.vrb
+*.nav
+*.snm
 docs/regression/regression_logistique_slides_body.tex
 
 weights.csv

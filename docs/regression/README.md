@@ -3,12 +3,23 @@
 Source LaTeX du cours, ses scripts, ses données intermédiaires et ses figures.
 
 Deux repères de lecture précèdent le cours. Le chapitre 1 commence avec la
-standardisation, puis le document se lit en trois parties : un tronc commun
+standardisation, puis le document long se lit en trois parties : un tronc commun
 (partie I), un cahier pratique où chaque fonction est à écrire avant d'ouvrir
-son corrigé (partie II), et douze annexes portant les démonstrations, les
-rappels et les corrigés. Les figures et tableaux portent une lettre dans leur
-chapitre (`figure 5-C`, `tableau 5-A`) afin de ne pas être confondus avec les
-sections numérotées (`section 5.3`).
+son corrigé (partie II), et des annexes portant les démonstrations, les rappels
+et les corrigés. Les figures et tableaux portent une lettre dans leur chapitre
+(`figure 5-C`, `tableau 5-A`) afin de ne pas être confondus avec les sections
+numérotées (`section 5.3`).
+
+Le diaporama 16:9 reprend les chapitres comme source de vérité, sans en-tête,
+pied de page ni navigation imprimée. Une section forme une notion projetable et
+peut se poursuivre sur plusieurs vues. Les vraies annexes ajoutées au cours long
+— rappels, démonstrations complémentaires et corrigés — n'y sont pas projetées.
+Les justifications mathématiques utiles et les étapes de programmation sont
+placées au moment où leur notion apparaît : données, score, probabilité, perte,
+optimisation puis évaluation. Il n'existe donc plus de retour final vers un bloc
+« Fondements » ni de reprise séparée de toute la programmation. Les chapitres de
+convexité et de stabilité numérique restent disponibles uniquement dans le cours
+long.
 
 ## Règle de travail sur la mise en page
 
@@ -32,6 +43,7 @@ Depuis la racine du dépôt :
 |---|---|
 | `make -C docs tex-memory` | une fois par machine : redump du format `pdflatex` avec `main_memory = 12000000` |
 | `make -C docs doc` | compile `regression_logistique.pdf` (latexmk + biber, PDF 2.0 balisé) |
+| `make -C docs slides` | génère puis compile le diaporama 16:9 `regression_logistique_slides.pdf` |
 | `make -C docs doc-tag-check` | précontrôle le balisage, les alternatives et le journal `tagpdf` |
 | `make -C docs tuto` | exécute les douze fichiers du cahier pratique, dans l'ordre |
 | `make -C docs verify` | recalcule toutes les valeurs numériques citées dans le document |
@@ -42,6 +54,10 @@ Depuis la racine du dépôt :
 `make -C docs doc` ne demande que TeX Live. `make -C docs tuto` et
 `make -C docs verify` n'emploient que la bibliothèque standard de Python —
 aucune dépendance de calcul.
+
+Le corps `regression_logistique_slides_body.tex` est généré : il ne se modifie
+pas directement. Toute correction de contenu se fait dans `chapters/`, et toute
+correction de transformation dans `scripts/gen_slides_source.py`.
 
 ### Pourquoi `make -C docs tex-memory`
 

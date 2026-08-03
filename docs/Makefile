@@ -52,7 +52,7 @@ doc:
 	cd $(DOCDIR) && latexmk -synctex=1 -pdf -interaction=nonstopmode \
 	  -file-line-error $(MASTER)
 
-$(SLIDES_BODY): $(DOCDIR)/scripts/gen_slides_source.py $(DOCDIR)/chapters/*.tex
+$(SLIDES_BODY): $(DOCDIR)/scripts/gen_slides_source.py $(DOCDIR)/chapters/*.tex | $(STAMP)
 	$(PY) $(DOCDIR)/scripts/gen_slides_source.py
 
 slides: $(SLIDES_BODY)

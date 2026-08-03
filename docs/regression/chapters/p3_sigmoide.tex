@@ -19,13 +19,24 @@ $1-p$ lorsqu'on passe de $z$ à $-z$, ce que le calcul confirme.
     &&\text{définition, avec } -z \text{ à la place de } z \notag\\[2pt]
   &= \frac{1}{1+e^{z}}
     &&\text{car } -(-z)=z \notag\\[2pt]
-  \intertext{et par ailleurs}
+\end{align}
+
+\slidebreak
+
+Et par ailleurs :
+\begin{align}
   1-\sigma(z) &= 1-\frac{1}{1+e^{-z}}
     &&\text{définition} \notag\\[2pt]
   &= \frac{(1+e^{-z})-1}{1+e^{-z}}
     &&\text{même dénominateur} \notag\\[2pt]
   &= \frac{e^{-z}}{1+e^{-z}}
-    &&\text{on simplifie le numérateur} \notag\\[2pt]
+    &&\text{on simplifie le numérateur} \notag
+\end{align}
+
+\slidebreak
+
+\begin{align}
+  1-\sigma(z)
   &= \frac{e^{-z}}{1+e^{-z}}\cdot\frac{e^{z}}{e^{z}}
     &&\text{on multiplie par } 1 \text{ écrit } e^{z}/e^{z} \notag\\[2pt]
   &= \frac{e^{-z}e^{z}}{e^{z}+e^{-z}e^{z}}
@@ -59,6 +70,11 @@ gradient.
      = 0+e^{-z}\cdot(-1)
     &&\text{dérivée d'une somme, puis chaîne sur } e^{-z} \notag\\[2pt]
      &= -e^{-z} \notag\\[6pt]
+\end{align}
+
+\slidebreak
+
+\begin{align}
   \sigma'(z) &= -\frac{u'}{u^{2}}
     &&\text{dérivée d'un inverse : } (1/u)'=-u'/u^{2} \notag\\[2pt]
   &= -\frac{-e^{-z}}{(1+e^{-z})^{2}}

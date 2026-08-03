@@ -96,6 +96,8 @@ long. Divisée par $m$, la valeur se compare d'un fichier à l'autre --- entre
 l'entraînement et le test, notamment --- et la longueur du pas de la descente
 garde le même sens quel que soit l'effectif.
 
+\slidebreak
+
 En notant $y_i$ la réponse, valant $1$ pour un \Gryf et $0$ sinon, et $p_i$ la
 probabilité annoncée :
 \[
@@ -115,6 +117,8 @@ La somme justifie après coup le logarithme de la perte individuelle : sans lui,
 les $1\,600$ probabilités se multiplieraient au lieu de s'ajouter. Un produit de
 $1\,600$ facteurs strictement inférieurs à $1$ sous-dépasse le domaine des
 flottants et s'arrondit à zéro (\annexeref{ann:cout}).
+
+\slidebreak
 
 \begin{resultat}[Coût au point de départ]
 Si tous les coefficients valent zéro, tous les scores valent zéro, donc toutes
@@ -136,6 +140,8 @@ fonction des trois coefficients, et se note $J(w)$.
 Cette dépendance convertit le placement géométrique de la frontière en une
 minimisation de fonction à trois variables : le programme cherche les trois
 coefficients qui rendent $J(w)$ minimal.
+
+\slidebreak
 
 Les deux questions ont des réponses distinctes : le minimum de $J$ et le minimum
 du nombre d'erreurs à seuil fixé tombent à des endroits différents, ce que le

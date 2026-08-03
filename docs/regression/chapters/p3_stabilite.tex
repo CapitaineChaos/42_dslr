@@ -31,10 +31,20 @@ Reprenons la perte d'une prédiction et remplaçons $p$ par $\sigma(z)$ :
     = \log 1-\log(1+e^{-z}) \notag\\
     &= -\log(1+e^{-z})
     &&\text{car } \log 1=0 \notag\\[4pt]
+\end{align}
+
+\slidebreak
+
+\begin{align}
   \log\bigl(1-\sigma(z)\bigr) &= \log\frac{e^{-z}}{1+e^{-z}}
     = \log e^{-z}-\log(1+e^{-z}) \notag\\
     &= -z-\log(1+e^{-z})
     &&\text{car } \log e^{-z}=-z \notag\\[4pt]
+\end{align}
+
+\slidebreak
+
+\begin{align}
   \ell &= -\Bigl[y\bigl(-\log(1+e^{-z})\bigr) \notag\\
     &\qquad\quad +(1-y)\bigl(-z-\log(1+e^{-z})\bigr)\Bigr] \notag\\[4pt]
   &= y\log(1+e^{-z})+(1-y)z+(1-y)\log(1+e^{-z})

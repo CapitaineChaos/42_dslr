@@ -1,28 +1,30 @@
-\DocumentMetadata{
-  lang       = fr-FR,
-  pdfversion = 2.0,
-  testphase  = {phase-III,math,table,firstaid},
-}
 \documentclass[11pt,aspectratio=169]{beamer}
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[french]{babel}
+\shorthandoff{:}
 \usepackage{csquotes}
 \usepackage{libertinus}
 \usepackage{microtype}
 \usepackage{amsmath,amssymb,mathtools}
 \usepackage{booktabs,tabularx,array,colortbl}
 \usepackage{graphicx}
+\makeatletter
+% Les sources longues portent des descriptions alternatives PDF. Beamer ne
+% prend pas encore en charge DocumentMetadata : la clé reste donc sans effet
+% dans le diaporama, sans qu'il faille dupliquer les appels d'image.
+\define@key{Gin}{alt}{}
+\makeatother
 \usepackage[export]{adjustbox}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,calc,decorations.pathreplacing,fit,backgrounds,patterns}
+\tikzset{alt/.code={}}
 \usepackage{pgfplots}
 \usepgfplotslibrary{statistics}
 \pgfplotsset{compat=1.18}
 \usepackage{xcolor}
 \usepackage{xspace}
-\usepackage{enumitem}
 \usepackage{listings}
 \usepackage[backend=biber,style=numeric,sorting=none]{biblatex}
 \addbibresource{references.bib}
@@ -42,46 +44,89 @@
 \definecolor{slyth}{HTML}{6B21A8}
 \definecolor{herbo}{HTML}{9D174D}
 \definecolor{runes}{HTML}{1D4ED8}
+\definecolor{courseproblem}{HTML}{687386}
+\definecolor{coursedata}{HTML}{47777B}
+\definecolor{coursescore}{HTML}{356B8B}
+\definecolor{courseprobability}{HTML}{5B6093}
+\definecolor{courseloss}{HTML}{8A5D68}
+\definecolor{courseoptimization}{HTML}{98633F}
+\definecolor{courseevaluation}{HTML}{527460}
 
 % Grille 16:9 : toute la surface sert au cours, sans chrome de navigation.
 \renewcommand{\familydefault}{\sfdefault}
 \usefonttheme{professionalfonts}
-\setbeamersize{text margin left=7mm,text margin right=7mm}
+\newlength{\coursesidemargin}
+\setlength{\coursesidemargin}{7mm}
+\setbeamersize{text margin left=\coursesidemargin,text margin right=\coursesidemargin}
 \setbeamertemplate{navigation symbols}{}
 \setbeamertemplate{headline}{}
 \setbeamertemplate{footline}{}
 \setbeamertemplate{caption}[numbered]
 \setbeamertemplate{frametitle continuation}{%
-  \space{\small\mdseries\color{ink!48}(suite \insertcontinuationcount)}}
+  \ifnum\insertcontinuationcount>1
+    \space{\small\mdseries\color{white!62}(suite)}%
+  \fi}
 \setbeamercolor{normal text}{fg=ink,bg=white}
 \setbeamercolor{structure}{fg=accent}
-\setbeamercolor{frametitle}{fg=ink,bg=white}
+\setbeamercolor{frametitle}{fg=white,bg=ink}
 \setbeamercolor{caption name}{fg=accent!72!ink}
 \setbeamercolor{caption}{fg=ink!62}
 \setbeamerfont{normal text}{size=\normalsize}
-\setbeamerfont{frametitle}{size=\Large,series=\bfseries}
+\setbeamerfont{frametitle}{size=\footnotesize,series=\bfseries}
+\setbeamerfont{framecrumb}{size=\tiny,series=\bfseries}
 \setbeamerfont{caption}{size=\scriptsize}
 \setbeamerfont{section title}{size=\LARGE,series=\bfseries}
 \setbeamerfont{part title}{size=\LARGE,series=\bfseries}
 \setbeamertemplate{frametitle}{%
-  \vspace{1.5mm}\insertframetitle\par
-  \vspace{.6mm}{\color{accent!36}\rule{19mm}{.7pt}}}
+  \nointerlineskip
+  \begin{beamercolorbox}[wd=\paperwidth,ht=3.8mm,dp=1.2mm]{frametitle}%
+    \hbox to \paperwidth{%
+      \parbox[c][5mm][c]{.20\paperwidth}{%
+        \hspace*{4mm}{\usebeamerfont{framecrumb}\color{white!68}%
+          \MakeUppercase{\coursepartposition}}}%
+      \parbox[c][5mm][c]{.60\paperwidth}{%
+        \centering
+        \begin{adjustbox}{max width=.58\paperwidth}%
+          {\usebeamerfont{frametitle}\color{white}%
+            \MakeUppercase{\insertframetitle}}%
+        \end{adjustbox}}%
+      \parbox[c][5mm][c]{.20\paperwidth}{}%
+    }%
+  \end{beamercolorbox}%
+  \nointerlineskip
+  \coursenavigation}
 \setbeamertemplate{itemize item}{\color{accent!62}\small\textbullet}
 \setbeamertemplate{itemize subitem}{\color{accent!48}\scriptsize\textbullet}
 \setbeamertemplate{enumerate item}{%
   \colorbox{accent!12}{\color{accent!82!ink}\scriptsize\bfseries\insertenumlabel}}
 \setlength{\parskip}{.42em}
+\setlength{\emergencystretch}{2em}
 \linespread{1.05}
 
 \title{Régression logistique}
 \subtitle{Modèle, optimisation et évaluation}
 \author{Sylvain Maitre}
 \date{Version 2.0}
+\setbeamertemplate{title page}{%
+  \vfill
+  {\fontsize{29}{33}\selectfont\bfseries\color{ink}\inserttitle\par}
+  \vspace{3mm}
+  {\fontsize{16}{20}\selectfont\color{accent}\insertsubtitle\par}
+  \vspace{7mm}{\color{accent!42}\rule{31mm}{1pt}}\par
+  \vfill
+  {\small\color{ink!72}\insertauthor\par}
+  \vspace{1mm}
+  {\scriptsize\color{ink!48}\insertdate\par}
+  \vspace{4mm}}
 
 % Les images respectent simultanément la largeur disponible et la hauteur utile.
 \let\courseincludegraphics\includegraphics
 \RenewDocumentCommand{\includegraphics}{O{}m}{%
-  \courseincludegraphics[max height=.61\textheight,keepaspectratio,#1]{#2}}
+  \courseincludegraphics[max height=.67\textheight,keepaspectratio,#1]{#2}}
+\NewDocumentEnvironment{slidevisual}{}{%
+  \begin{adjustbox}{max totalsize={\textwidth}{.75\textheight},center}%
+  \begin{minipage}{\textwidth}}
+  {\end{minipage}\end{adjustbox}}
 
 \pgfplotsset{courseplot/.style={width=.76\textwidth,height=5.25cm,
   grid=major,grid style={gridgray!40}}}
@@ -123,6 +168,40 @@
 % Numérotation stable entre le cours long et le diaporama.
 \newcounter{coursechapter}
 \newcommand{\coursechapterkind}{Chapitre}
+\newcommand{\coursechapterindicator}{}
+\newcommand{\coursepartshort}{Vue d'ensemble}
+\newcommand{\coursepartposition}{Vue d'ensemble}
+\newcommand{\coursepartindex}{0}
+\newcommand{\coursepartcolor}{courseproblem}
+\newcommand{\coursestage}[3]{%
+  \begingroup
+  \ifnum#1=\coursepartindex
+    \def\stageforeground{#3}%
+    \def\stagemarker{\textbullet\space}%
+    \def\stageweight{\bfseries}%
+  \else
+    \ifnum#1<\coursepartindex
+      \def\stageforeground{ink!52}%
+    \else
+      \def\stageforeground{ink!18}%
+    \fi
+    \def\stagemarker{}%
+    \def\stageweight{\mdseries}%
+  \fi
+  \parbox[c][3mm][c]{.142857\paperwidth}{%
+    \centering
+    {\fontsize{5.55}{6}\selectfont\stageweight
+      \color{\stageforeground}\stagemarker\MakeUppercase{#2}}}%
+  \endgroup}
+\newcommand{\coursenavigation}{%
+  \hbox to \paperwidth{%
+    \coursestage{1}{Problème}{courseproblem}%
+    \coursestage{2}{Données}{coursedata}%
+    \coursestage{3}{Score}{coursescore}%
+    \coursestage{4}{Probabilité}{courseprobability}%
+    \coursestage{5}{Perte}{courseloss}%
+    \coursestage{6}{Optimisation}{courseoptimization}%
+    \coursestage{7}{Évaluation}{courseevaluation}}}
 \renewcommand{\thecoursechapter}{\arabic{coursechapter}}
 \newcommand{\coursereperes}{%
   \setcounter{coursechapter}{0}%
@@ -132,41 +211,43 @@
   \setcounter{coursechapter}{0}%
   \renewcommand{\coursechapterkind}{Chapitre}%
   \renewcommand{\thecoursechapter}{\arabic{coursechapter}}}
-\newcommand{\courseappendices}{%
-  \setcounter{coursechapter}{0}%
-  \renewcommand{\coursechapterkind}{Annexe}%
-  \renewcommand{\thecoursechapter}{\Alph{coursechapter}}}
-\newcommand{\coursepart}[1]{%
+\newcommand{\coursepart}[5]{%
+  \gdef\coursepartshort{#2}%
+  \gdef\coursepartposition{Étape #4}%
+  \gdef\coursepartindex{#5}%
+  \gdef\coursepartcolor{#3}%
+  \setbeamercolor{frametitle}{fg=white,bg=ink}%
   \part{#1}
   \begin{frame}[plain]
     \centering\vfill
+    {\scriptsize\bfseries\color{#3}ÉTAPE #4\par}
+    \vspace{2mm}
     {\usebeamerfont{part title}\color{ink}#1\par}
-    \vspace{3mm}{\color{accent!45}\rule{28mm}{1pt}}
+    \vspace{3mm}{\color{#3}\rule{28mm}{1pt}}
     \vfill
   \end{frame}}
 \newcommand{\coursechapter}[2]{%
   \refstepcounter{coursechapter}%
-  \setcounter{figure}{0}%
-  \setcounter{table}{0}%
-  \setcounter{exo}{0}%
+  \gdef\coursechapterindicator{\coursechapterkind\space\thecoursechapter}%
+  \label{#2}%
   \section{#1}
   \begin{frame}[plain]
-    \label{#2}
     \vfill
-    {\large\sffamily\bfseries\color{accent!72!ink}%
+    {\large\sffamily\bfseries\color{\coursepartcolor}%
       \coursechapterkind\space\thecoursechapter\par}
     \vspace{3mm}
     {\usebeamerfont{section title}\color{ink}#1\par}
-    \vspace{4mm}{\color{accent!42}\rule{24mm}{.9pt}}
+    \vspace{4mm}{\color{\coursepartcolor}\rule{24mm}{.9pt}}
     \vfill
   \end{frame}}
-\renewcommand{\thefigure}{\thecoursechapter-\Alph{figure}}
-\renewcommand{\thetable}{\thecoursechapter-\Alph{table}}
+\renewcommand{\thefigure}{\arabic{figure}}
+\renewcommand{\thetable}{\arabic{table}}
 
 % Ouverture pédagogique d'un chapitre : objectifs scannables, métadonnées après.
 \NewDocumentCommand{\orientobjective}{m}{\item #1}
 \NewDocumentCommand{\orientobjectives}{>{\SplitList{;}}m}{%
-  \begin{itemize}[leftmargin=1.4em,itemsep=.45em,topsep=.35em]
+  \begin{itemize}
+  \setlength{\itemsep}{.45em}
   \ProcessList{#1}{\orientobjective}
   \end{itemize}}
 \newcommand{\orientmeta}[2]{%
@@ -192,7 +273,7 @@
   {\end{coursecallout}}
 \newenvironment{vigilance}[1][]{\begin{coursecallout}{warning!82!ink}{#1}}
   {\end{coursecallout}}
-\newenvironment{lecture}{\begin{coursecallout}{ink!68}{Lecture}}
+\RenewDocumentEnvironment{lecture}{}{\begin{coursecallout}{ink!68}{Lecture}}
   {\end{coursecallout}}
 \newenvironment{chiffres}[1][]{\begin{coursecallout}{ink!58}{#1}\small}
   {\end{coursecallout}}
@@ -205,11 +286,11 @@
   {\end{coursecallout}}
 
 \NewDocumentEnvironment{panelenumerate}{O{accent}}
-  {\begin{enumerate}[leftmargin=1.8em,itemsep=.45em,topsep=.3em]}
+  {\begin{enumerate}\setlength{\itemsep}{.45em}}
   {\end{enumerate}}
 \NewDocumentCommand{\panelitem}{O{accent}m}{\item #2}
 \NewDocumentEnvironment{panelitemize}{O{accent}}
-  {\begin{itemize}[leftmargin=1.6em,itemsep=.45em,topsep=.3em]}
+  {\begin{itemize}\setlength{\itemsep}{.45em}}
   {\end{itemize}}
 \NewDocumentCommand{\panelbullet}{O{accent}m}{\item #2}
 \NewDocumentCommand{\paneltablerow}{O{accent}mmm}{%
@@ -218,7 +299,7 @@
   \cellcolor{gridgray!6}{\color{ink!65}#4} \\}
 
 \newcounter{exo}
-\renewcommand{\theexo}{\thecoursechapter.\arabic{exo}}
+\renewcommand{\theexo}{\arabic{exo}}
 \NewDocumentEnvironment{exercice}{O{}}{%
   \refstepcounter{exo}\begin{coursecallout}{rulecolor!82!ink}%
     {Exercice~\theexo\space— #1}}
@@ -259,7 +340,10 @@
 \newcommand{\w}{\mathbf{w}}
 \newcommand{\X}{\mathbf{X}}
 \newcommand{\y}{\mathbf{y}}
-\newcommand{\annexeref}[1]{annexe~\ref{#1}}
+% Les compléments ajoutés tardivement au cours long ne sont pas projetés.
+% Les mentions résiduelles restent lisibles sans produire de renvoi cassé.
+\newcommand{\annexeref}[1]{annexe du cours long}
+\newcommand{\slidebreak}{\framebreak}
 \newcommand{\Mzero}{\ensuremath{M_0}\xspace}
 \newcommand{\Mquatre}{\ensuremath{M_{400}}\xspace}
 \newcommand{\Mstop}{\ensuremath{M_{\text{arr}}}\xspace}
@@ -280,16 +364,28 @@
   \titlepage
 \end{frame}
 
-\begin{frame}{Parcours}
-  \begin{enumerate}
-    \item construire le modèle et apprendre à lire ses décisions ;
-    \item écrire puis contrôler son implémentation ;
-    \item revenir aux démonstrations et aux cas limites lorsque nécessaire.
-  \end{enumerate}
+\begin{frame}{Parcours causal}
+  \centering
+  {\large\bfseries\color{ink}
+    Problème \(\longrightarrow\) Données \(\longrightarrow\) Score
+    \(\longrightarrow\) Probabilité\par}
+  \vspace{6mm}
+  {\large\bfseries\color{ink}
+    Perte \(\longrightarrow\) Optimisation
+    \(\longrightarrow\) Évaluation\par}
+  \vspace{9mm}
+  {\small\color{ink!68}
+    Chaque notion est introduite, justifiée, programmée puis utilisée avant
+    de passer à la suivante.\par}
 \end{frame}
 
 \input{regression_logistique_slides_body.tex}
 
+\gdef\coursechapterindicator{}
+\gdef\coursepartshort{Ressources}
+\gdef\coursepartposition{Ressources}
+\gdef\coursepartindex{8}
+\setbeamercolor{frametitle}{fg=white,bg=ink}
 \begin{frame}[t,allowframebreaks]{Références}
   \printbibliography[heading=none]
 \end{frame}
