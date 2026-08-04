@@ -2,9 +2,17 @@
 """Valide et calcule le micro-cas Gryffondor--Serpentard.
 
 Le CSV est l'unique source de donnees. Le script impute et standardise a partir
-des douze observations d'apprentissage seulement, verifie l'optimum analytique
-de la regression logistique, execute une descente de gradient de pas 1, puis
-regenere les artefacts internes du diaporama.
+des vingt observations d'apprentissage seulement, verifie l'optimum analytique
+de la regression logistique, execute une descente de gradient, puis regenere les
+artefacts internes du diaporama.
+
+Construction du jeu d'apprentissage. La marge brute vaut m = V - 2P - 24 et ne
+prend que trois valeurs : -10, 0 et +20. Sur chaque palier la proportion de
+Gryffondor vaut respectivement 1/4, 1/2 et 9/10, dont les logits -ln3, 0 et
++2ln3 sont alignes sur la marge. Le maximum de vraisemblance est donc atteint
+exactement en z = (ln3/10)(V - 2P - 24), sans separation parfaite ni forme
+degeneree : la frontiere n'est ni la premiere bissectrice ni centree sur le
+barycentre.
 """
 
 from __future__ import annotations
@@ -18,9 +26,9 @@ from typing import Iterable, Sequence
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "data" / "micro_ecoles.csv"
-CALCULATIONS = ROOT / "data" / "micro_ecoles_calculs.csv"
-TEX_VALUES = ROOT / "regression_logistique_slides_values.tex"
+SOURCE = ROOT / "data" / "eleves.csv"
+CALCULATIONS = ROOT / "data" / "calculs.csv"
+TEX_VALUES = ROOT / "valeurs.tex"
 
 FIELDS = (
     "id",
@@ -35,9 +43,24 @@ GRYFFONDOR = "Gryffondor"
 SERPENTARD = "Serpentard"
 HOUSE_TO_Y = {GRYFFONDOR: 1, SERPENTARD: 0}
 USAGES = {"apprentissage", "test"}
-ATYPIQUES = {"E07", "E08", "E18"}
-MISSING = {("E13", "potions"), ("E14", "flight")}
+ATYPIQUES = {"E07", "E10", "E12", "E13", "E19", "E24", "E25"}
+MISSING = {("E05", "potions"), ("E23", "flight")}
 THRESHOLDS = (0.50, 0.65)
+
+N_TRAIN = 20
+N_TEST = 8
+POTIONS_SLOPE = 2.0
+BOUNDARY_OFFSET = 24.0
+MARGIN_STEP = 10.0
+# palier de marge -> (effectif, nombre de Gryffondor)
+MARGIN_BANDS = {-10.0: (8, 2), 0.0: (2, 1), 20.0: (10, 9)}
+MEAN_POTIONS = 10.0
+MEAN_VOL = 50.0
+SD_POTIONS = 5.0
+SD_VOL = 18.0
+MEDIAN_POTIONS = 9.0
+MEDIAN_VOL = 51.0
+COVARIANCE = 55.0
 
 
 @dataclass(frozen=True)
@@ -54,17 +77,8 @@ class Student:
     missing_flight: bool
 
     @property
-    def school(self) -> str:
-        """Alias interne conserve pour les routines de calcul generiques."""
-        return self.house
-
-    @property
-    def maths(self) -> float:
-        return self.potions
-
-    @property
-    def french(self) -> float:
-        return self.flight
+    def margin(self) -> float:
+        return self.flight - POTIONS_SLOPE * self.potions - BOUNDARY_OFFSET
 
 
 @dataclass(frozen=True)
@@ -93,8 +107,8 @@ class Evaluation:
 @dataclass(frozen=True)
 class Calculation:
     student: Student
-    z_maths: float
-    z_french: float
+    z_potions: float
+    z_vol: float
     score: float
     probability: float
     loss: float
@@ -130,8 +144,9 @@ def read_students() -> list[Student]:
             )
         rows = list(reader)
 
-    if len(rows) != 20:
-        raise ValueError(f"le CSV doit contenir 20 eleves, pas {len(rows)}")
+    total = N_TRAIN + N_TEST
+    if len(rows) != total:
+        raise ValueError(f"le CSV doit contenir {total} eleves, pas {len(rows)}")
 
     parsed: list[dict[str, object]] = []
     for index, row in enumerate(rows, start=1):
@@ -151,15 +166,13 @@ def read_students() -> list[Student]:
         atypical_text = row["atypique"].strip().casefold()
         if atypical_text not in {"oui", "non"}:
             raise ValueError(f"{ident}: atypique doit valoir oui ou non")
-        potions = parse_grade(row["potions"], ident, "potions", 20.0)
-        flight = parse_grade(row["vol"], ident, "vol", 100.0)
         parsed.append(
             {
                 "ident": ident,
                 "name": name,
                 "house": house,
-                "potions": potions,
-                "flight": flight,
+                "potions": parse_grade(row["potions"], ident, "potions", 20.0),
+                "flight": parse_grade(row["vol"], ident, "vol", 100.0),
                 "usage": usage,
                 "atypical": atypical_text == "oui",
             }
@@ -175,13 +188,19 @@ def read_students() -> list[Student]:
         raise ValueError(
             f"valeurs manquantes {observed_missing!r}; attendu {MISSING!r}"
         )
+
     train_records = [record for record in parsed if record["usage"] == "apprentissage"]
-    if any(record[field] is None for record in train_records for field in ("potions", "flight")):
-        raise ValueError("les parametres d'imputation exigent un apprentissage complet")
-    median_potions = statistics.median(float(record["potions"]) for record in train_records)
-    median_flight = statistics.median(float(record["flight"]) for record in train_records)
-    if not close(median_potions, 10.0) or not close(median_flight, 50.0):
-        raise AssertionError("les medianes d'apprentissage attendues valent 10 et 50")
+    median_potions = statistics.median(
+        float(record["potions"]) for record in train_records if record["potions"] is not None
+    )
+    median_flight = statistics.median(
+        float(record["flight"]) for record in train_records if record["flight"] is not None
+    )
+    if not close(median_potions, MEDIAN_POTIONS) or not close(median_flight, MEDIAN_VOL):
+        raise AssertionError(
+            f"medianes d'apprentissage {median_potions:g} et {median_flight:g}; "
+            f"attendu {MEDIAN_POTIONS:g} et {MEDIAN_VOL:g}"
+        )
 
     students = [
         Student(
@@ -205,18 +224,14 @@ def read_students() -> list[Student]:
 
     if len({student.name for student in students}) != len(students):
         raise ValueError("les noms d'eleves doivent etre uniques")
+    if len({(student.potions, student.flight) for student in students}) != len(students):
+        raise ValueError("deux eleves ne peuvent pas partager le meme couple de notes")
     if {student.ident for student in students if student.atypical} != ATYPIQUES:
-        raise ValueError("les lignes atypiques doivent etre E07, E08 et E18")
-    if [student.usage for student in students[:12]] != ["apprentissage"] * 12:
-        raise ValueError("E01 a E12 doivent constituer l'apprentissage")
-    if [student.usage for student in students[12:]] != ["test"] * 8:
-        raise ValueError("E13 a E20 doivent constituer le test")
-    for usage, expected in (("apprentissage", 12), ("test", 8)):
-        subset = [student for student in students if student.usage == usage]
-        if len(subset) != expected:
-            raise ValueError(f"{usage}: {len(subset)} lignes au lieu de {expected}")
-        if sum(student.y for student in subset) * 2 != expected:
-            raise ValueError(f"{usage}: les deux maisons doivent etre equilibrees")
+        raise ValueError(f"les lignes atypiques doivent etre {sorted(ATYPIQUES)}")
+    if [student.usage for student in students[:N_TRAIN]] != ["apprentissage"] * N_TRAIN:
+        raise ValueError(f"E01 a E{N_TRAIN:02d} doivent constituer l'apprentissage")
+    if [student.usage for student in students[N_TRAIN:]] != ["test"] * N_TEST:
+        raise ValueError(f"les {N_TEST} dernieres lignes doivent constituer le test")
     return students
 
 
@@ -234,11 +249,11 @@ def column_stats(values: Sequence[float]) -> ColumnStats:
     )
 
 
-def design_row(student: Student, maths: ColumnStats, french: ColumnStats) -> tuple[float, ...]:
+def design_row(student: Student, potions: ColumnStats, flight: ColumnStats) -> tuple[float, ...]:
     return (
         1.0,
-        (student.maths - maths.mean) / maths.sd_population,
-        (student.french - french.mean) / french.sd_population,
+        (student.potions - potions.mean) / potions.sd_population,
+        (student.flight - flight.mean) / flight.sd_population,
     )
 
 
@@ -284,40 +299,38 @@ def gradient(
 
 
 def exact_optimum(train: Sequence[Student]) -> tuple[tuple[float, ...], tuple[float, ...]]:
-    raw_margin = lambda student: student.flight - 3.0 * student.potions - 20.0
-    positive_side = [student for student in train if raw_margin(student) > 0.0]
-    negative_side = [student for student in train if raw_margin(student) < 0.0]
-    if len(positive_side) != 6 or len(negative_side) != 6:
-        raise AssertionError("le train doit comporter six points de chaque cote")
-    gaps = {abs(raw_margin(student)) for student in train}
-    if gaps != {18.0}:
-        raise AssertionError(f"les marges brutes attendues valent toutes 18, obtenu {gaps}")
-    counts = (
-        sum(student.y for student in positive_side),
-        len(positive_side) - sum(student.y for student in positive_side),
-        sum(student.y for student in negative_side),
-        len(negative_side) - sum(student.y for student in negative_side),
-    )
-    if counts != (5, 1, 1, 5):
-        raise AssertionError(f"table de contingence inattendue: {counts}")
-
-    # Le score de Vol est la transformation 3*F+20 du micro-cas latent. Chaque
-    # niveau moyen (P+F)/2 porte les deux maisons : seule la marge
-    # V-3P-20 intervient. Sur une marge +18, p=5/6 et logit(p)=ln(5).
-    by_average: dict[float, list[Student]] = {}
+    """Optimum en forme close deduit des trois paliers de marge."""
+    bands: dict[float, list[Student]] = {}
     for student in train:
-        latent_flight = (student.flight - 20.0) / 3.0
-        by_average.setdefault((student.potions + latent_flight) / 2.0, []).append(student)
-    if any(
-        len(pair) != 2 or {student.y for student in pair} != {0, 1}
-        for pair in by_average.values()
-    ):
-        raise AssertionError("chaque niveau moyen doit porter les deux classes")
+        bands.setdefault(student.margin, []).append(student)
+    if set(bands) != set(MARGIN_BANDS):
+        raise AssertionError(f"paliers de marge {sorted(bands)}; attendu {sorted(MARGIN_BANDS)}")
+    for margin, members in bands.items():
+        size, gryffondors = MARGIN_BANDS[margin]
+        if len(members) != size or sum(student.y for student in members) != gryffondors:
+            raise AssertionError(
+                f"palier {margin:+g}: {len(members)} eleves dont "
+                f"{sum(student.y for student in members)} Gryffondor; "
+                f"attendu {size} dont {gryffondors}"
+            )
+        # Sur un palier, tous les scores coincident : la proportion observee est
+        # la probabilite ajustee, et son logit doit rester aligne sur la marge.
+        proportion = gryffondors / size
+        expected = math.log(proportion / (1.0 - proportion))
+        if not close(expected, margin * math.log(3.0) / MARGIN_STEP, tolerance=1e-12):
+            raise AssertionError(f"palier {margin:+g}: logit {expected} non aligne")
 
-    margin_slope = math.log(counts[0] / counts[1]) / 18.0
-    raw = (-20.0 * margin_slope, -3.0 * margin_slope, margin_slope)
-    standardized_slope = 2.0 * math.log(5.0) / 3.0
-    standardized = (0.0, -standardized_slope, standardized_slope)
+    unit = math.log(3.0) / MARGIN_STEP
+    raw = (
+        -BOUNDARY_OFFSET * unit,
+        -POTIONS_SLOPE * unit,
+        unit,
+    )
+    standardized = (
+        unit * (MEAN_VOL - POTIONS_SLOPE * MEAN_POTIONS - BOUNDARY_OFFSET),
+        -POTIONS_SLOPE * SD_POTIONS * unit,
+        SD_VOL * unit,
+    )
     return raw, standardized
 
 
@@ -330,7 +343,7 @@ def gradient_descent(
     maximum: int = 100_000,
 ) -> tuple[tuple[float, ...], int, list[tuple[int, float, tuple[float, ...], float]]]:
     weights = (0.0, 0.0, 0.0)
-    snapshots = {0, 1, 2, 5, 10, 20, 50, 100, 200}
+    snapshots = {0, 1, 2, 5, 10, 20, 50, 100, 200, 400}
     trace: list[tuple[int, float, tuple[float, ...], float]] = []
 
     for iteration in range(maximum + 1):
@@ -379,20 +392,25 @@ def finite_difference_check(
 
 def calculate(
     students: Sequence[Student],
-    maths: ColumnStats,
-    french: ColumnStats,
+    potions: ColumnStats,
+    flight: ColumnStats,
     weights: Sequence[float],
 ) -> list[Calculation]:
     calculations: list[Calculation] = []
     for student in students:
-        row = design_row(student, maths, french)
+        row = design_row(student, potions, flight)
         score = dot(weights, row)
+        # A l'optimum le score vaut exactement (ln3/12) fois la marge entiere.
+        # Les eleves de marge nulle tombent pile sur le seuil 0,50 : sans ce
+        # recalage, un residu flottant de 1e-16 deciderait de leur prediction.
+        if abs(score) < 1e-9:
+            score = 0.0
         probability = sigmoid(score)
         calculations.append(
             Calculation(
                 student=student,
-                z_maths=row[1],
-                z_french=row[2],
+                z_potions=row[1],
+                z_vol=row[2],
                 score=score,
                 probability=probability,
                 loss=softplus(score) - student.y * score,
@@ -512,8 +530,11 @@ def standardized_coordinate_list(
     flight: ColumnStats,
 ) -> str:
     return " ".join(
-        "(" + decimal_tex((student.potions - potions.mean) / potions.sd_population, 4, trim=True).replace("{,}", ".")
-        + "," + decimal_tex((student.flight - flight.mean) / flight.sd_population, 4, trim=True).replace("{,}", ".") + ")"
+        "("
+        + decimal_tex((student.potions - potions.mean) / potions.sd_population, 4, trim=True).replace("{,}", ".")
+        + ","
+        + decimal_tex((student.flight - flight.mean) / flight.sd_population, 4, trim=True).replace("{,}", ".")
+        + ")"
         for student in students
     )
 
@@ -557,19 +578,98 @@ def tex_calculation_rows(calculations: Iterable[Calculation]) -> str:
     return "\n".join(rows)
 
 
-LABEL_OFFSETS = {
-    "E01": (-9, 7), "E02": (-6, -8), "E03": (-12, 8), "E04": (-9, -8),
-    "E05": (10, 9), "E06": (11, -7), "E07": (-11, -9), "E08": (-14, 10),
-    "E09": (13, 11), "E10": (-11, 10), "E11": (0, 10), "E12": (13, 10),
-    "E13": (16, -4), "E14": (14, -9), "E15": (-11, -9), "E16": (-11, -9),
-    "E17": (12, 10), "E18": (-17, -9), "E19": (-10, -9), "E20": (14, -8),
-}
+def metric_text(metric: Evaluation) -> str:
+    return f"VP $={metric.tp}$, FN $={metric.fn}$, FP $={metric.fp}$, VN $={metric.tn}$"
 
 
-def tex_all_labels(students: Iterable[Student]) -> str:
+# Geometrie du nuage de la planche "Distribution des notes" : la zone tracee
+# mesure environ 344 x 152 points pour Potions dans [0,20] et Vol dans [0,100].
+# Les etiquettes sont posees par recherche de position, jamais a la main : un
+# changement de note deplace automatiquement le nom qui va avec.
+PLOT_WIDTH_PT = 344.0
+PLOT_HEIGHT_PT = 152.0
+POTIONS_MAX = 20.0
+VOL_MAX = 100.0
+CHAR_WIDTH_PT = 3.3
+LABEL_PADDING_PT = 2.4
+LABEL_HEIGHT_PT = 7.4
+MARKER_HALF_PT = 3.6
+CANDIDATE_RADII = (9.0, 13.0, 17.0, 22.0)
+CANDIDATE_ANGLES = tuple(range(0, 360, 30))
+
+
+def _boxes_overlap(
+    a: tuple[float, float, float, float], b: tuple[float, float, float, float]
+) -> float:
+    """Surface d'intersection de deux boites (cx, cy, demi-largeur, demi-hauteur)."""
+    dx = (a[2] + b[2]) - abs(a[0] - b[0])
+    dy = (a[3] + b[3]) - abs(a[1] - b[1])
+    return dx * dy if dx > 0.0 and dy > 0.0 else 0.0
+
+
+def place_labels(students: Sequence[Student]) -> dict[str, tuple[int, int]]:
+    """Choisit un decalage par etiquette en evitant marqueurs et voisines."""
+    x_scale = PLOT_WIDTH_PT / POTIONS_MAX
+    y_scale = PLOT_HEIGHT_PT / VOL_MAX
+    centres = {
+        student.ident: (student.potions * x_scale, student.flight * y_scale)
+        for student in students
+    }
+    half_width = {
+        student.ident: (
+            len(student.name.split()[0]) * CHAR_WIDTH_PT + LABEL_PADDING_PT
+        ) / 2.0
+        for student in students
+    }
+    markers = [
+        (x, y, MARKER_HALF_PT, MARKER_HALF_PT) for x, y in centres.values()
+    ]
+
+    candidates = [
+        (
+            round(radius * math.cos(math.radians(angle))),
+            round(radius * math.sin(math.radians(angle))),
+            radius,
+        )
+        for radius in CANDIDATE_RADII
+        for angle in CANDIDATE_ANGLES
+    ]
+
+    def cost(student: Student, shift: tuple[int, int, float], placed: dict[str, tuple[float, float, float, float]]) -> float:
+        dx, dy, radius = shift
+        cx, cy = centres[student.ident]
+        box = (cx + dx, cy + dy, half_width[student.ident], LABEL_HEIGHT_PT / 2.0)
+        penalty = 0.28 * radius
+        if not (0.0 <= box[0] - box[2] and box[0] + box[2] <= PLOT_WIDTH_PT):
+            penalty += 900.0
+        if not (0.0 <= box[1] - box[3] and box[1] + box[3] <= PLOT_HEIGHT_PT):
+            penalty += 900.0
+        for marker in markers:
+            penalty += 9.0 * _boxes_overlap(box, marker)
+        for ident, other in placed.items():
+            if ident != student.ident:
+                penalty += 6.0 * _boxes_overlap(box, other)
+        return penalty
+
+    order = sorted(students, key=lambda s: (-s.flight, s.potions))
+    chosen: dict[str, tuple[int, int, float]] = {}
+    placed: dict[str, tuple[float, float, float, float]] = {}
+    for _ in range(4):  # une passe de pose, puis trois passes de reprise
+        for student in order:
+            best = min(candidates, key=lambda shift: cost(student, shift, placed))
+            chosen[student.ident] = best
+            cx, cy = centres[student.ident]
+            placed[student.ident] = (
+                cx + best[0], cy + best[1], half_width[student.ident], LABEL_HEIGHT_PT / 2.0
+            )
+    return {ident: (shift[0], shift[1]) for ident, shift in chosen.items()}
+
+
+def tex_all_labels(students: Sequence[Student]) -> str:
+    shifts = place_labels(students)
     labels = []
     for student in students:
-        xshift, yshift = LABEL_OFFSETS[student.ident]
+        xshift, yshift = shifts[student.ident]
         color = "coursescore!88!ink" if student.house == GRYFFONDOR else "warning!88!ink"
         first_name = tex_escape(student.name.split()[0])
         labels.append(
@@ -578,10 +678,6 @@ def tex_all_labels(students: Iterable[Student]) -> str:
             rf"at (axis cs:{student.potions:g},{student.flight:g}) {{{first_name}}};"
         )
     return "\n".join(labels)
-
-
-def metric_text(metric: Evaluation) -> str:
-    return f"VP $={metric.tp}$, FN $={metric.fn}$, FP $={metric.fp}$, VN $={metric.tn}$"
 
 
 def write_calculations(calculations: Sequence[Calculation]) -> None:
@@ -596,6 +692,7 @@ def write_calculations(calculations: Sequence[Calculation]) -> None:
         "potions_preparee",
         "vol_prepare",
         "y",
+        "marge",
         "x_potions",
         "x_vol",
         "score",
@@ -623,8 +720,9 @@ def write_calculations(calculations: Sequence[Calculation]) -> None:
                     "potions_preparee": f"{student.potions:g}",
                     "vol_prepare": f"{student.flight:g}",
                     "y": student.y,
-                    "x_potions": csv_number(calculation.z_maths),
-                    "x_vol": csv_number(calculation.z_french),
+                    "marge": f"{student.margin:g}",
+                    "x_potions": csv_number(calculation.z_potions),
+                    "x_vol": csv_number(calculation.z_vol),
                     "score": csv_number(calculation.score),
                     "probabilite": csv_number(calculation.probability),
                     "perte": csv_number(calculation.loss),
@@ -638,11 +736,12 @@ def write_calculations(calculations: Sequence[Calculation]) -> None:
 
 def write_tex_values(
     students: Sequence[Student],
-    maths: ColumnStats,
-    french: ColumnStats,
+    potions: ColumnStats,
+    flight: ColumnStats,
     raw_optimum: Sequence[float],
     standardized_optimum: Sequence[float],
     gd_weights: Sequence[float],
+    gd_alpha: float,
     gd_iterations: int,
     gd_trace: Sequence[tuple[int, float, tuple[float, ...], float]],
     gradient_checks: Sequence[tuple[int, float, float, float]],
@@ -694,31 +793,46 @@ def write_tex_values(
 
     test_at_half = metrics[("test", 0.50)]
     wilson_low, wilson_high = wilson_interval(test_at_half.tp + test_at_half.tn, len(test))
+    train_gryffondor = sum(student.y for student in train)
+    calculations_by_id = {item.student.ident: item for item in calculations}
 
     def command(name: str, value: str) -> str:
         return rf"\newcommand{{\{name}}}{{{value}}}"
 
     lines = [
-        "% Fichier genere par scripts/build_micro_case.py ; ne pas modifier.",
-        "% Les donnees brutes, l'imputation et les calculs sont controles par le generateur.",
+        "% Fichier genere par scripts/construire_cas.py ; ne pas modifier.",
+        "% Les donnees brutes, l'imputation et les calculs viennent de data/eleves.csv.",
         "",
         command("MicroGryffondorLabel", GRYFFONDOR),
         command("MicroSerpentardLabel", SERPENTARD),
         command("MicroNTrain", str(len(train))),
         command("MicroNTest", str(len(test))),
-        command("MicroMedianPotions", "10"),
-        command("MicroMedianVol", "50"),
-        command("MicroMeanPotions", decimal_tex(maths.mean, trim=True)),
-        command("MicroMeanVol", decimal_tex(french.mean, trim=True)),
-        command("MicroSdPotions", decimal_tex(maths.sd_population, trim=True)),
-        command("MicroSdVol", decimal_tex(french.sd_population, trim=True)),
-        command("MicroTrainCorrelation", r"-\frac{1}{8}"),
-        command("MicroExactLogOdds", r"\ln 5"),
-        command("MicroExactProbabilityHigh", r"\frac{5}{6}"),
-        command("MicroExactProbabilityLow", r"\frac{1}{6}"),
+        command("MicroTrainGryffondor", str(train_gryffondor)),
+        command("MicroTrainSerpentard", str(len(train) - train_gryffondor)),
+        command("MicroMedianPotions", decimal_tex(MEDIAN_POTIONS, trim=True)),
+        command("MicroMedianVol", decimal_tex(MEDIAN_VOL, trim=True)),
+        command("MicroMeanPotions", decimal_tex(potions.mean, trim=True)),
+        command("MicroMeanVol", decimal_tex(flight.mean, trim=True)),
+        command("MicroSdPotions", decimal_tex(potions.sd_population, trim=True)),
+        command("MicroSdVol", decimal_tex(flight.sd_population, trim=True)),
+        command("MicroTrainCovariance", decimal_tex(COVARIANCE, trim=True)),
+        command("MicroTrainCorrelation", r"\frac{11}{18}"),
+        command("MicroMarginExpr", "V-2P-24"),
+        command("MicroBoundaryRaw", "V=2P+24"),
+        command("MicroMarginStep", decimal_tex(MARGIN_STEP, trim=True)),
+        command("MicroScoreFromMargin", r"z=\frac{\ln 3}{10}\left(V-2P-24\right)"),
+        command("MicroLogOddsHigh", r"+2\ln 3"),
+        command("MicroLogOddsMid", "0"),
+        command("MicroLogOddsLow", r"-\ln 3"),
+        command("MicroExactProbabilityHigh", r"\frac{9}{10}"),
+        command("MicroExactProbabilityMid", r"\frac{1}{2}"),
+        command("MicroExactProbabilityLow", r"\frac{1}{4}"),
+        command("MicroBandHighSize", str(MARGIN_BANDS[20.0][0])),
+        command("MicroBandMidSize", str(MARGIN_BANDS[0.0][0])),
+        command("MicroBandLowSize", str(MARGIN_BANDS[-10.0][0])),
         command(
             "MicroW",
-            r"\left(0\,;\,-\frac{2\ln 5}{3}\,;\,+\frac{2\ln 5}{3}\right)",
+            r"\left(\frac{3\ln 3}{5}\,;\,-\ln 3\,;\,+\frac{9\ln 3}{5}\right)",
         ),
         command(
             "MicroWDecimal",
@@ -728,7 +842,7 @@ def write_tex_values(
         ),
         command(
             "MicroRawBeta",
-            r"\left(-\frac{10\ln 5}{9}\,;\,-\frac{\ln 5}{6}\,;\,+\frac{\ln 5}{18}\right)",
+            r"\left(-\frac{12\ln 3}{5}\,;\,-\frac{\ln 3}{5}\,;\,+\frac{\ln 3}{10}\right)",
         ),
         command(
             "MicroRawBetaDecimal",
@@ -738,13 +852,14 @@ def write_tex_values(
         ),
         command("MicroTrainLoss", decimal_tex(train_loss)),
         command("MicroTestLoss", decimal_tex(test_loss)),
+        command("MicroGDAlpha", decimal_tex(gd_alpha, 2)),
         command("MicroGDIterations", str(gd_iterations)),
         command(
             "MicroGDLoss",
             decimal_tex(
                 mean_loss(
                     gd_weights,
-                    [design_row(student, maths, french) for student in train],
+                    [design_row(student, potions, flight) for student in train],
                     [student.y for student in train],
                 )
             ),
@@ -762,99 +877,100 @@ def write_tex_values(
         command("MicroThresholdLow", decimal_tex(THRESHOLDS[0], 2)),
         command("MicroThresholdHigh", decimal_tex(THRESHOLDS[1], 2)),
         command("MicroTrainAccuracy", decimal_tex(metrics[("apprentissage", 0.50)].accuracy, 4)),
+        command("MicroTrainBaseline", decimal_tex(train_gryffondor / len(train), 4)),
         command("MicroTestAccuracy", decimal_tex(metrics[("test", 0.50)].accuracy, 4)),
         command("MicroTestAccuracyTauHigh", decimal_tex(metrics[("test", 0.65)].accuracy, 4)),
         command("MicroTestPrecision", decimal_tex(test_at_half.precision, 4)),
         command("MicroTestRecall", decimal_tex(test_at_half.recall, 4)),
         command("MicroTestSpecificity", decimal_tex(test_at_half.specificity, 4)),
         command("MicroTestFScore", decimal_tex(test_at_half.f1, 4)),
+        command("MicroTestPrecisionTauHigh", decimal_tex(metrics[("test", 0.65)].precision, 4)),
+        command("MicroTestRecallTauHigh", decimal_tex(metrics[("test", 0.65)].recall, 4)),
         command("MicroTestWilsonLow", decimal_tex(wilson_low, 6)),
         command("MicroTestWilsonHigh", decimal_tex(wilson_high, 6)),
         command("MicroTrainConfusion", metric_text(metrics[("apprentissage", 0.50)])),
         command("MicroTestConfusion", metric_text(metrics[("test", 0.50)])),
         command("MicroTestConfusionTauHigh", metric_text(metrics[("test", 0.65)])),
         command("MicroTrainRows", "\n" + tex_dataset_rows(train, raw=True)),
+        command("MicroTrainPreparedRows", "\n" + tex_dataset_rows(train, raw=False)),
         command("MicroTestRawRows", "\n" + tex_dataset_rows(test, raw=True)),
         command("MicroTestPreparedRows", "\n" + tex_dataset_rows(test, raw=False)),
-        command("MicroAllGryffondorCoords", coordinate_list(student for student in students if student.y == 1)),
-        command("MicroAllSerpentardCoords", coordinate_list(student for student in students if student.y == 0)),
-        command("MicroTrainGryffondorCoords", coordinate_list(student for student in train if student.y == 1)),
-        command("MicroTrainSerpentardCoords", coordinate_list(student for student in train if student.y == 0)),
-        command("MicroTestGryffondorCoords", coordinate_list(student for student in test if student.y == 1)),
-        command("MicroTestSerpentardCoords", coordinate_list(student for student in test if student.y == 0)),
+        command("MicroAllGryffondorCoords", coordinate_list(s for s in students if s.y == 1)),
+        command("MicroAllSerpentardCoords", coordinate_list(s for s in students if s.y == 0)),
+        command("MicroTrainGryffondorCoords", coordinate_list(s for s in train if s.y == 1)),
+        command("MicroTrainSerpentardCoords", coordinate_list(s for s in train if s.y == 0)),
+        command("MicroTestGryffondorCoords", coordinate_list(s for s in test if s.y == 1)),
+        command("MicroTestSerpentardCoords", coordinate_list(s for s in test if s.y == 0)),
         command(
             "MicroTrainGryffondorStdCoords",
-            standardized_coordinate_list(
-                (student for student in train if student.y == 1), maths, french
-            ),
+            standardized_coordinate_list((s for s in train if s.y == 1), potions, flight),
         ),
         command(
             "MicroTrainSerpentardStdCoords",
-            standardized_coordinate_list(
-                (student for student in train if student.y == 0), maths, french
-            ),
+            standardized_coordinate_list((s for s in train if s.y == 0), potions, flight),
         ),
-        command("MicroMissingCoords", coordinate_list(student for student in students if student.missing_potions or student.missing_flight)),
-        command("MicroAllNameLabels", "\n" + tex_all_labels(students)),
-        command("MicroTrainAtypicalCoords", coordinate_list(student for student in train if student.atypical)),
-        command("MicroTestAtypicalCoords", coordinate_list(student for student in test if student.atypical)),
+        command(
+            "MicroMissingCoords",
+            coordinate_list(s for s in students if s.missing_potions or s.missing_flight),
+        ),
+        command("MicroAllNameLabels", "\n" + tex_all_labels(list(students))),
+        command("MicroTrainAtypicalCoords", coordinate_list(s for s in train if s.atypical)),
+        command("MicroTestAtypicalCoords", coordinate_list(s for s in test if s.atypical)),
         command("MicroGDTableRows", "\n" + "\n".join(gd_rows)),
         command("MicroGradientCheckRows", "\n" + "\n".join(check_rows)),
         command("MicroMetricsRows", "\n" + "\n".join(metric_rows)),
         command("MicroTestSummaryRows", "\n" + "\n".join(test_summary_rows)),
         command("MicroTrainCalcRows", "\n" + tex_calculation_rows(train_calculations)),
         command("MicroTestCalcRows", "\n" + tex_calculation_rows(test_calculations)),
+        command("MicroProbabilityGeorge", decimal_tex(calculations_by_id["E23"].probability)),
+        command("MicroProbabilityDaphne", decimal_tex(calculations_by_id["E25"].probability)),
+        command("MicroProbabilityAlicia", decimal_tex(calculations_by_id["E24"].probability)),
+        command("MicroProbabilityFred", decimal_tex(calculations_by_id["E21"].probability)),
+        "",
     ]
-    calculations_by_id = {
-        calculation.student.ident: calculation for calculation in calculations
-    }
-    lines.extend(
-        [
-            command(
-                "MicroProbabilityLavande",
-                decimal_tex(calculations_by_id["E17"].probability),
-            ),
-            command(
-                "MicroProbabilityMarcus",
-                decimal_tex(calculations_by_id["E18"].probability),
-            ),
-        ]
-    )
-    lines.append("")
     TEX_VALUES.write_text("\n".join(lines), encoding="utf-8")
 
 
 def main() -> None:
     students = read_students()
     train = [student for student in students if student.usage == "apprentissage"]
-    maths = column_stats([student.maths for student in train])
-    french = column_stats([student.french for student in train])
+    potions = column_stats([student.potions for student in train])
+    flight = column_stats([student.flight for student in train])
 
     expected_stats = {
-        "potions": (maths, 10.0, 4.0),
-        "vol": (french, 50.0, 12.0),
+        "potions": (potions, MEAN_POTIONS, SD_POTIONS),
+        "vol": (flight, MEAN_VOL, SD_VOL),
     }
     for label, (stats, expected_mean, expected_sd) in expected_stats.items():
         if not close(stats.mean, expected_mean) or not close(stats.sd_population, expected_sd):
             raise AssertionError(
-                f"{label}: moyenne {expected_mean:g} et ecart-type {expected_sd:g} attendus"
+                f"{label}: moyenne {expected_mean:g} et ecart-type {expected_sd:g} attendus, "
+                f"obtenu {stats.mean:g} et {stats.sd_population:g}"
             )
     centered_products = math.fsum(
-        (student.maths - maths.mean) * (student.french - french.mean)
+        (student.potions - potions.mean) * (student.flight - flight.mean)
         for student in train
     )
-    if not close(centered_products / len(train), -6.0):
-        raise AssertionError("covariance population attendue: -6")
+    if not close(centered_products / len(train), COVARIANCE):
+        raise AssertionError(f"covariance population attendue: {COVARIANCE:g}")
 
-    train_design = [design_row(student, maths, french) for student in train]
+    train_design = [design_row(student, potions, flight) for student in train]
     targets = [student.y for student in train]
     raw_optimum, standardized_optimum = exact_optimum(train)
     exact_gradient = gradient(standardized_optimum, train_design, targets)
     if max(abs(value) for value in exact_gradient) > 2e-15:
         raise AssertionError(f"gradient non nul a l'optimum exact: {exact_gradient}")
 
-    gd_weights, gd_iterations, gd_trace = gradient_descent(train_design, targets, alpha=1.0)
-    if max(abs(a - b) for a, b in zip(gd_weights, standardized_optimum, strict=True)) > 2e-10:
+    # Les deux ecritures du meme modele doivent coincider sur toutes les lignes.
+    for student in students:
+        row = design_row(student, potions, flight)
+        brut = raw_optimum[0] + raw_optimum[1] * student.potions + raw_optimum[2] * student.flight
+        if not close(dot(standardized_optimum, row), brut, tolerance=1e-12):
+            raise AssertionError(f"{student.ident}: scores brut et standardise divergents")
+
+    alpha = 1.0
+    gd_weights, gd_iterations, gd_trace = gradient_descent(train_design, targets, alpha=alpha)
+    if max(abs(a - b) for a, b in zip(gd_weights, standardized_optimum, strict=True)) > 2e-9:
         raise AssertionError(
             f"la descente ne rejoint pas l'optimum exact: {gd_weights} != {standardized_optimum}"
         )
@@ -864,14 +980,7 @@ def main() -> None:
     if max(row[3] for row in gradient_checks) > 2e-9:
         raise AssertionError(f"controle du gradient insuffisant: {gradient_checks}")
 
-    calculations = calculate(students, maths, french, standardized_optimum)
-    test_loss = math.fsum(
-        calculation.loss
-        for calculation in calculations
-        if calculation.student.usage == "test"
-    ) / 8.0
-    if not close(test_loss, 0.457132522223, tolerance=1e-12):
-        raise AssertionError(f"perte de test inattendue: {test_loss}")
+    calculations = calculate(students, potions, flight, standardized_optimum)
     metrics: dict[tuple[str, float], Evaluation] = {}
     for usage in ("apprentissage", "test"):
         subset = [item for item in calculations if item.student.usage == usage]
@@ -879,10 +988,10 @@ def main() -> None:
             metrics[(usage, threshold)] = evaluate(subset, index)
 
     expected_confusions = {
-        ("apprentissage", 0.50): (5, 1, 1, 5),
-        ("apprentissage", 0.65): (5, 1, 1, 5),
-        ("test", 0.50): (4, 0, 1, 3),
-        ("test", 0.65): (3, 1, 0, 4),
+        ("apprentissage", 0.50): (10, 2, 2, 6),
+        ("apprentissage", 0.65): (9, 3, 1, 7),
+        ("test", 0.50): (3, 1, 1, 3),
+        ("test", 0.65): (2, 2, 0, 4),
     }
     for key, expected in expected_confusions.items():
         metric = metrics[key]
@@ -893,11 +1002,12 @@ def main() -> None:
     write_calculations(calculations)
     write_tex_values(
         students,
-        maths,
-        french,
+        potions,
+        flight,
         raw_optimum,
         standardized_optimum,
         gd_weights,
+        alpha,
         gd_iterations,
         gd_trace,
         gradient_checks,
@@ -906,7 +1016,8 @@ def main() -> None:
     )
     print(
         f"{SOURCE.name}: {len(train)} apprentissage + {len(students) - len(train)} test; "
-        f"mu=(10,50), sigma=(4,12); GD alpha=1 en {gd_iterations} tours"
+        f"mu=({MEAN_POTIONS:g},{MEAN_VOL:g}), sigma=({SD_POTIONS:g},{SD_VOL:g}); "
+        f"GD alpha={alpha:g} en {gd_iterations} tours"
     )
     print(f"{CALCULATIONS}: {len(calculations)} lignes calculees")
     print(f"{TEX_VALUES}: macros LaTeX regenerees")

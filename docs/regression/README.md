@@ -43,7 +43,7 @@ Depuis la racine du dépôt :
 |---|---|
 | `make -C docs tex-memory` | une fois par machine : redump du format `pdflatex` avec `main_memory = 12000000` |
 | `make -C docs doc` | compile `regression_logistique.pdf` (latexmk + biber, PDF 2.0 balisé) |
-| `make -C docs slides` | génère puis compile le diaporama 16:9 `regression_logistique_slides.pdf` |
+| `make -C docs slides` | génère puis compile le diaporama 16:9 `../slides/diaporama.pdf` |
 | `make -C docs doc-tag-check` | précontrôle le balisage, les alternatives et le journal `tagpdf` |
 | `make -C docs tuto` | exécute les douze fichiers du cahier pratique, dans l'ordre |
 | `make -C docs verify` | recalcule toutes les valeurs numériques citées dans le document |
@@ -55,9 +55,9 @@ Depuis la racine du dépôt :
 `make -C docs verify` n'emploient que la bibliothèque standard de Python —
 aucune dépendance de calcul.
 
-Le corps `regression_logistique_slides_body.tex` est généré : il ne se modifie
-pas directement. Toute correction de contenu se fait dans `chapters/`, et toute
-correction de transformation dans `scripts/gen_slides_source.py`.
+Le diaporama ne vit plus ici : ses sources, ses données et ses scripts sont
+regroupés dans [`../slides/`](../slides/), qui a son propre README. Les deux
+livrables ne partagent aucun fichier.
 
 ### Pourquoi `make -C docs tex-memory`
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Assemble le diaporama du micro-cas sans recopier les valeurs calculées.
 
-``build_micro_case.py`` transforme d'abord le CSV source en macros LaTeX.
+``construire_cas.py`` transforme d'abord le CSV source en macros LaTeX.
 Ce script garde volontairement un rôle minuscule : il contrôle la structure du
 contenu éditorial, puis produit le corps inclus par le thème Beamer.
 """
@@ -13,9 +13,9 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-VALUES = ROOT / "regression_logistique_slides_values.tex"
-CONTENT = ROOT / "regression_logistique_slides_content.tex"
-OUTPUT = ROOT / "regression_logistique_slides_body.tex"
+VALUES = ROOT / "valeurs.tex"
+CONTENT = ROOT / "contenu.tex"
+OUTPUT = ROOT / "corps.tex"
 
 STAGES = (
     "Données",
@@ -53,7 +53,7 @@ def validate(content: str) -> None:
 
     if not VALUES.exists():
         raise SystemExit(
-            f"{VALUES.name} absent : exécuter scripts/build_micro_case.py d'abord"
+            f"{VALUES.name} absent : exécuter scripts/construire_cas.py d'abord"
         )
 
     parts = re.findall(r"\\coursepart\{([^{}]+)\}\{([^{}]+)\}\{([^{}]+)\}", content)
@@ -88,10 +88,10 @@ def main() -> None:
     content = CONTENT.read_text(encoding="utf-8")
     validate(content)
     assembled = (
-        "% Fichier généré par scripts/gen_slides_source.py.\n"
-        "% Les nombres viennent exclusivement de data/micro_ecoles.csv.\n"
-        "\\input{regression_logistique_slides_values.tex}\n"
-        "\\input{regression_logistique_slides_content.tex}\n"
+        "% Fichier généré par scripts/assembler_corps.py.\n"
+        "% Les nombres viennent exclusivement de data/eleves.csv.\n"
+        "\\input{valeurs.tex}\n"
+        "\\input{contenu.tex}\n"
     )
     OUTPUT.write_text(assembled, encoding="utf-8")
     print(f"{OUTPUT}: corps assemblé ({len(STAGES)} étapes)")

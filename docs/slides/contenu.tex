@@ -197,11 +197,11 @@
     box/.style={draw=ink!28,rounded corners=2pt,minimum height=15mm,
       minimum width=31mm,align=center,font=\small,inner xsep=4mm},
     arr/.style={-{Latex[length=2mm]},thick,ink!58}]
-    \node[box,fill=coursedata!13] (all) {20 élèves};
+    \node[box,fill=coursedata!13] (all) {24 élèves};
     \node[box,fill=coursedata!22,right=of all,yshift=10mm] (train)
-      {12 élèves\\estimation};
+      {\MicroNTrain{} élèves\\estimation};
     \node[box,fill=courseevaluation!18,right=of all,yshift=-10mm] (test)
-      {8 élèves\\évaluation};
+      {\MicroNTest{} élèves\\évaluation};
     \node[box,fill=courseupdate!15,right=of train] (fit)
       {médianes, $\mu$, $s$\\et coefficients};
     \node[box,fill=courseevaluation!24,right=of test] (eval)
@@ -217,16 +217,22 @@
   les nombres du modèle. Le groupe d'évaluation les reçoit sans les modifier.
 \end{frame}
 
-\begin{frame}[t]{Groupe d'estimation : douze élèves}
+\begin{frame}[t]{Groupe d'estimation : seize élèves}
   \centering
-  \scriptsize
-  \renewcommand{\arraystretch}{1.04}
+  \tiny
+  \renewcommand{\arraystretch}{.98}
   \begin{tabularx}{\textwidth}{c >{\raggedright\arraybackslash}X l c c}
     \microheader ID & \color{white}\bfseries Élève &
       \color{white}\bfseries Maison & \color{white}\bfseries Potions &
       \color{white}\bfseries Vol \\
     \MicroTrainRows
   \end{tabularx}
+  \par\vspace{2mm}
+  \begin{vigilance}[Une note manque ici même]
+    La note de Potions de Ron est absente. Le trou se trouve donc là où sont
+    calculées les statistiques : sa valeur de remplacement participera aux
+    médianes, aux moyennes et aux coefficients.
+  \end{vigilance}
 \end{frame}
 
 \begin{frame}[t]{Groupe d'évaluation : huit élèves}
@@ -240,9 +246,10 @@
     \MicroTestRawRows
   \end{tabularx}
   \vfill
-  \begin{vigilance}[Deux notes sont manquantes]
-    Potions manque pour Seamus ; Vol manque pour Daphné. Une case vide ne peut
-    pas être standardisée : elle doit d'abord recevoir une valeur numérique.
+  \begin{vigilance}[Une note manque aussi à l'évaluation]
+    La note de Vol de George est absente. Une case vide ne peut pas être
+    standardisée : elle doit d'abord recevoir une valeur numérique, et cette
+    valeur vient du groupe d'estimation.
   \end{vigilance}
 \end{frame}
 
@@ -255,19 +262,21 @@
           \widetilde P=\MicroMedianPotions,
           \qquad \widetilde V=\MicroMedianVol.
         \]
-        Ces médianes sont calculées sur les douze élèves du groupe d'estimation.
+        Ces médianes ne sont lues que sur les notes \emph{observées} du groupe
+        d'estimation, jamais sur le groupe d'évaluation.
       \end{coursecallout}
     \column{.47\textwidth}
       \begin{coursecallout}{courseevaluation!88!ink}{Deux substitutions}
         \[
           \begin{aligned}
-            P_{\text{Seamus}}&\leftarrow\MicroMedianPotions
+            P_{\text{Ron}}&\leftarrow\MicroMedianPotions
               &\Longrightarrow x_{\mathrm{pot}}&=0,\\
-            V_{\text{Daphné}}&\leftarrow\MicroMedianVol
-              &\Longrightarrow x_{\mathrm{vol}}&=0.
+            V_{\text{George}}&\leftarrow\MicroMedianVol
+              &\Longrightarrow x_{\mathrm{vol}}&=0{,}35.
           \end{aligned}
         \]
-        Ici, médiane et moyenne coïncident dans chaque matière.
+        En Potions la médiane égale la moyenne ; en Vol elle vaut
+        \(\MicroMedianVol\) contre une moyenne de \(\MicroMeanVol\).
       \end{coursecallout}
   \end{columns}
   \vfill
@@ -311,7 +320,7 @@
         \foreach \v in {0,25,50,75,100}
           \draw[ink!55] (-.12,\v) -- (.12,\v)
             node[right=2mm,font=\scriptsize] {\v};
-        \fill[courseprobability!58] (-.35,29) rectangle (.35,71);
+        \fill[courseprobability!58] (-.35,14) rectangle (.35,76);
       \end{tikzpicture}
       \par notée sur 100
   \end{columns}
@@ -348,8 +357,8 @@
       \end{coursecallout}
   \end{columns}
   \vfill
-  Pour Harry : \(x_{\mathrm{pot}}=-1{,}75\) et
-  \(x_{\mathrm{vol}}=-0{,}25\). Les deux coordonnées sont désormais sans unité.
+  Pour Harry : \(x_{\mathrm{pot}}=+1{,}50\) et
+  \(x_{\mathrm{vol}}=+1{,}20\). Les deux coordonnées sont désormais sans unité.
 \end{frame}
 
 \begin{frame}[t]{Effet géométrique de la standardisation}
@@ -411,18 +420,18 @@
 
 \begin{frame}[t]{Contributions des deux matières au score}
   \centering
-  Prenons provisoirement \(w^{\mathrm{essai}}=(0,-1,+1)\), donc
-  \(z=x_{\mathrm{vol}}-x_{\mathrm{pot}}\).
+  Prenons provisoirement \(w^{\mathrm{essai}}=(0,-1,+2)\), donc
+  \(z=2x_{\mathrm{vol}}-x_{\mathrm{pot}}\).
   \vspace{3mm}
   \renewcommand{\arraystretch}{1.25}
   \begin{tabular}{lrrrrr}
     \toprule
     élève & $x_{\mathrm{pot}}$ & $x_{\mathrm{vol}}$ &
-      $-x_{\mathrm{pot}}$ & $+x_{\mathrm{vol}}$ & $z$\\
+      $-x_{\mathrm{pot}}$ & $+2x_{\mathrm{vol}}$ & $z$\\
     \midrule
-    Harry   & $-1{,}75$ & $-0{,}25$ & $+1{,}75$ & $-0{,}25$ & $+1{,}50$\\
-    Drago   & $-0{,}25$ & $-1{,}75$ & $+0{,}25$ & $-1{,}75$ & $-1{,}50$\\
-    Neville & $+1{,}00$ & $-0{,}50$ & $-1{,}00$ & $-0{,}50$ & $-1{,}50$\\
+    Harry   & $+1{,}50$ & $+1{,}20$ & $-1{,}50$ & $+2{,}40$ & $+0{,}90$\\
+    Drago   & $+0{,}50$ & $-1{,}00$ & $-0{,}50$ & $-2{,}00$ & $-2{,}50$\\
+    Neville & $-1{,}25$ & $-1{,}70$ & $+1{,}25$ & $-3{,}40$ & $-2{,}15$\\
     \bottomrule
   \end{tabular}
   \vfill
@@ -440,25 +449,25 @@
       \addplot[only marks,mark=*,mark size=2.6pt,warning!88!ink]
         coordinates {\MicroTrainSerpentardCoords};
       \addlegendentry{Serpentard}
-      \addplot[ink!78,very thick,domain=0:20,samples=2] {3*x+20};
+      \addplot[ink!78,very thick,domain=0:20,samples=2] {2*x+18};
       \node[font=\scriptsize,text=coursescore!88!ink,anchor=south]
-        at (axis cs:15,70) {$z>0$};
+        at (axis cs:6,74) {$z>0$};
       \node[font=\scriptsize,text=warning!88!ink,anchor=north]
-        at (axis cs:5,25) {$z<0$};
+        at (axis cs:14,24) {$z<0$};
       \node[font=\scriptsize,fill=white,inner sep=1pt,text=ink!72]
-        at (axis cs:15.5,64) {$V=3P+20$};
+        at (axis cs:16.5,52) {$V=2P+18$};
     \end{axis}
   \end{tikzpicture}
 \end{frame}
 
 \begin{frame}[t]{Écriture matricielle des scores}
-  Pour les douze observations du groupe d'estimation :
+  Pour les seize observations du groupe d'estimation :
   \[
     X=
     \begin{pmatrix}
       1 & x_{1,\mathrm{pot}} & x_{1,\mathrm{vol}}\\
       \vdots & \vdots & \vdots\\
-      1 & x_{12,\mathrm{pot}} & x_{12,\mathrm{vol}}
+      1 & x_{16,\mathrm{pot}} & x_{16,\mathrm{vol}}
     \end{pmatrix},
     \qquad
     w=\begin{pmatrix}w_0\\w_{\mathrm{pot}}\\w_{\mathrm{vol}}\end{pmatrix}.
@@ -467,7 +476,7 @@
     \boxed{z=Xw}
   \]
   \vfill
-  Une même multiplication produit les douze scores ; chaque ligne de \(X\)
+  Une même multiplication produit les seize scores ; chaque ligne de \(X\)
   correspond à un élève.
 \end{frame}
 
@@ -545,9 +554,9 @@
   \vfill
   \centering
   \begin{tabular}{c|ccccc}
-    $z$ & $-\ln5$ & $-1$ & $0$ & $1$ & $+\ln5$\\
+    $z$ & $-\ln3$ & $-1$ & $0$ & $1$ & $+2\ln3$\\
     \midrule
-    $p$ & $1/6$ & $0{,}269$ & $1/2$ & $0{,}731$ & $5/6$
+    $p$ & $1/4$ & $0{,}269$ & $1/2$ & $0{,}731$ & $9/10$
   \end{tabular}
 \end{frame}
 
@@ -558,15 +567,16 @@
     \toprule
     élève & $z$ d'essai & $p=\sigma(z)$ & maison favorisée\\
     \midrule
-    Harry   & $+1{,}50$ & $0{,}818$ & Gryffondor\\
-    Drago   & $-1{,}50$ & $0{,}182$ & Serpentard\\
-    Neville & $-1{,}50$ & $0{,}182$ & Serpentard\\
+    Harry   & $+0{,}90$ & $0{,}711$ & Gryffondor\\
+    Drago   & $-2{,}50$ & $0{,}076$ & Serpentard\\
+    Neville & $-2{,}15$ & $0{,}104$ & Serpentard\\
     \bottomrule
   \end{tabular}
   \vfill
   \begin{coursecallout}{courseprobability!88!ink}{}
     La sigmoïde étant strictement croissante, deux observations de même score
-    reçoivent la même probabilité selon le modèle.
+    reçoivent la même probabilité selon le modèle. Neville est Gryffondor : ces
+    coefficients d'essai le placent déjà du mauvais côté.
   \end{coursecallout}
 \end{frame}
 
@@ -634,23 +644,24 @@
 
 \begin{frame}[t]{Influence des profils en recouvrement}
   Avec les coefficients d'essai, le signe du score concorde avec la maison
-  observée pour dix élèves et s'y oppose pour deux :
+  observée pour treize élèves et s'y oppose pour trois :
   \[
-    J=\frac{10\times0{,}201+2\times1{,}701}{12}=0{,}451.
+    J=\frac1{16}\sum_{i=1}^{16}\ell(z_i,y_i)=0{,}520535.
   \]
   \vspace{3mm}
   \begin{columns}[T,onlytextwidth]
     \column{.47\textwidth}
       \begin{coursecallout}{rulecolor!88!ink}{Signe concordant}
-        Perte : \(0{,}201\).
+        Colin : \(z=+1{,}55\), \(y=1\), perte \(0{,}193\).
       \end{coursecallout}
     \column{.47\textwidth}
       \begin{coursecallout}{warning!88!ink}{Signe discordant}
-        Perte : \(1{,}701\), soit environ \(8{,}4\) fois plus.
+        Neville : \(z=-2{,}15\), \(y=1\), perte \(2{,}260\), soit près de
+        douze fois plus.
       \end{coursecallout}
   \end{columns}
   \vfill
-  Ces deux observations empêchent une séparation parfaite des maisons.
+  Neville, Seamus et Marcus empêchent une séparation parfaite des maisons.
 \end{frame}
 
 % ---------------------------------------------------------------------------
@@ -676,16 +687,19 @@
     w^{(0)}=(0,0,0)\quad\Longrightarrow\quad z_i=0,
     \quad p_i=\frac12.
   \]
-  Les douze observations donnent exactement
+  Les seize observations donnent exactement
   \[
-    \sum_i(p_i-y_i)=0,\qquad
-    \sum_i(p_i-y_i)x_{i,\mathrm{pot}}=3,\qquad
-    \sum_i(p_i-y_i)x_{i,\mathrm{vol}}=-3.
+    \sum_i(p_i-y_i)=-3,\qquad
+    \sum_i(p_i-y_i)x_{i,\mathrm{pot}}=-1{,}5,\qquad
+    \sum_i(p_i-y_i)x_{i,\mathrm{vol}}=-4{,}2.
   \]
   Donc
   \[
-    \boxed{\nabla J(w^{(0)})=(0,\;0{,}25,\;-0{,}25).}
+    \boxed{\nabla J(w^{(0)})
+      =(-0{,}1875,\;-0{,}09375,\;-0{,}2625).}
   \]
+  La première composante est non nulle : les maisons ne sont pas également
+  représentées, l'ordonnée à l'origine bouge dès le premier pas.
 \end{frame}
 
 \begin{frame}[t]{Contribution de quatre observations au gradient}
@@ -696,14 +710,14 @@
     élève & $y$ & $p-y$ à $w=0$ & $x_{\mathrm{pot}}$ &
       $(p-y)x_{\mathrm{pot}}$ & $(p-y)x_{\mathrm{vol}}$\\
     \midrule
-    Harry   & $1$ & $-0{,}5$ & $-1{,}75$ & $+0{,}875$ & $+0{,}125$\\
-    Drago   & $0$ & $+0{,}5$ & $-0{,}25$ & $-0{,}125$ & $-0{,}875$\\
-    Neville & $1$ & $-0{,}5$ & $+1{,}00$ & $-0{,}500$ & $+0{,}250$\\
-    Vincent & $0$ & $+0{,}5$ & $-0{,}50$ & $-0{,}250$ & $+0{,}500$\\
+    Harry   & $1$ & $-0{,}5$ & $+1{,}50$ & $-0{,}750$ & $-0{,}600$\\
+    Drago   & $0$ & $+0{,}5$ & $+0{,}50$ & $+0{,}250$ & $-0{,}500$\\
+    Neville & $1$ & $-0{,}5$ & $-1{,}25$ & $+0{,}625$ & $+0{,}850$\\
+    Marcus  & $0$ & $+0{,}5$ & $-0{,}25$ & $-0{,}125$ & $+0{,}250$\\
     \bottomrule
   \end{tabular}
   \vfill
-  Les contributions sont additionnées avant la division par \(n=12\).
+  Les contributions sont additionnées avant la division par \(n=16\).
 \end{frame}
 
 \begin{frame}[t]{Calcul vectoriel du gradient}
@@ -713,13 +727,13 @@
       z&=Xw,\\
       p&=\sigma(z),\\
       r&=p-y,\\
-      \nabla J(w)&=\frac1{12}X^\top r.
+      \nabla J(w)&=\frac1{16}X^\top r.
     \end{aligned}
   \]
   \vfill
   \begin{coursecallout}{coursegradient!88!ink}{Dimensions}
-    \(X\in\mathbb R^{12\times3}\), \(w\in\mathbb R^3\),
-    \(p,y,r\in\mathbb R^{12}\) et
+    \(X\in\mathbb R^{16\times3}\), \(w\in\mathbb R^3\),
+    \(p,y,r\in\mathbb R^{16}\) et
     \(\nabla J(w)\in\mathbb R^3\).
   \end{coursecallout}
 \end{frame}
@@ -752,14 +766,14 @@
   \]
   À partir de \(w^{(0)}=(0,0,0)\) :
   \[
-    w^{(1)}=(0,0,0)-(0,0{,}25,-0{,}25)
-             =\boxed{(0,-0{,}25,+0{,}25)}.
+    w^{(1)}=(0,0,0)-(-0{,}1875,-0{,}09375,-0{,}2625)
+    =\boxed{(+0{,}1875,\,+0{,}09375,\,+0{,}2625)}.
   \]
-  Pour Harry, \(x_{\mathrm{vol}}-x_{\mathrm{pot}}=1{,}5\) :
+  Pour Harry, \(x_{\mathrm{pot}}=1{,}50\) et \(x_{\mathrm{vol}}=1{,}20\) :
   \[
-    z^{(1)}=0{,}375,\qquad p^{(1)}=0{,}593.
+    z^{(1)}=0{,}643125,\qquad p^{(1)}=0{,}655460.
   \]
-  La perte moyenne passe de \(0{,}693147\) à \(0{,}585623\).
+  La perte moyenne passe de \(0{,}693147\) à \(0{,}598254\).
 \end{frame}
 
 \begin{frame}[t]{Convergence de la descente de gradient}
@@ -780,21 +794,28 @@
 \end{frame}
 
 \begin{frame}[t]{Expression analytique de l'optimum}
-  Les six observations vérifiant \(V>3P+20\) comprennent cinq Gryffondor et un
-  Serpentard. Une probabilité commune \(q\) y maximise la vraisemblance pour
+  \vspace{1mm}
+  La marge brute \(m=\MicroMarginExpr\) ne prend que trois valeurs sur le groupe
+  d'estimation. Tous les élèves d'un palier reçoivent le même score : la
+  vraisemblance y est maximale quand la probabilité ajustée égale la proportion
+  observée.
+  \vspace{2mm}
+  \centering
+  \renewcommand{\arraystretch}{1.3}
+  \begin{tabular}{rcccc}
+    \toprule
+    palier $m$ & effectif & Gryffondor & $p^\star$ & $\operatorname{logit}(p^\star)$\\
+    \midrule
+    $+24$ & $\MicroBandHighSize$ & $9$ & $\MicroExactProbabilityHigh$ & $\MicroLogOddsHigh$\\
+    $0$   & $\MicroBandMidSize$  & $1$ & $\MicroExactProbabilityMid$  & $\MicroLogOddsMid$\\
+    $-12$ & $\MicroBandLowSize$  & $1$ & $\MicroExactProbabilityLow$  & $\MicroLogOddsLow$\\
+    \bottomrule
+  \end{tabular}
+  \vfill
+  Les trois logits sont proportionnels à la marge, dans le rapport
+  \(\ln3\) pour \(\MicroMarginStep\) points :
   \[
-    q=\frac56.
-  \]
-  Leur différence standardisée vaut
-  \(x_{\mathrm{vol}}-x_{\mathrm{pot}}=18/12=3/2\). En posant
-  \(w_{\mathrm{pot}}=-a\) et \(w_{\mathrm{vol}}=a\),
-  \[
-    \sigma\!\left(\frac32a\right)=\frac56
-    \Longrightarrow
-    \frac32a=\operatorname{logit}\!\left(\frac56\right)=\ln5.
-  \]
-  \[
-    \boxed{a=\frac{2\ln5}{3}=1{,}072959.}
+    \boxed{\MicroScoreFromMargin}
   \]
 \end{frame}
 
@@ -802,52 +823,58 @@
   \begin{columns}[T,onlytextwidth]
     \column{.48\textwidth}
       \begin{coursecallout}{courseupdate!88!ink}{Variables standardisées}
-        \[
-          (w_0,w_{\mathrm{pot}},w_{\mathrm{vol}})=\MicroW
-        \]
-        \[
-          z=\frac{2\ln5}{3}
-          (x_{\mathrm{vol}}-x_{\mathrm{pot}}).
-        \]
+        \begin{adjustbox}{max width=\linewidth,center}
+          $(w_0,w_{\mathrm{pot}},w_{\mathrm{vol}})=\MicroW$
+        \end{adjustbox}
+        \begin{adjustbox}{max width=\linewidth,center}
+          $\MicroWDecimal$
+        \end{adjustbox}
       \end{coursecallout}
     \column{.48\textwidth}
       \begin{coursecallout}{coursescore!88!ink}{Notes brutes}
         \[
           \begin{gathered}
-            b=-\frac{10\ln5}{9},\quad
-            \beta_{\mathrm{pot}}=-\frac{\ln5}{6},\\
-            \beta_{\mathrm{vol}}=+\frac{\ln5}{18}.
+            b=-\frac{3\ln3}{2},\quad
+            \beta_{\mathrm{pot}}=-\frac{\ln3}{6},\\
+            \beta_{\mathrm{vol}}=+\frac{\ln3}{12}.
           \end{gathered}
         \]
-        \[
-          \boxed{z=\frac{\ln5}{18}(V-3P-20).}
-        \]
+        \begin{adjustbox}{max width=\linewidth,center}
+          $\MicroRawBetaDecimal$
+        \end{adjustbox}
       \end{coursecallout}
   \end{columns}
   \vfill
   \[
-    J(w^\star)=\MicroTrainLoss.
+    \boxed{\MicroScoreFromMargin}
   \]
+  L'ordonnée à l'origine n'est pas nulle et les deux poids n'ont pas la même
+  intensité : la frontière ne passe ni par le barycentre ni le long d'une
+  bissectrice. \(J(w^\star)=\MicroTrainLoss\).
 \end{frame}
 
 \begin{frame}[t]{Le recouvrement rend l'optimum fini}
   \centering
   \begin{tikzpicture}
     \begin{axis}[width=.74\textwidth,height=4.8cm,xmin=0,xmax=2.6,
-      ymin=.43,ymax=.72,axis lines=box,grid=major,grid style={gridgray!30},
-      xlabel={$a$ dans $(0,-a,+a)$},ylabel={$J(a)$},
+      ymin=.40,ymax=.72,axis lines=box,grid=major,grid style={gridgray!30},
+      xlabel={$t$ dans $w=t\,w^\star$},ylabel={$J(t)$},
       tick label style={font=\scriptsize},label style={font=\scriptsize}]
-      \addplot[courseupdate!88!ink,very thick,domain=0:2.6,samples=120]
-        {(5/6)*ln(1+exp(-1.5*x))+(1/6)*ln(1+exp(1.5*x))};
+      \addplot[courseupdate!88!ink,very thick,domain=0:2.6,samples=140]
+        {(9*ln(1+exp(-2.197224577*x))+ln(1+exp(2.197224577*x))
+          +2*ln(2)+ln(1+exp(1.098612289*x))
+          +3*ln(1+exp(-1.098612289*x)))/16};
       \addplot[only marks,mark=*,mark size=2.8pt,warning]
-        coordinates {(1.072958608,.450561209)};
-      \node[font=\scriptsize,anchor=south west,text=warning]
-        at (axis cs:1.072958608,.450561209) {$a^\star$};
+        coordinates {(1,.430404)};
+      \node[font=\scriptsize,anchor=north west,text=warning]
+        at (axis cs:1,.430404) {$t=1$};
     \end{axis}
   \end{tikzpicture}
   \begin{releve}
-    Sans Neville et Vincent, les maisons seraient parfaitement séparées : la
-    perte décroîtrait vers zéro lorsque \(a\) augmente, sans optimum fini.
+    Neville et Marcus sont du mauvais côté de la frontière, Vincent et Seamus
+    exactement dessus. Sans ces quatre élèves les maisons seraient parfaitement
+    séparées : la perte décroîtrait vers zéro lorsque \(t\) augmente, sans
+    optimum fini.
   \end{releve}
 \end{frame}
 
@@ -861,13 +888,13 @@
       \addplot[only marks,mark=*,mark size=2.6pt,warning!88!ink]
         coordinates {\MicroTrainSerpentardCoords};
       \addlegendentry{Serpentard}
-      \addplot[ink!82,very thick,domain=0:20,samples=2] {3*x+20};
-      \node[font=\scriptsize\bfseries,text=warning,anchor=south east]
-        at (axis cs:14,44) {Neville};
+      \addplot[ink!82,very thick,domain=0:20,samples=2] {2*x+18};
       \node[font=\scriptsize\bfseries,text=warning,anchor=north west]
-        at (axis cs:8,62) {Vincent};
+        at (axis cs:5,16) {Neville};
+      \node[font=\scriptsize\bfseries,text=warning,anchor=south east]
+        at (axis cs:9,60) {Marcus};
       \node[font=\scriptsize,fill=white,inner sep=1pt,text=ink!72]
-        at (axis cs:15.5,64) {$p=0{,}50$};
+        at (axis cs:16.5,52) {$p=0{,}50$};
     \end{axis}
   \end{tikzpicture}
 \end{frame}
@@ -897,30 +924,38 @@
 
 \begin{frame}[t]{Probabilités produites sur le groupe d'estimation}
   \[
-    V-3P-20=+18
-    \Rightarrow z=+\ln5
-    \Rightarrow p=\frac56,
+    m=\MicroMarginExpr:\qquad
+    m=+24\Rightarrow p=\tfrac9{10},
+    \quad
+    m=0\Rightarrow p=\tfrac12,
+    \quad
+    m=-12\Rightarrow p=\tfrac14.
   \]
-  \[
-    V-3P-20=-18
-    \Rightarrow z=-\ln5
-    \Rightarrow p=\frac16.
-  \]
-  \vspace{3mm}
+  \vspace{2mm}
   \begin{columns}[T,onlytextwidth]
-    \column{.47\textwidth}
-      \begin{coursecallout}{rulecolor!88!ink}{Dix observations correctement classées}
+    \column{.31\textwidth}
+      \begin{coursecallout}{rulecolor!88!ink}{Neuf Gryffondor à $p=9/10$}
         \[
-          \ell=-\ln(5/6)=0{,}182322.
+          \ell=-\ln\tfrac9{10}=0{,}105361.
         \]
       \end{coursecallout}
-    \column{.47\textwidth}
-      \begin{coursecallout}{warning!88!ink}{Neville et Vincent}
+    \column{.31\textwidth}
+      \begin{coursecallout}{coursedecision!88!ink}{Vincent et Seamus à $p=1/2$}
         \[
-          \ell=-\ln(1/6)=1{,}791759.
+          \ell=\ln2=0{,}693147.
+        \]
+      \end{coursecallout}
+    \column{.31\textwidth}
+      \begin{coursecallout}{warning!88!ink}{Marcus à $p=9/10$}
+        \[
+          \ell=-\ln\tfrac1{10}=2{,}302585.
         \]
       \end{coursecallout}
   \end{columns}
+  \vfill
+  \centering
+  Neville, Serpentard prédit alors qu'il est Gryffondor, paie
+  \(-\ln\tfrac14=1{,}386294\).
 \end{frame}
 
 \begin{frame}[t]{Résultats sur le groupe d'estimation}
@@ -946,14 +981,16 @@
     \node[lab] at (3,3.25) {Gryffondor prédit};
     \node[lab,rotate=90] at (-.35,2.25) {Serpentard obs.};
     \node[lab,rotate=90] at (-.35,.75) {Gryffondor obs.};
-    \node[cell,fill=rulecolor!18,text=rulecolor!82!ink] at (1,2.25) {VN $=5$};
-    \node[cell,fill=warning!18,text=warning!88!ink] at (3,2.25) {FP $=1$};
+    \node[cell,fill=rulecolor!18,text=rulecolor!82!ink] at (1,2.25) {VN $=3$};
+    \node[cell,fill=warning!18,text=warning!88!ink] at (3,2.25) {FP $=2$};
     \node[cell,fill=warning!18,text=warning!88!ink] at (1,.75) {FN $=1$};
-    \node[cell,fill=rulecolor!18,text=rulecolor!82!ink] at (3,.75) {VP $=5$};
+    \node[cell,fill=rulecolor!18,text=rulecolor!82!ink] at (3,.75) {VP $=10$};
   \end{tikzpicture}
   \vfill
   \[
-    \text{exactitude}=\frac{5+5}{12}=83{,}3\%.
+    \text{exactitude}=\frac{10+3}{16}=81{,}25\%,
+    \qquad
+    \text{prédire toujours Gryffondor}=\frac{11}{16}=68{,}75\%.
   \]
 \end{frame}
 
@@ -961,7 +998,7 @@
   \[
     p\geq\tau
     \Longleftrightarrow
-    V\geq3P+20+\frac{18}{\ln5}\operatorname{logit}(\tau).
+    V\geq2P+18+\frac{12}{\ln3}\operatorname{logit}(\tau).
   \]
   \centering
   \begin{tikzpicture}
@@ -972,14 +1009,14 @@
       xlabel={Potions (sur 20)},ylabel={Vol (sur 100)},
       tick label style={font=\tiny},label style={font=\scriptsize},
       legend style={draw=none,font=\scriptsize,at={(.5,1.02)},anchor=south,legend columns=2}]
-      \addplot[only marks,mark=square*,mark size=2.2pt,coursescore]
+      \addplot[only marks,mark=square*,mark size=2.2pt,coursescore,forget plot]
         coordinates {\MicroTrainGryffondorCoords};
-      \addplot[only marks,mark=*,mark size=2.2pt,warning]
+      \addplot[only marks,mark=*,mark size=2.2pt,warning,forget plot]
         coordinates {\MicroTrainSerpentardCoords};
-      \addplot[ink!80,thick,domain=0:20,samples=2] {3*x+20};
+      \addplot[ink!80,thick,domain=0:20,samples=2] {2*x+18};
       \addlegendentry{$\tau=0{,}50$}
       \addplot[coursedecision!88!ink,dashed,thick,domain=0:20,samples=2]
-        {3*x+26.92};
+        {2*x+24.762};
       \addlegendentry{$\tau=0{,}65$}
     \end{axis}
   \end{tikzpicture}
@@ -998,11 +1035,11 @@
     arr/.style={-{Latex[length=2mm]},thick,ink!60}]
     \node[box,fill=courseevaluation!14] (row) {une observation\\à évaluer};
     \node[box,fill=coursedata!15,right=of row] (impute)
-      {$\widetilde P=10$ ; $\widetilde V=50$\\si une note manque};
+      {$\widetilde P=\MicroMedianPotions$ ; $\widetilde V=\MicroMedianVol$\\si une note manque};
     \node[box,fill=courseprobability!15,right=of impute] (scale)
-      {$\mu=(10,50)$\\$s=(4,12)$};
+      {$\mu=(\MicroMeanPotions,\MicroMeanVol)$\\$s=(\MicroSdPotions,\MicroSdVol)$};
     \node[box,fill=courseupdate!15,right=of scale] (model)
-      {$z=(\ln5/18)(V-3P-20)$\\coefficients figés};
+      {$z=(\ln3/12)(V-2P-18)$\\coefficients figés};
     \node[box,fill=courseevaluation!20,right=of model] (out)
       {$p$, maison prédite, perte};
     \draw[arr] (row) -- (impute);
@@ -1040,11 +1077,13 @@
       \addplot[only marks,mark=o,mark size=3pt,very thick,warning!88!ink]
         coordinates {\MicroTestSerpentardCoords};
       \addlegendentry{Serpentard — évaluation}
-      \addplot[ink!78,very thick,domain=0:20,samples=2] {3*x+20};
-      \node[font=\scriptsize\bfseries,text=warning,anchor=south east]
-        at (axis cs:10,55) {Marcus : $p=\MicroProbabilityMarcus$};
-      \node[font=\scriptsize\bfseries,text=coursescore!88!ink,anchor=north west]
-        at (axis cs:13,65) {Lavande : $p=\MicroProbabilityLavande$};
+      \addplot[ink!78,very thick,domain=0:20,samples=2] {2*x+18};
+      \node[font=\scriptsize\bfseries,text=warning,anchor=south,
+        yshift=4pt,fill=white,fill opacity=.85,text opacity=1,inner sep=1.5pt]
+        at (axis cs:5,30) {Daphné : $p=\MicroProbabilityDaphne$};
+      \node[font=\scriptsize\bfseries,text=coursescore!88!ink,anchor=north,
+        yshift=-4pt,fill=white,fill opacity=.85,text opacity=1,inner sep=1.5pt]
+        at (axis cs:17,57) {George : $p=\MicroProbabilityGeorge$};
     \end{axis}
   \end{tikzpicture}
 \end{frame}
@@ -1056,24 +1095,26 @@
       {\bfseries\color{coursedecision!88!ink} $\tau=0{,}50$}\par\medskip
       \begin{tabular}{c|cc}
         & Serp. prédit & Gryff. prédit\\\hline
-        Serp. obs. & $3$ & \cellcolor{warning!18}$1$\\
-        Gryff. obs. & $0$ & \cellcolor{rulecolor!18}$4$
+        Serp. obs. & $2$ & \cellcolor{warning!18}$1$\\
+        Gryff. obs. & \cellcolor{warning!18}$1$ & \cellcolor{rulecolor!18}$4$
       \end{tabular}
       \par\medskip
-      Marcus est classé à tort.
+      Daphné passe pour Gryffondor ; Alicia est manquée.
     \column{.48\textwidth}
       \centering
       {\bfseries\color{coursedecision!88!ink} $\tau=0{,}65$}\par\medskip
       \begin{tabular}{c|cc}
         & Serp. prédit & Gryff. prédit\\\hline
-        Serp. obs. & \cellcolor{rulecolor!18}$4$ & $0$\\
-        Gryff. obs. & \cellcolor{warning!18}$1$ & $3$
+        Serp. obs. & \cellcolor{rulecolor!18}$3$ & $0$\\
+        Gryff. obs. & \cellcolor{warning!18}$2$ & $3$
       \end{tabular}
       \par\medskip
-      Lavande est alors classée à tort.
+      Plus aucun faux positif, mais George est manqué à son tour.
   \end{columns}
   \vfill
-  L'exactitude reste \(7/8\) ; la nature de l'erreur change.
+  L'exactitude reste \(6/8\) ; la nature de l'erreur change. Le seuil élevé
+  achète de la précision (\(\MicroTestPrecisionTauHigh\)) au prix du rappel
+  (\(\MicroTestRecallTauHigh\)).
 \end{frame}
 
 \begin{frame}[t]{Comparaison des métriques selon le seuil}
@@ -1095,16 +1136,16 @@
 \begin{frame}[t]{Incertitude d'évaluation sur huit observations}
   \vspace{3mm}
   \[
-    \widehat{\mathrm{acc}}=\frac78=87{,}5\%.
+    \widehat{\mathrm{acc}}=\frac68=75\%.
   \]
   L'intervalle de Wilson à 95\% vaut
   \[
     \boxed{[\MicroTestWilsonLow\,;\,\MicroTestWilsonHigh]}
-    \approx[52{,}9\%\,;\,97{,}8\%].
+    \approx[40{,}9\%\,;\,92{,}9\%].
   \]
   \begin{vigilance}[Portée de l'étude de cas]
-    Les vingt observations sont synthétiques, équilibrées et choisies pour
-    rendre chaque transformation vérifiable. Elles illustrent une méthode ;
+    Les vingt-quatre observations sont synthétiques et choisies pour rendre
+    chaque transformation vérifiable à la main. Elles illustrent une méthode ;
     elles ne mesurent pas la performance attendue sur une population réelle.
   \end{vigilance}
 \end{frame}

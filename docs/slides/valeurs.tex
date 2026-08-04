@@ -1,0 +1,216 @@
+% Fichier genere par scripts/construire_cas.py ; ne pas modifier.
+% Les donnees brutes, l'imputation et les calculs viennent de data/eleves.csv.
+
+\newcommand{\MicroGryffondorLabel}{Gryffondor}
+\newcommand{\MicroSerpentardLabel}{Serpentard}
+\newcommand{\MicroNTrain}{20}
+\newcommand{\MicroNTest}{8}
+\newcommand{\MicroTrainGryffondor}{12}
+\newcommand{\MicroTrainSerpentard}{8}
+\newcommand{\MicroMedianPotions}{9}
+\newcommand{\MicroMedianVol}{51}
+\newcommand{\MicroMeanPotions}{10}
+\newcommand{\MicroMeanVol}{50}
+\newcommand{\MicroSdPotions}{5}
+\newcommand{\MicroSdVol}{18}
+\newcommand{\MicroTrainCovariance}{55}
+\newcommand{\MicroTrainCorrelation}{\frac{11}{18}}
+\newcommand{\MicroMarginExpr}{V-2P-24}
+\newcommand{\MicroBoundaryRaw}{V=2P+24}
+\newcommand{\MicroMarginStep}{10}
+\newcommand{\MicroScoreFromMargin}{z=\frac{\ln 3}{10}\left(V-2P-24\right)}
+\newcommand{\MicroLogOddsHigh}{+2\ln 3}
+\newcommand{\MicroLogOddsMid}{0}
+\newcommand{\MicroLogOddsLow}{-\ln 3}
+\newcommand{\MicroExactProbabilityHigh}{\frac{9}{10}}
+\newcommand{\MicroExactProbabilityMid}{\frac{1}{2}}
+\newcommand{\MicroExactProbabilityLow}{\frac{1}{4}}
+\newcommand{\MicroBandHighSize}{10}
+\newcommand{\MicroBandMidSize}{2}
+\newcommand{\MicroBandLowSize}{8}
+\newcommand{\MicroW}{\left(\frac{3\ln 3}{5}\,;\,-\ln 3\,;\,+\frac{9\ln 3}{5}\right)}
+\newcommand{\MicroWDecimal}{\left(+0{,}659167\,;\,-1{,}098612\,;\,+1{,}977502\right)}
+\newcommand{\MicroRawBeta}{\left(-\frac{12\ln 3}{5}\,;\,-\frac{\ln 3}{5}\,;\,+\frac{\ln 3}{10}\right)}
+\newcommand{\MicroRawBetaDecimal}{\left(-2{,}636669\,;\,-0{,}219722\,;\,+0{,}109861\right)}
+\newcommand{\MicroTrainLoss}{0{,}456790}
+\newcommand{\MicroTestLoss}{0{,}418562}
+\newcommand{\MicroGDAlpha}{1{,}00}
+\newcommand{\MicroGDIterations}{505}
+\newcommand{\MicroGDLoss}{0{,}456790}
+\newcommand{\MicroGDW}{\left(+0{,}659167\,;\,-1{,}098612\,;\,+1{,}977502\right)}
+\newcommand{\MicroGradientMaxError}{0{,}00000000000}
+\newcommand{\MicroThresholdLow}{0{,}50}
+\newcommand{\MicroThresholdHigh}{0{,}65}
+\newcommand{\MicroTrainAccuracy}{0{,}8000}
+\newcommand{\MicroTrainBaseline}{0{,}6000}
+\newcommand{\MicroTestAccuracy}{0{,}7500}
+\newcommand{\MicroTestAccuracyTauHigh}{0{,}7500}
+\newcommand{\MicroTestPrecision}{0{,}7500}
+\newcommand{\MicroTestRecall}{0{,}7500}
+\newcommand{\MicroTestSpecificity}{0{,}7500}
+\newcommand{\MicroTestFScore}{0{,}7500}
+\newcommand{\MicroTestPrecisionTauHigh}{1{,}0000}
+\newcommand{\MicroTestRecallTauHigh}{0{,}5000}
+\newcommand{\MicroTestWilsonLow}{0{,}409275}
+\newcommand{\MicroTestWilsonHigh}{0{,}928521}
+\newcommand{\MicroTrainConfusion}{VP $=10$, FN $=2$, FP $=2$, VN $=6$}
+\newcommand{\MicroTestConfusion}{VP $=3$, FN $=1$, FP $=1$, VN $=3$}
+\newcommand{\MicroTestConfusionTauHigh}{VP $=2$, FN $=2$, FP $=0$, VN $=4$}
+\newcommand{\MicroTrainRows}{
+E01 & Harry Potter & Gryffondor & $11$ & $66$ \\
+E02 & Drago Malefoy & Serpentard & $15$ & $44$ \\
+E03 & Hermione Granger & Gryffondor & $18$ & $80$ \\
+E04 & Pansy Parkinson & Serpentard & $9$ & $32$ \\
+E05 & Ron Weasley & Gryffondor & \textcolor{warning}{---} & $62$ \\
+E06 & Gregory Goyle & Serpentard & $4$ & $22$ \\
+E07 & Neville Londubat & Gryffondor & $3$ & $20$ \\
+E08 & Ginny Weasley & Gryffondor & $10$ & $64$ \\
+E09 & Vincent Crabbe & Serpentard & $5$ & $24$ \\
+E10 & Seamus Finnigan & Gryffondor & $8$ & $40$ \\
+E11 & Dean Thomas & Gryffondor & $12$ & $68$ \\
+E12 & Marcus Flint & Serpentard & $2$ & $48$ \\
+E13 & Colin Crivey & Gryffondor & $8$ & $30$ \\
+E14 & Angelina Johnson & Gryffondor & $16$ & $76$ \\
+E15 & Lavande Brown & Gryffondor & $7$ & $58$ \\
+E16 & Katie Bell & Gryffondor & $14$ & $72$ \\
+E17 & Blaise Zabini & Serpentard & $16$ & $46$ \\
+E18 & Théodore Nott & Serpentard & $20$ & $54$ \\
+E19 & Millicent Bulstrode & Serpentard & $7$ & $38$ \\
+E20 & Parvati Patil & Gryffondor & $6$ & $56$ \\}
+\newcommand{\MicroTrainPreparedRows}{
+E01 & Harry Potter & Gryffondor & $11$ & $66$ \\
+E02 & Drago Malefoy & Serpentard & $15$ & $44$ \\
+E03 & Hermione Granger & Gryffondor & $18$ & $80$ \\
+E04 & Pansy Parkinson & Serpentard & $9$ & $32$ \\
+E05 & Ron Weasley & Gryffondor & $9$ & $62$ \\
+E06 & Gregory Goyle & Serpentard & $4$ & $22$ \\
+E07 & Neville Londubat & Gryffondor & $3$ & $20$ \\
+E08 & Ginny Weasley & Gryffondor & $10$ & $64$ \\
+E09 & Vincent Crabbe & Serpentard & $5$ & $24$ \\
+E10 & Seamus Finnigan & Gryffondor & $8$ & $40$ \\
+E11 & Dean Thomas & Gryffondor & $12$ & $68$ \\
+E12 & Marcus Flint & Serpentard & $2$ & $48$ \\
+E13 & Colin Crivey & Gryffondor & $8$ & $30$ \\
+E14 & Angelina Johnson & Gryffondor & $16$ & $76$ \\
+E15 & Lavande Brown & Gryffondor & $7$ & $58$ \\
+E16 & Katie Bell & Gryffondor & $14$ & $72$ \\
+E17 & Blaise Zabini & Serpentard & $16$ & $46$ \\
+E18 & Théodore Nott & Serpentard & $20$ & $54$ \\
+E19 & Millicent Bulstrode & Serpentard & $7$ & $38$ \\
+E20 & Parvati Patil & Gryffondor & $6$ & $56$ \\}
+\newcommand{\MicroTestRawRows}{
+E21 & Fred Weasley & Gryffondor & $5$ & $64$ \\
+E22 & Olivier Dubois & Gryffondor & $13$ & $65$ \\
+E23 & George Weasley & Gryffondor & $11$ & \textcolor{warning}{---} \\
+E24 & Alicia Spinnet & Gryffondor & $8$ & $32$ \\
+E25 & Daphné Greengrass & Serpentard & $9$ & $44$ \\
+E26 & Adrian Pucey & Serpentard & $15$ & $48$ \\
+E27 & Graham Montague & Serpentard & $17$ & $42$ \\
+E28 & Terence Higgs & Serpentard & $12$ & $24$ \\}
+\newcommand{\MicroTestPreparedRows}{
+E21 & Fred Weasley & Gryffondor & $5$ & $64$ \\
+E22 & Olivier Dubois & Gryffondor & $13$ & $65$ \\
+E23 & George Weasley & Gryffondor & $11$ & $51$ \\
+E24 & Alicia Spinnet & Gryffondor & $8$ & $32$ \\
+E25 & Daphné Greengrass & Serpentard & $9$ & $44$ \\
+E26 & Adrian Pucey & Serpentard & $15$ & $48$ \\
+E27 & Graham Montague & Serpentard & $17$ & $42$ \\
+E28 & Terence Higgs & Serpentard & $12$ & $24$ \\}
+\newcommand{\MicroAllGryffondorCoords}{(11,66) (18,80) (9,62) (3,20) (10,64) (8,40) (12,68) (8,30) (16,76) (7,58) (14,72) (6,56) (5,64) (13,65) (11,51) (8,32)}
+\newcommand{\MicroAllSerpentardCoords}{(15,44) (9,32) (4,22) (5,24) (2,48) (16,46) (20,54) (7,38) (9,44) (15,48) (17,42) (12,24)}
+\newcommand{\MicroTrainGryffondorCoords}{(11,66) (18,80) (9,62) (3,20) (10,64) (8,40) (12,68) (8,30) (16,76) (7,58) (14,72) (6,56)}
+\newcommand{\MicroTrainSerpentardCoords}{(15,44) (9,32) (4,22) (5,24) (2,48) (16,46) (20,54) (7,38)}
+\newcommand{\MicroTestGryffondorCoords}{(5,64) (13,65) (11,51) (8,32)}
+\newcommand{\MicroTestSerpentardCoords}{(9,44) (15,48) (17,42) (12,24)}
+\newcommand{\MicroTrainGryffondorStdCoords}{(0.2,0.8889) (1.6,1.6667) (-0.2,0.6667) (-1.4,-1.6667) (0,0.7778) (-0.4,-0.5556) (0.4,1) (-0.4,-1.1111) (1.2,1.4444) (-0.6,0.4444) (0.8,1.2222) (-0.8,0.3333)}
+\newcommand{\MicroTrainSerpentardStdCoords}{(1,-0.3333) (-0.2,-1) (-1.2,-1.5556) (-1,-1.4444) (-1.6,-0.1111) (1.2,-0.2222) (2,0.2222) (-0.6,-0.6667)}
+\newcommand{\MicroMissingCoords}{(9,62) (11,51)}
+\newcommand{\MicroAllNameLabels}{
+\node[font=\tiny\bfseries,text=coursescore!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=0pt,yshift=9pt] at (axis cs:11,66) {Harry};
+\node[font=\tiny\bfseries,text=warning!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=-5pt,yshift=-8pt] at (axis cs:15,44) {Drago};
+\node[font=\tiny\bfseries,text=coursescore!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=5pt,yshift=8pt] at (axis cs:18,80) {Hermione};
+\node[font=\tiny\bfseries,text=warning!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=5pt,yshift=8pt] at (axis cs:9,32) {Pansy};
+\node[font=\tiny\bfseries,text=coursescore!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=-4pt,yshift=8pt] at (axis cs:9,62) {Ron};
+\node[font=\tiny\bfseries,text=warning!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=0pt,yshift=-9pt] at (axis cs:4,22) {Gregory};
+\node[font=\tiny\bfseries,text=coursescore!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=0pt,yshift=9pt] at (axis cs:3,20) {Neville};
+\node[font=\tiny\bfseries,text=coursescore!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=-4pt,yshift=8pt] at (axis cs:10,64) {Ginny};
+\node[font=\tiny\bfseries,text=warning!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=0pt,yshift=9pt] at (axis cs:5,24) {Vincent};
+\node[font=\tiny\bfseries,text=coursescore!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=-4pt,yshift=8pt] at (axis cs:8,40) {Seamus};
+\node[font=\tiny\bfseries,text=coursescore!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=5pt,yshift=8pt] at (axis cs:12,68) {Dean};
+\node[font=\tiny\bfseries,text=warning!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=5pt,yshift=8pt] at (axis cs:2,48) {Marcus};
+\node[font=\tiny\bfseries,text=coursescore!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=0pt,yshift=-17pt] at (axis cs:8,30) {Colin};
+\node[font=\tiny\bfseries,text=coursescore!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=5pt,yshift=8pt] at (axis cs:16,76) {Angelina};
+\node[font=\tiny\bfseries,text=coursescore!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=5pt,yshift=8pt] at (axis cs:7,58) {Lavande};
+\node[font=\tiny\bfseries,text=coursescore!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=5pt,yshift=8pt] at (axis cs:14,72) {Katie};
+\node[font=\tiny\bfseries,text=warning!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=0pt,yshift=-9pt] at (axis cs:16,46) {Blaise};
+\node[font=\tiny\bfseries,text=warning!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=-15pt,yshift=8pt] at (axis cs:20,54) {Théodore};
+\node[font=\tiny\bfseries,text=warning!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=-5pt,yshift=-8pt] at (axis cs:7,38) {Millicent};
+\node[font=\tiny\bfseries,text=coursescore!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=-5pt,yshift=-8pt] at (axis cs:6,56) {Parvati};
+\node[font=\tiny\bfseries,text=coursescore!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=5pt,yshift=8pt] at (axis cs:5,64) {Fred};
+\node[font=\tiny\bfseries,text=coursescore!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=-5pt,yshift=-8pt] at (axis cs:13,65) {Olivier};
+\node[font=\tiny\bfseries,text=coursescore!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=5pt,yshift=8pt] at (axis cs:11,51) {George};
+\node[font=\tiny\bfseries,text=coursescore!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=-7pt,yshift=-11pt] at (axis cs:8,32) {Alicia};
+\node[font=\tiny\bfseries,text=warning!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=5pt,yshift=8pt] at (axis cs:9,44) {Daphné};
+\node[font=\tiny\bfseries,text=warning!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=5pt,yshift=8pt] at (axis cs:15,48) {Adrian};
+\node[font=\tiny\bfseries,text=warning!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=5pt,yshift=8pt] at (axis cs:17,42) {Graham};
+\node[font=\tiny\bfseries,text=warning!88!ink,fill=white,fill opacity=.82,text opacity=1,inner sep=.6pt,xshift=5pt,yshift=8pt] at (axis cs:12,24) {Terence};}
+\newcommand{\MicroTrainAtypicalCoords}{(3,20) (8,40) (2,48) (8,30) (7,38)}
+\newcommand{\MicroTestAtypicalCoords}{(8,32) (9,44)}
+\newcommand{\MicroGDTableRows}{
+$0$ & $0{,}693147$ & $+0{,}000000$ & $+0{,}000000$ & $+0{,}000000$ & $0{,}275152$ \\
+$1$ & $0{,}627613$ & $+0{,}100000$ & $+0{,}020000$ & $+0{,}255556$ & $0{,}205274$ \\
+$2$ & $0{,}589805$ & $+0{,}175416$ & $-0{,}003387$ & $+0{,}445036$ & $0{,}165603$ \\
+$5$ & $0{,}531556$ & $+0{,}315954$ & $-0{,}158034$ & $+0{,}818988$ & $0{,}110192$ \\
+$10$ & $0{,}490893$ & $+0{,}426284$ & $-0{,}415388$ & $+1{,}180157$ & $0{,}069205$ \\
+$20$ & $0{,}465744$ & $+0{,}524128$ & $-0{,}730450$ & $+1{,}555024$ & $0{,}032744$ \\
+$50$ & $0{,}457114$ & $+0{,}628227$ & $-1{,}026081$ & $+1{,}894273$ & $0{,}005710$ \\
+$100$ & $0{,}456792$ & $+0{,}656534$ & $-1{,}092679$ & $+1{,}970677$ & $4{,}547\times10^{-4}$ \\
+$200$ & $0{,}456790$ & $+0{,}659148$ & $-1{,}098570$ & $+1{,}977453$ & $3{,}257\times10^{-6}$ \\
+$400$ & $0{,}456790$ & $+0{,}659167$ & $-1{,}098612$ & $+1{,}977502$ & $1{,}691\times10^{-10}$ \\
+$505$ & $0{,}456790$ & $+0{,}659167$ & $-1{,}098612$ & $+1{,}977502$ & $9{,}52\times10^{-13}$ \\}
+\newcommand{\MicroGradientCheckRows}{
+$0$ & $-0{,}051088138$ & $-0{,}051088138$ & $0{,}00000000000$ \\
+$1$ & $-0{,}072622164$ & $-0{,}072622164$ & $0{,}00000000000$ \\
+$2$ & $-0{,}241949596$ & $-0{,}241949596$ & $0{,}00000000000$ \\}
+\newcommand{\MicroMetricsRows}{
+apprentissage & $0{,}50$ & $10$ & $2$ & $2$ & $6$ & $0{,}8000$ & $0{,}8333$ & $0{,}8333$ & $0{,}7500$ & $0{,}8333$ & $0{,}7917$ \\
+apprentissage & $0{,}65$ & $9$ & $3$ & $1$ & $7$ & $0{,}8000$ & $0{,}9000$ & $0{,}7500$ & $0{,}8750$ & $0{,}8182$ & $0{,}8125$ \\
+test & $0{,}50$ & $3$ & $1$ & $1$ & $3$ & $0{,}7500$ & $0{,}7500$ & $0{,}7500$ & $0{,}7500$ & $0{,}7500$ & $0{,}7500$ \\
+test & $0{,}65$ & $2$ & $2$ & $0$ & $4$ & $0{,}7500$ & $1{,}0000$ & $0{,}5000$ & $1{,}0000$ & $0{,}6667$ & $0{,}7500$ \\}
+\newcommand{\MicroTestSummaryRows}{
+$0{,}50$ & $0{,}7500$ & $0{,}7500$ & $0{,}7500$ & $0{,}7500$ & $0{,}7500$ \\
+$0{,}65$ & $0{,}7500$ & $1{,}0000$ & $0{,}5000$ & $1{,}0000$ & $0{,}6667$ \\}
+\newcommand{\MicroTrainCalcRows}{
+E01 & Harry & Gryff. & $+2{,}197225$ & $0{,}900000$ & Gryff. & Gryff. \\
+E02 & Drago & Serp. & $-1{,}098612$ & $0{,}250000$ & Serp. & Serp. \\
+E03 & Hermione & Gryff. & $+2{,}197225$ & $0{,}900000$ & Gryff. & Gryff. \\
+E04 & Pansy & Serp. & $-1{,}098612$ & $0{,}250000$ & Serp. & Serp. \\
+E05 & Ron & Gryff. & $+2{,}197225$ & $0{,}900000$ & Gryff. & Gryff. \\
+E06 & Gregory & Serp. & $-1{,}098612$ & $0{,}250000$ & Serp. & Serp. \\
+E07 & Neville & Gryff. & $-1{,}098612$ & $0{,}250000$ & Serp. & Serp. \\
+E08 & Ginny & Gryff. & $+2{,}197225$ & $0{,}900000$ & Gryff. & Gryff. \\
+E09 & Vincent & Serp. & $-1{,}098612$ & $0{,}250000$ & Serp. & Serp. \\
+E10 & Seamus & Gryff. & $+0{,}000000$ & $0{,}500000$ & Gryff. & Serp. \\
+E11 & Dean & Gryff. & $+2{,}197225$ & $0{,}900000$ & Gryff. & Gryff. \\
+E12 & Marcus & Serp. & $+2{,}197225$ & $0{,}900000$ & Gryff. & Gryff. \\
+E13 & Colin & Gryff. & $-1{,}098612$ & $0{,}250000$ & Serp. & Serp. \\
+E14 & Angelina & Gryff. & $+2{,}197225$ & $0{,}900000$ & Gryff. & Gryff. \\
+E15 & Lavande & Gryff. & $+2{,}197225$ & $0{,}900000$ & Gryff. & Gryff. \\
+E16 & Katie & Gryff. & $+2{,}197225$ & $0{,}900000$ & Gryff. & Gryff. \\
+E17 & Blaise & Serp. & $-1{,}098612$ & $0{,}250000$ & Serp. & Serp. \\
+E18 & Théodore & Serp. & $-1{,}098612$ & $0{,}250000$ & Serp. & Serp. \\
+E19 & Millicent & Serp. & $+0{,}000000$ & $0{,}500000$ & Gryff. & Serp. \\
+E20 & Parvati & Gryff. & $+2{,}197225$ & $0{,}900000$ & Gryff. & Gryff. \\}
+\newcommand{\MicroTestCalcRows}{
+E21 & Fred & Gryff. & $+3{,}295837$ & $0{,}964286$ & Gryff. & Gryff. \\
+E22 & Olivier & Gryff. & $+1{,}647918$ & $0{,}838610$ & Gryff. & Gryff. \\
+E23 & George & Gryff. & $+0{,}549306$ & $0{,}633975$ & Gryff. & Serp. \\
+E24 & Alicia & Gryff. & $-0{,}878890$ & $0{,}293408$ & Serp. & Serp. \\
+E25 & Daphné & Serp. & $+0{,}219722$ & $0{,}554711$ & Gryff. & Serp. \\
+E26 & Adrian & Serp. & $-0{,}659167$ & $0{,}340927$ & Serp. & Serp. \\
+E27 & Graham & Serp. & $-1{,}757780$ & $0{,}147069$ & Serp. & Serp. \\
+E28 & Terence & Serp. & $-2{,}636669$ & $0{,}066815$ & Serp. & Serp. \\}
+\newcommand{\MicroProbabilityGeorge}{0{,}633975}
+\newcommand{\MicroProbabilityDaphne}{0{,}554711}
+\newcommand{\MicroProbabilityAlicia}{0{,}293408}
+\newcommand{\MicroProbabilityFred}{0{,}964286}
