@@ -7,6 +7,12 @@ DOCDIR   := regression
 MASTER   := regression_logistique.tex
 SLIDES   := regression_logistique_slides.tex
 SLIDES_BODY := $(DOCDIR)/regression_logistique_slides_body.tex
+SLIDES_CONTENT := $(DOCDIR)/regression_logistique_slides_content.tex
+SLIDES_VALUES := $(DOCDIR)/regression_logistique_slides_values.tex
+SLIDES_GENERATOR := $(DOCDIR)/scripts/gen_slides_source.py
+MICRO_BUILDER := $(DOCDIR)/scripts/build_micro_case.py
+MICRO_DATA := $(DOCDIR)/data/micro_ecoles.csv
+MICRO_CALCULATIONS := $(DOCDIR)/data/micro_ecoles_calculs.csv
 TUTO     := $(DOCDIR)/scripts/tuto
 
 .PHONY: all install tuto verify figures labels tex-memory doc slides doc-tag-check clean
@@ -29,7 +35,7 @@ verify: $(STAMP)
 	$(PY) $(DOCDIR)/scripts/verifie_chiffres.py
 
 figures: $(STAMP)
-	@for gen in $(DOCDIR)/scripts/gen_*.py; do \
+	@for gen in $(filter-out $(SLIDES_GENERATOR),$(wildcard $(DOCDIR)/scripts/gen_*.py)); do \
 	  echo "=== $$gen ==="; $(PY) $$gen || exit 1; \
 	done
 
@@ -52,8 +58,13 @@ doc:
 	cd $(DOCDIR) && latexmk -synctex=1 -pdf -interaction=nonstopmode \
 	  -file-line-error $(MASTER)
 
-$(SLIDES_BODY): $(DOCDIR)/scripts/gen_slides_source.py $(DOCDIR)/chapters/*.tex | $(STAMP)
-	$(PY) $(DOCDIR)/scripts/gen_slides_source.py
+$(SLIDES_VALUES): $(MICRO_BUILDER) $(MICRO_DATA) | $(STAMP)
+	$(PY) $(MICRO_BUILDER)
+
+$(SLIDES_BODY): $(SLIDES_GENERATOR) $(MICRO_BUILDER) $(MICRO_DATA) \
+                $(SLIDES_CONTENT) $(SLIDES_VALUES) | $(STAMP)
+	$(PY) $(MICRO_BUILDER)
+	$(PY) $(SLIDES_GENERATOR)
 
 slides: $(SLIDES_BODY)
 	cd $(DOCDIR) && latexmk -synctex=1 -pdf -interaction=nonstopmode \
@@ -67,4 +78,6 @@ clean:
 	cd $(DOCDIR) && latexmk -C $(MASTER)
 	cd $(DOCDIR) && latexmk -C $(SLIDES)
 	rm -f $(SLIDES_BODY)
+	rm -f $(SLIDES_VALUES)
+	rm -f $(MICRO_CALCULATIONS)
 	rm -f $(DOCDIR)/chapters/*.aux

@@ -24,11 +24,7 @@
 \usepgfplotslibrary{statistics}
 \pgfplotsset{compat=1.18}
 \usepackage{xcolor}
-\usepackage{xspace}
 \usepackage{listings}
-\usepackage[backend=biber,style=numeric,sorting=none]{biblatex}
-\addbibresource{references.bib}
-\AtEveryBibitem{\clearfield{urldate}}
 
 \definecolor{ink}{HTML}{18212B}
 \definecolor{accent}{HTML}{155E75}
@@ -38,18 +34,14 @@
 \definecolor{gridgray}{HTML}{CBD5E1}
 \definecolor{rulecolor}{HTML}{4D7C0F}
 \definecolor{rulelight}{HTML}{F1F8E8}
-\definecolor{gryff}{HTML}{155E75}
-\definecolor{huffle}{HTML}{9A3412}
-\definecolor{raven}{HTML}{4D7C0F}
-\definecolor{slyth}{HTML}{6B21A8}
-\definecolor{herbo}{HTML}{9D174D}
-\definecolor{runes}{HTML}{1D4ED8}
 \definecolor{courseproblem}{HTML}{687386}
 \definecolor{coursedata}{HTML}{47777B}
 \definecolor{coursescore}{HTML}{356B8B}
 \definecolor{courseprobability}{HTML}{5B6093}
 \definecolor{courseloss}{HTML}{8A5D68}
-\definecolor{courseoptimization}{HTML}{98633F}
+\definecolor{coursegradient}{HTML}{98633F}
+\definecolor{courseupdate}{HTML}{8B7040}
+\definecolor{coursedecision}{HTML}{687548}
 \definecolor{courseevaluation}{HTML}{527460}
 
 % Grille 16:9 : toute la surface sert au cours, sans chrome de navigation.
@@ -79,20 +71,17 @@
 \setbeamerfont{part title}{size=\LARGE,series=\bfseries}
 \setbeamertemplate{frametitle}{%
   \nointerlineskip
-  \begin{beamercolorbox}[wd=\paperwidth,ht=3.8mm,dp=1.2mm]{frametitle}%
-    \hbox to \paperwidth{%
-      \parbox[c][5mm][c]{.20\paperwidth}{%
-        \hspace*{4mm}{\usebeamerfont{framecrumb}\color{white!68}%
-          \MakeUppercase{\coursepartposition}}}%
-      \parbox[c][5mm][c]{.60\paperwidth}{%
-        \centering
-        \begin{adjustbox}{max width=.58\paperwidth}%
+  \begin{tikzpicture}[remember picture,overlay]
+    \fill[ink] (current page.north west)
+      rectangle ([yshift=-5mm]current page.north east);
+    \node[anchor=center,inner sep=0pt,outer sep=0pt]
+      at ([yshift=-2.5mm]current page.north) {%
+        \begin{adjustbox}{max width=.84\paperwidth}%
           {\usebeamerfont{frametitle}\color{white}%
             \MakeUppercase{\insertframetitle}}%
-        \end{adjustbox}}%
-      \parbox[c][5mm][c]{.20\paperwidth}{}%
-    }%
-  \end{beamercolorbox}%
+        \end{adjustbox}};
+  \end{tikzpicture}%
+  \rule{0pt}{5mm}\par
   \nointerlineskip
   \coursenavigation}
 \setbeamertemplate{itemize item}{\color{accent!62}\small\textbullet}
@@ -103,11 +92,12 @@
 \setlength{\emergencystretch}{2em}
 \linespread{1.05}
 
-\title{Régression logistique}
-\subtitle{Modèle, optimisation et évaluation}
+\title{Régression logistique binaire}
+\subtitle{Du score linéaire à la décision probabiliste}
 \author{Sylvain Maitre}
-\date{Version 2.0}
+\date{Étude de cas : Gryffondor et Serpentard}
 \setbeamertemplate{title page}{%
+  \centering
   \vfill
   {\fontsize{29}{33}\selectfont\bfseries\color{ink}\inserttitle\par}
   \vspace{3mm}
@@ -124,7 +114,7 @@
 \RenewDocumentCommand{\includegraphics}{O{}m}{%
   \courseincludegraphics[max height=.67\textheight,keepaspectratio,#1]{#2}}
 \NewDocumentEnvironment{slidevisual}{}{%
-  \begin{adjustbox}{max totalsize={\textwidth}{.75\textheight},center}%
+  \begin{adjustbox}{max totalsize={.97\textwidth}{.75\textheight},center}%
   \begin{minipage}{\textwidth}}
   {\end{minipage}\end{adjustbox}}
 
@@ -167,79 +157,165 @@
 
 % Numérotation stable entre le cours long et le diaporama.
 \newcounter{coursechapter}
+\newcounter{coursestep}
 \newcommand{\coursechapterkind}{Chapitre}
+\newif\ifcoursereperemode
+\coursereperemodefalse
 \newcommand{\coursechapterindicator}{}
 \newcommand{\coursepartshort}{Vue d'ensemble}
 \newcommand{\coursepartposition}{Vue d'ensemble}
 \newcommand{\coursepartindex}{0}
 \newcommand{\coursepartcolor}{courseproblem}
+\newif\ifcoursenavigationvisible
+\coursenavigationvisiblefalse
+\newcount\courseslideinstage
+\newcount\coursestagetotal
+\newcount\coursenextstage
+\newdimen\courseprogresswidth
+% La progression est calculée exclusivement par LaTeX à partir des numéros de
+% frames enregistrés dans le fichier auxiliaire ; aucun total n'est généré.
+\newcommand{\coursefinishstage}{}
+\newcommand{\courseprogressdimensions}{%
+  \courseslideinstage=1
+  \coursestagetotal=1
+  \ifnum\getrefnumber{course-stage-start-\coursepartindex}>0
+    \courseslideinstage=\numexpr\insertframenumber-
+      \getrefnumber{course-stage-start-\coursepartindex}+1\relax
+    \coursenextstage=\numexpr\coursepartindex+1\relax
+    \ifnum\coursenextstage>8
+      \coursestagetotal=\numexpr\inserttotalframenumber-
+        \getrefnumber{course-stage-start-\coursepartindex}+1\relax
+    \else
+      \ifnum\getrefnumber{course-stage-start-\the\coursenextstage}>0
+        \coursestagetotal=\numexpr
+          \getrefnumber{course-stage-start-\the\coursenextstage}-
+          \getrefnumber{course-stage-start-\coursepartindex}\relax
+      \fi
+    \fi
+  \fi
+  \ifnum\courseslideinstage<1
+    \courseslideinstage=1
+  \fi
+  \ifnum\courseslideinstage>\coursestagetotal
+    \courseslideinstage=\coursestagetotal
+  \fi
+  \courseprogresswidth=\dimexpr
+    .125\paperwidth*\courseslideinstage/\coursestagetotal\relax}
 \newcommand{\coursestage}[3]{%
   \begingroup
   \ifnum#1=\coursepartindex
-    \def\stageforeground{#3}%
-    \def\stagemarker{\textbullet\space}%
+    \courseprogressdimensions
+    \def\stageforeground{ink}%
+    \def\stagebase{#3!14}%
     \def\stageweight{\bfseries}%
+    \def\stagefillwidth{\courseprogresswidth}%
+    \def\stagefillcolor{#3!48}%
   \else
     \ifnum#1<\coursepartindex
-      \def\stageforeground{ink!52}%
+      \def\stageforeground{white}%
+      \def\stagebase{#3!78!ink}%
+      \def\stagefillwidth{0pt}%
+      \def\stagefillcolor{#3!78!ink}%
     \else
-      \def\stageforeground{ink!18}%
+      \def\stageforeground{#3!78!ink}%
+      \def\stagebase{#3!10}%
+      \def\stagefillwidth{0pt}%
+      \def\stagefillcolor{#3!10}%
     \fi
-    \def\stagemarker{}%
     \def\stageweight{\mdseries}%
   \fi
-  \parbox[c][3mm][c]{.142857\paperwidth}{%
-    \centering
-    {\fontsize{5.55}{6}\selectfont\stageweight
-      \color{\stageforeground}\stagemarker\MakeUppercase{#2}}}%
+  \pgfmathsetlengthmacro{\stageleft}{(#1-1)*.125*\paperwidth}%
+  \pgfmathsetlengthmacro{\stagecenter}{\stageleft+.0625*\paperwidth}%
+  \fill[\stagebase]
+    (\stageleft,0) rectangle ++(.125\paperwidth,-3.8mm);
+  \fill[\stagefillcolor]
+    (\stageleft,0) rectangle ++(\stagefillwidth,-3.8mm);
+  \draw[white,line width=.8pt]
+    (\stageleft,0) rectangle ++(.125\paperwidth,-3.8mm);
+  \node[anchor=center,inner sep=0pt,outer sep=0pt]
+    at (\stagecenter,-1.9mm) {%
+      \fontsize{5.55}{6}\selectfont\stageweight
+      \color{\stageforeground}\MakeUppercase{#2}};
   \endgroup}
 \newcommand{\coursenavigation}{%
-  \hbox to \paperwidth{%
-    \coursestage{1}{Problème}{courseproblem}%
-    \coursestage{2}{Données}{coursedata}%
-    \coursestage{3}{Score}{coursescore}%
-    \coursestage{4}{Probabilité}{courseprobability}%
-    \coursestage{5}{Perte}{courseloss}%
-    \coursestage{6}{Optimisation}{courseoptimization}%
-    \coursestage{7}{Évaluation}{courseevaluation}}}
+  \ifcoursenavigationvisible
+    \begingroup
+    \leftskip=0pt\rightskip=0pt\parfillskip=0pt
+    \begin{tikzpicture}[remember picture,overlay]
+      \begin{scope}[shift={([yshift=-5mm]current page.north west)}]
+        \coursestage{1}{Données}{coursedata}%
+        \coursestage{2}{Score linéaire}{coursescore}%
+        \coursestage{3}{Sigmoïde}{courseprobability}%
+        \coursestage{4}{Perte logistique}{courseloss}%
+        \coursestage{5}{Gradient}{coursegradient}%
+        \coursestage{6}{Mise à jour}{courseupdate}%
+        \coursestage{7}{Décision}{coursedecision}%
+        \coursestage{8}{Évaluation}{courseevaluation}%
+      \end{scope}
+    \end{tikzpicture}%
+    \rule{0pt}{3.8mm}%
+    \endgroup
+  \fi}
 \renewcommand{\thecoursechapter}{\arabic{coursechapter}}
+\newcommand{\courseintro}{%
+  \coursefinishstage
+  \coursenavigationvisiblefalse
+  \gdef\coursechapterindicator{}%
+  \gdef\coursepartshort{Introduction}%
+  \gdef\coursepartposition{Introduction}%
+  \gdef\coursepartindex{0}%
+  \gdef\coursepartcolor{courseproblem}}
 \newcommand{\coursereperes}{%
+  \coursereperemodetrue
   \setcounter{coursechapter}{0}%
   \renewcommand{\coursechapterkind}{Repère}%
   \renewcommand{\thecoursechapter}{\Roman{coursechapter}}}
 \newcommand{\coursemain}{%
+  \coursereperemodefalse
   \setcounter{coursechapter}{0}%
   \renewcommand{\coursechapterkind}{Chapitre}%
   \renewcommand{\thecoursechapter}{\arabic{coursechapter}}}
-\newcommand{\coursepart}[5]{%
+\newcommand{\coursepart}[3]{%
+  \coursefinishstage
+  \coursenavigationvisibletrue
+  \stepcounter{coursestep}%
   \gdef\coursepartshort{#2}%
-  \gdef\coursepartposition{Étape #4}%
-  \gdef\coursepartindex{#5}%
+  \gdef\coursepartposition{#2}%
+  \xdef\coursepartindex{\arabic{coursestep}}%
   \gdef\coursepartcolor{#3}%
   \setbeamercolor{frametitle}{fg=white,bg=ink}%
   \part{#1}
-  \begin{frame}[plain]
+  \section{#1}
+  \begin{frame}[t]{#2}
+    \label{course-stage-start-\coursepartindex}%
     \centering\vfill
-    {\scriptsize\bfseries\color{#3}ÉTAPE #4\par}
-    \vspace{2mm}
     {\usebeamerfont{part title}\color{ink}#1\par}
     \vspace{3mm}{\color{#3}\rule{28mm}{1pt}}
     \vfill
   \end{frame}}
+\newcommand{\courseunit}[2]{%
+  \gdef\coursechapterindicator{}%
+  \label{#2}}
 \newcommand{\coursechapter}[2]{%
-  \refstepcounter{coursechapter}%
-  \gdef\coursechapterindicator{\coursechapterkind\space\thecoursechapter}%
-  \label{#2}%
-  \section{#1}
-  \begin{frame}[plain]
-    \vfill
-    {\large\sffamily\bfseries\color{\coursepartcolor}%
-      \coursechapterkind\space\thecoursechapter\par}
-    \vspace{3mm}
-    {\usebeamerfont{section title}\color{ink}#1\par}
-    \vspace{4mm}{\color{\coursepartcolor}\rule{24mm}{.9pt}}
-    \vfill
-  \end{frame}}
+  \ifcoursereperemode
+    \gdef\coursechapterindicator{}%
+    \label{#2}%
+    \section{#1}%
+  \else
+    \refstepcounter{coursechapter}%
+    \gdef\coursechapterindicator{\coursechapterkind\space\thecoursechapter}%
+    \label{#2}%
+    \section{#1}
+    \begin{frame}[plain]
+      \vfill
+      {\large\sffamily\bfseries\color{\coursepartcolor}%
+        \coursechapterkind\space\thecoursechapter\par}
+      \vspace{3mm}
+      {\usebeamerfont{section title}\color{ink}#1\par}
+      \vspace{4mm}{\color{\coursepartcolor}\rule{24mm}{.9pt}}
+      \vfill
+    \end{frame}%
+  \fi}
 \renewcommand{\thefigure}{\arabic{figure}}
 \renewcommand{\thetable}{\arabic{table}}
 
@@ -261,28 +337,32 @@
   \orientmeta{Prérequis}{#2}
   \orientmeta{Parcours}{#3}}
 
-% Encadrés transformés en respirations typographiques qui peuvent se poursuivre
-% sur la vue suivante. Aucun grand rectangle ne retient artificiellement le texte.
 \newenvironment{coursecallout}[2]{%
   \par\addvspace{.55em}\begingroup
-  \leftskip=4mm\rightskip=2mm
-  \noindent{\small\bfseries\color{#1}#2}\par\smallskip
-  \color{ink!94}\ignorespaces}
-  {\par\endgroup\addvspace{.55em}}
+  \def\coursecalloutcolor{#1}%
+  \noindent\color{#1}\rule{\linewidth}{.7pt}\par
+  \if\relax\detokenize{#2}\relax\else
+    \noindent\colorbox{#1!12}{\parbox{\dimexpr\linewidth-2\fboxsep\relax}{%
+      \small\bfseries\color{#1}#2}}\par
+  \fi
+  \smallskip\leftskip=3mm\rightskip=2mm\raggedright\color{ink!94}\ignorespaces}
+  {\par\leftskip=0pt\rightskip=0pt\smallskip
+   \noindent\color{\coursecalloutcolor}\rule{\linewidth}{.7pt}\par
+   \endgroup\addvspace{.55em}}
 \newenvironment{resultat}[1][]{\begin{coursecallout}{accent!82!ink}{#1}}
   {\end{coursecallout}}
 \newenvironment{vigilance}[1][]{\begin{coursecallout}{warning!82!ink}{#1}}
   {\end{coursecallout}}
-\RenewDocumentEnvironment{lecture}{}{\begin{coursecallout}{ink!68}{Lecture}}
+\RenewDocumentEnvironment{lecture}{}{\begin{coursecallout}{coursescore!88!ink}{Lecture}}
   {\end{coursecallout}}
-\newenvironment{chiffres}[1][]{\begin{coursecallout}{ink!58}{#1}\small}
+\newenvironment{chiffres}[1][]{\begin{coursecallout}{courseprobability!88!ink}{#1}\small}
   {\end{coursecallout}}
 \newenvironment{releve}{%
-  \par\begingroup\small\color{ink!68}\leftskip=5mm\rightskip=2mm}
+  \par\begingroup\small\color{ink!68}\leftskip=5mm\rightskip=2mm\raggedright}
   {\par\endgroup}
 \newenvironment{rappel}[1][]{\begin{coursecallout}{rulecolor!82!ink}{#1}}
   {\end{coursecallout}}
-\newenvironment{approfondir}[1][]{\begin{coursecallout}{ink!62}{#1}}
+\newenvironment{approfondir}[1][]{\begin{coursecallout}{courseprobability!82!ink}{#1}}
   {\end{coursecallout}}
 
 \NewDocumentEnvironment{panelenumerate}{O{accent}}
@@ -311,9 +391,7 @@
   {\end{coursecallout}}
 \newcommand{\tlab}[1]{\par\addvspace{3pt}%
   {\scriptsize\bfseries\color{accent!80!ink}#1}\quad\ignorespaces}
-\newcommand{\corrige}[1]{\par\addvspace{3pt}%
-  {\scriptsize\color{ink!55}Corrigé : \annexeref{ann:corriges},
-   \texttt{#1}.}}
+\newcommand{\corrige}[1]{}
 
 \NewDocumentEnvironment{graphique}{m}{}{}
 \newcommand{\codefile}[2][firstline=1]{%
@@ -323,12 +401,6 @@
     columns=fullflexible,keepspaces=true}}
   {}
 
-\newcommand{\Gryf}{\textcolor{gryff}{Gryffindor}\xspace}
-\newcommand{\Huff}{\textcolor{huffle}{Hufflepuff}\xspace}
-\newcommand{\Rav}{\textcolor{raven}{Ravenclaw}\xspace}
-\newcommand{\Slyth}{\textcolor{slyth}{Slytherin}\xspace}
-\newcommand{\Herb}{\textcolor{herbo}{Herbology}\xspace}
-\newcommand{\Runes}{\textcolor{runes}{Ancient Runes}\xspace}
 \newcommand{\ann}[3]{%
   \underbrace{\textcolor{#1}{#2}}_{\textcolor{#1}{\substack{#3}}}}
 \newcommand{\annup}[3]{%
@@ -340,21 +412,13 @@
 \newcommand{\w}{\mathbf{w}}
 \newcommand{\X}{\mathbf{X}}
 \newcommand{\y}{\mathbf{y}}
-% Les compléments ajoutés tardivement au cours long ne sont pas projetés.
-% Les mentions résiduelles restent lisibles sans produire de renvoi cassé.
-\newcommand{\annexeref}[1]{annexe du cours long}
 \newcommand{\slidebreak}{\framebreak}
-\newcommand{\Mzero}{\ensuremath{M_0}\xspace}
-\newcommand{\Mquatre}{\ensuremath{M_{400}}\xspace}
-\newcommand{\Mstop}{\ensuremath{M_{\text{arr}}}\xspace}
-\newcommand{\Movr}{\ensuremath{M_{4}}\xspace}
 
 \hypersetup{
   colorlinks=true,
   linkcolor=accent!85!ink,
-  citecolor=accent,
   urlcolor=accent,
-  pdftitle={Régression logistique --- diaporama pédagogique},
+  pdftitle={Régression logistique binaire},
   pdfauthor={Sylvain Maitre},
   pdflang={fr-FR}}
 
@@ -364,30 +428,7 @@
   \titlepage
 \end{frame}
 
-\begin{frame}{Parcours causal}
-  \centering
-  {\large\bfseries\color{ink}
-    Problème \(\longrightarrow\) Données \(\longrightarrow\) Score
-    \(\longrightarrow\) Probabilité\par}
-  \vspace{6mm}
-  {\large\bfseries\color{ink}
-    Perte \(\longrightarrow\) Optimisation
-    \(\longrightarrow\) Évaluation\par}
-  \vspace{9mm}
-  {\small\color{ink!68}
-    Chaque notion est introduite, justifiée, programmée puis utilisée avant
-    de passer à la suivante.\par}
-\end{frame}
-
 \input{regression_logistique_slides_body.tex}
 
-\gdef\coursechapterindicator{}
-\gdef\coursepartshort{Ressources}
-\gdef\coursepartposition{Ressources}
-\gdef\coursepartindex{8}
-\setbeamercolor{frametitle}{fg=white,bg=ink}
-\begin{frame}[t,allowframebreaks]{Références}
-  \printbibliography[heading=none]
-\end{frame}
-
+\courseintro
 \end{document}

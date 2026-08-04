@@ -1,0 +1,21 @@
+id;eleve;maison;usage;atypique;potions_absente;vol_absent;potions_preparee;vol_prepare;y;x_potions;x_vol;score;probabilite;perte;prediction_tau_050;correct_tau_050;prediction_tau_065;correct_tau_065
+E01;Harry Potter;Gryffondor;apprentissage;non;non;non;3;47;1;-1,750000000;-0,250000000;1,609437912;0,833333333;0,182321557;1;1;1;1
+E02;Drago Malefoy;Serpentard;apprentissage;non;non;non;9;29;0;-0,250000000;-1,750000000;-1,609437912;0,166666667;0,182321557;0;1;0;1
+E03;Hermione Granger;Gryffondor;apprentissage;non;non;non;5;53;1;-1,250000000;0,250000000;1,609437912;0,833333333;0,182321557;1;1;1;1
+E04;Pansy Parkinson;Serpentard;apprentissage;non;non;non;11;35;0;0,250000000;-1,250000000;-1,609437912;0,166666667;0,182321557;0;1;0;1
+E05;Ron Weasley;Gryffondor;apprentissage;non;non;non;6;56;1;-1,000000000;0,500000000;1,609437912;0,833333333;0,182321557;1;1;1;1
+E06;Blaise Zabini;Serpentard;apprentissage;non;non;non;12;38;0;0,500000000;-1,000000000;-1,609437912;0,166666667;0,182321557;0;1;0;1
+E07;Neville Londubat;Gryffondor;apprentissage;oui;non;non;14;44;1;1,000000000;-0,500000000;-1,609437912;0,166666667;1,791759469;0;0;0;0
+E08;Vincent Crabbe;Serpentard;apprentissage;oui;non;non;8;62;0;-0,500000000;1,000000000;1,609437912;0,833333333;1,791759469;1;0;1;0
+E09;Ginny Weasley;Gryffondor;apprentissage;non;non;non;9;65;1;-0,250000000;1,250000000;1,609437912;0,833333333;0,182321557;1;1;1;1
+E10;Gregory Goyle;Serpentard;apprentissage;non;non;non;15;47;0;1,250000000;-0,250000000;-1,609437912;0,166666667;0,182321557;0;1;0;1
+E11;Dean Thomas;Gryffondor;apprentissage;non;non;non;11;71;1;0,250000000;1,750000000;1,609437912;0,833333333;0,182321557;1;1;1;1
+E12;Théodore Nott;Serpentard;apprentissage;non;non;non;17;53;0;1,750000000;0,250000000;-1,609437912;0,166666667;0,182321557;0;1;0;1
+E13;Seamus Finnigan;Gryffondor;test;non;oui;non;10;60;1;0,000000000;0,833333333;0,894132174;0,709742172;0,342853514;1;1;1;1
+E14;Daphné Greengrass;Serpentard;test;non;non;oui;16;50;0;1,500000000;0,000000000;-1,609437912;0,166666667;0,182321557;0;1;0;1
+E15;Parvati Patil;Gryffondor;test;non;non;non;7;50;1;-0,750000000;0,000000000;0,804718956;0,690983006;0,369640049;1;1;1;1
+E16;Millicent Bulstrode;Serpentard;test;non;non;non;7;35;0;-0,750000000;-1,250000000;-0,536479304;0,369006965;0,460460455;0;1;0;1
+E17;Lavande Brown;Gryffondor;test;non;non;non;13;65;1;0,750000000;1,250000000;0,536479304;0,630993035;0,460460455;1;1;0;0
+E18;Marcus Flint;Serpentard;test;oui;non;non;10;55;0;0,000000000;0,416666667;0,447066087;0,609941444;0,941458407;1;0;0;1
+E19;Colin Crivey;Gryffondor;test;non;non;non;4;41;1;-1,500000000;-0,750000000;0,804718956;0,690983006;0,369640049;1;1;1;1
+E20;Adrian Pucey;Serpentard;test;non;non;non;13;55;0;0,750000000;0,416666667;-0,357652869;0,411527859;0,530225692;0;1;0;1
