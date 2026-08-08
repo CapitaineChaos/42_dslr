@@ -44,11 +44,11 @@
 % par un nœud : son contenu est donc centré par construction, jamais par des
 % coordonnées ajustées à la main. L'ensemble est enveloppé dans \hyperref, ce qui
 % rend toute la surface de la carte cliquable vers la section correspondante.
-\newlength{\chainw}\setlength{\chainw}{3.06cm}
+\newlength{\chainw}\setlength{\chainw}{3.94cm}
 \newlength{\chainh}\setlength{\chainh}{3.6cm}
 \pgfplotsset{
   chainaxis/.style={
-    scale only axis,width=2.55cm,height=1.7cm,
+    scale only axis,width=3.2cm,height=1.95cm,
     axis lines=box,axis line style={ink!30,line width=.4pt},
     xtick=\empty,ytick=\empty,
     clip mode=individual,
@@ -63,7 +63,31 @@
   \addplot[courseupdate!48!white,line width=.5pt] coordinates {\MicroContourSecond};
   \addplot[courseupdate!62!white,line width=.5pt] coordinates {\MicroContourInner};}
 
-\newcommand{\chaincard}[4]{%
+% Le tracé d'une vignette occupe une boîte de gabarit fixe, obtenue en dilatant
+% le rectangle d'axes d'une marge identique sur les quatre côtés : son centre
+% est donc exactement celui du rectangle d'axes. Étiquettes et légendes
+% débordent de cette boîte au lieu de la dilater, si bien qu'une carte étiquetée
+% et une carte nue placent leur tracé au même endroit, sans dérive latérale ni
+% verticale. L'argument optionnel reprend la hauteur d'axe lorsque la vignette
+% s'écarte de la hauteur commune.
+\newcommand{\chainplot}[2][1.95]{%
+  \begin{tikzpicture}
+    \useasboundingbox (-.30,-.30) rectangle (3.5,{#1+.30});
+    #2
+  \end{tikzpicture}}
+
+% Clé de légende : la maison se lit à la fois par la teinte et par la forme du
+% marqueur employé dans les nuages, carré pour l'une, disque pour l'autre.
+\newcommand{\chainkey}[3]{%
+  \tikz[baseline=-.5ex]{\node[#2,fill=#1,inner sep=0pt,minimum size=2.5pt]{};}%
+  \kern1.3pt\textcolor{#1}{#3}}
+\newcommand{\chainhouses}{%
+  \chainkey{coursescore!88!ink}{rectangle}{\MicroGryffondorLabel}\kern5pt
+  \chainkey{warning!88!ink}{circle}{\MicroSerpentardLabel}}
+
+% Les deux ordonnées sont fixes pour les huit cartes : le bandeau de légende ne
+% déplace pas le tracé, il occupe une bande qui lui est réservée en permanence.
+\newcommand{\chaincard}[5]{%
   \hyperref[#1]{%
     \begin{tikzpicture}
       \path[draw=ink!24,fill=white,rounded corners=1.6pt,line width=.5pt]
@@ -72,7 +96,9 @@
         (0,\chainh-.51cm) rectangle (\chainw,\chainh);
       \node[font=\fontsize{6.3}{7}\selectfont\bfseries,text=ink!92,anchor=west]
         at (.16,\chainh-.255cm) {#3};
-      \node[inner sep=0pt] at (.5\chainw,.5\chainh-.255cm) {#4};
+      \node[inner sep=0pt] at (.5\chainw,1.775cm) {#4};
+      \node[inner sep=0pt,font=\fontsize{5.4}{6}\selectfont]
+        at (.5\chainw,.23cm) {#5};
     \end{tikzpicture}}}
 
 % Frontière ajustée et frontière décalée par le seuil haut, toutes deux issues
@@ -154,7 +180,7 @@
   slot/.style={inner sep=0pt,outer sep=0pt}]
 
   \node[slot] (donnees) at (0,4.8) {\chaincard{course-stage-start-1}{coursedata}{DONNÉES}{%
-    \begin{tikzpicture}
+    \chainplot{%
       \begin{axis}[chainaxis,xmin=0,xmax=20,ymin=0,ymax=100,
         xlabel={\PotionsName},ylabel={\VolName},
         label style={font=\tiny,inner sep=1.5pt}]
@@ -162,22 +188,20 @@
           coordinates {\MicroAllGryffondorCoords};
         \addplot[only marks,mark=*,mark size=.9pt,warning!88!ink]
           coordinates {\MicroAllSerpentardCoords};
-      \end{axis}
-    \end{tikzpicture}}};
+      \end{axis}}}{\chainhouses}};
 
-  \node[slot] (score) at (3.78,4.8) {\chaincard{course-stage-start-2}{coursescore}{SCORE LINÉAIRE}{%
-    \begin{tikzpicture}
+  \node[slot] (score) at (4.66,4.8) {\chaincard{course-stage-start-2}{coursescore}{SCORE LINÉAIRE}{%
+    \chainplot{%
       \begin{axis}[chainaxis,xmin=0,xmax=20,ymin=0,ymax=100]
         \addplot[only marks,mark=square*,mark size=.9pt,coursescore!88!ink]
           coordinates {\MicroTrainGryffondorCoords};
         \addplot[only marks,mark=*,mark size=.9pt,warning!88!ink]
           coordinates {\MicroTrainSerpentardCoords};
         \microboundary{ink!72,line width=.8pt};
-      \end{axis}
-    \end{tikzpicture}}};
+      \end{axis}}}{\chainhouses}};
 
-  \node[slot] (sigmoide) at (7.56,4.8) {\chaincard{course-stage-start-3}{courseprobability}{SIGMOÏDE}{%
-    \begin{tikzpicture}
+  \node[slot] (sigmoide) at (9.32,4.8) {\chaincard{course-stage-start-3}{courseprobability}{SIGMOÏDE}{%
+    \chainplot{%
       \begin{axis}[chainaxis,xmin=-3.2,xmax=3.2,ymin=-.06,ymax=1.06]
         \addplot[courseprobability!88!ink,domain=-3.2:3.2,samples=70]
           {1/(1+exp(-x))};
@@ -185,12 +209,11 @@
           coordinates {\MicroSigmoidGryffondorCoords};
         \addplot[only marks,mark=*,mark size=.9pt,warning!88!ink]
           coordinates {\MicroSigmoidSerpentardCoords};
-      \end{axis}
-    \end{tikzpicture}}};
+      \end{axis}}}{\chainhouses}};
 
-  \node[slot] (decision) at (11.34,4.8) {\chaincard{course-stage-start-7}{coursedecision}{DÉCISION}{%
-    \begin{tikzpicture}
-      \begin{axis}[chainaxis,height=.95cm,xmin=0,xmax=1,ymin=0,ymax=1]
+  \node[slot] (decision) at (13.98,4.8) {\chaincard{course-stage-start-7}{coursedecision}{DÉCISION}{%
+    \chainplot[1.1]{%
+      \begin{axis}[chainaxis,height=1.1cm,xmin=0,xmax=1,ymin=0,ymax=1]
         \fill[warning!8] (axis cs:0,0) rectangle (axis cs:.5,1);
         \fill[coursescore!8] (axis cs:.5,0) rectangle (axis cs:1,1);
         \draw[coursedecision!88!ink,dashed,line width=.6pt]
@@ -199,17 +222,12 @@
           coordinates {\MicroDecisionGryffondorCoords};
         \addplot[only marks,mark=*,mark size=.9pt,warning!88!ink]
           coordinates {\MicroDecisionSerpentardCoords};
-        \node[font=\tiny,text=warning!88!ink,anchor=north west,yshift=-1pt]
-          at (axis description cs:0,0) {\MicroSerpentardLabel};
-        \node[font=\tiny,text=coursescore!88!ink,anchor=north east,yshift=-1pt]
-          at (axis description cs:1,0) {\MicroGryffondorLabel};
-        \node[font=\tiny,text=coursedecision!88!ink,anchor=north,
+        \node[font=\tiny,text=coursedecision!88!ink,anchor=south,
           inner sep=1.5pt] at (axis description cs:.5,1) {$\tau$};
-      \end{axis}
-    \end{tikzpicture}}};
+      \end{axis}}}{\chainhouses}};
 
   \node[slot] (maj) at (0,0) {\chaincard{course-stage-start-6}{courseupdate}{MISE À JOUR}{%
-    \begin{tikzpicture}
+    \chainplot{%
       \begin{axis}[chainaxis,xmin=\MicroSliceXmin,xmax=\MicroSliceXmax,
         ymin=\MicroSliceYmin,ymax=\MicroSliceYmax,
         xlabel={$w_{\mathrm{pot}}$},ylabel={$w_{\mathrm{vol}}$},
@@ -220,11 +238,10 @@
           coordinates {\MicroGDPathCoords};
         \addplot[only marks,mark=star,mark size=2pt,line width=.7pt,ink!75]
           coordinates {\MicroOptimumCoords};
-      \end{axis}
-    \end{tikzpicture}}};
+      \end{axis}}}{}};
 
-  \node[slot] (gradient) at (3.78,0) {\chaincard{course-stage-start-5}{coursegradient}{GRADIENT}{%
-    \begin{tikzpicture}
+  \node[slot] (gradient) at (4.66,0) {\chaincard{course-stage-start-5}{coursegradient}{GRADIENT}{%
+    \chainplot{%
       \begin{axis}[chainaxis,xmin=\MicroSliceXmin,xmax=\MicroSliceXmax,
         ymin=\MicroSliceYmin,ymax=\MicroSliceYmax,
         xlabel={$w_{\mathrm{pot}}$},ylabel={$w_{\mathrm{vol}}$},
@@ -237,37 +254,32 @@
           coordinates {\MicroGradientProbe};
         \node[font=\tiny,text=coursegradient!92!ink,anchor=south west,inner sep=1pt]
           at (axis cs:\MicroGradientTipX,\MicroGradientTipY) {$-\nabla J$};
-      \end{axis}
-    \end{tikzpicture}}};
+      \end{axis}}}{}};
 
-  \node[slot] (perte) at (7.56,0) {\chaincard{course-stage-start-4}{courseloss}{PERTE LOGISTIQUE}{%
-    \begin{tikzpicture}
+  \node[slot] (perte) at (9.32,0) {\chaincard{course-stage-start-4}{courseloss}{PERTE LOGISTIQUE}{%
+    \chainplot{%
       \begin{axis}[chainaxis,xmin=-3,xmax=3,ymin=0,ymax=3.2,
         xlabel={$z$},label style={font=\tiny,inner sep=1.5pt}]
         \addplot[coursescore!88!ink,domain=-3:3,samples=60] {ln(1+exp(-x))};
         \addplot[warning!88!ink,domain=-3:3,samples=60] {ln(1+exp(x))};
-        \node[font=\fontsize{5}{5.5}\selectfont,text=coursescore!88!ink,
-          anchor=north west,inner sep=2pt]
-          at (axis description cs:0,1) {\MicroGryffondorLabel};
-        \node[font=\fontsize{5}{5.5}\selectfont,text=warning!88!ink,
-          anchor=north east,inner sep=2pt]
-          at (axis description cs:1,1) {\MicroSerpentardLabel};
-      \end{axis}
-    \end{tikzpicture}}};
+      \end{axis}}}{\chainhouses}};
 
-  \node[slot] (evaluation) at (11.34,0)
+  \node[slot] (evaluation) at (13.98,0)
     {\chaincard{course-stage-start-8}{courseevaluation}{ÉVALUATION}{%
-    \begin{tikzpicture}[x=1.02cm,y=.58cm,
-      cell/.style={draw=white,line width=.7pt,minimum width=1cm,
-        minimum height=.56cm,font=\tiny\bfseries,inner sep=0pt},
+    \begin{tikzpicture}[x=1.28cm,y=.66cm,
+      cell/.style={draw=white,line width=.7pt,minimum width=1.22cm,
+        minimum height=.62cm,font=\tiny\bfseries,inner sep=0pt},
       tag/.style={font=\tiny,text=ink!62}]
+      \useasboundingbox (-1.26cm,-.945cm) rectangle (2.54cm,1.605cm);
       \node[cell,fill=rulecolor!18,text=rulecolor!75!ink] at (0,1) {VN $=\MicroTrainTN$};
       \node[cell,fill=warning!16,text=warning!85!ink]     at (1,1) {FP $=\MicroTrainFP$};
       \node[cell,fill=warning!16,text=warning!85!ink]     at (0,0) {FN $=\MicroTrainFN$};
       \node[cell,fill=rulecolor!18,text=rulecolor!75!ink] at (1,0) {VP $=\MicroTrainTP$};
       \node[tag,anchor=south] at (.5,1.62) {maison prédite};
       \node[tag,anchor=south,rotate=90] at (-.62,.5) {maison observée};
-    \end{tikzpicture}}};
+    \end{tikzpicture}}{%
+      \chainkey{warning!85!ink}{rectangle}{N = négatif}\kern6pt
+      \chainkey{rulecolor!75!ink}{rectangle}{P = positif}}};
 
   \draw[flow] (donnees) -- (score);
   \draw[flow] (score) -- (sigmoide);
@@ -288,24 +300,28 @@
 \begin{frame}[t]{Séparation entre estimation et évaluation}
   \vspace{5mm}
   \centering
-  \begin{tikzpicture}[node distance=9mm and 12mm,
-    box/.style={draw=ink!28,rounded corners=2pt,minimum height=15mm,
-      minimum width=31mm,align=center,font=\small,inner xsep=4mm},
-    arr/.style={-{Latex[length=2mm]},thick,ink!58}]
-    \node[box,fill=coursedata!13] (all) {24 élèves};
-    \node[box,fill=coursedata!22,right=of all,yshift=10mm] (train)
+  \begin{tikzpicture}[node distance=9mm and 11mm,
+    box/.style={draw=ink!28,rounded corners=2pt,minimum height=14mm,
+      minimum width=30mm,align=center,font=\small,inner xsep=3mm},
+    arr/.style={-{Latex[length=2mm]},thick,ink!58},
+    lab/.style={font=\scriptsize,text=ink!62,align=left,inner sep=2.5pt}]
+    \node[box,fill=coursedata!13] (all) {\MicroNTotal{} élèves};
+    \node[box,fill=coursedata!22,right=of all,yshift=14mm] (train)
       {\MicroNTrain{} élèves\\estimation};
-    \node[box,fill=courseevaluation!18,right=of all,yshift=-10mm] (test)
+    \node[box,fill=courseevaluation!18,right=of all,yshift=-14mm] (test)
       {\MicroNTest{} élèves\\évaluation};
     \node[box,fill=courseupdate!15,right=of train] (fit)
-      {médianes, $\mu$, $s$\\et coefficients};
+      {médianes, moyennes,\\écarts types, coefficients};
     \node[box,fill=courseevaluation!24,right=of test] (eval)
       {mesure\\des erreurs};
     \draw[arr] (all) -- (train);
     \draw[arr] (all) -- (test);
     \draw[arr] (train) -- (fit);
-    \draw[arr] (fit.south) |- (eval.north);
     \draw[arr] (test) -- (eval);
+    % Seule flèche qui ne transporte pas des observations mais les nombres
+    % estimés : elle doit le dire, sans quoi elle se lit comme un lien de plus.
+    \draw[arr] (fit) -- node[lab,right] {paramètres appliqués\\sans réestimation}
+      (eval);
   \end{tikzpicture}
   \vfill
   Le groupe d'estimation constitue le \emph{jeu d'apprentissage} : lui seul fixe
@@ -323,10 +339,11 @@
     \MicroTrainRows
   \end{tabularx}
   \par\vspace{2mm}
-  \begin{vigilance}[Une note manque ici même]
-    La note de \PotionsName{} de Ron est absente. Le trou se trouve donc là où sont
-    calculées les statistiques : sa valeur de remplacement participera aux
-    médianes, aux moyennes et aux coefficients.
+  \begin{vigilance}[Donnée manquante à l'intérieur du groupe d'estimation]
+    La note de \PotionsName{} de Ron Weasley est manquante. L'imputation
+    intervient donc dans le groupe qui fixe les paramètres : la valeur substituée
+    pèse sur les médianes, sur les moyennes et, par voie de conséquence, sur les
+    coefficients estimés.
   \end{vigilance}
 \end{frame}
 
@@ -341,10 +358,11 @@
     \MicroTestRawRows
   \end{tabularx}
   \vfill
-  \begin{vigilance}[Une note manque aussi à l'évaluation]
-    La note de \VolName{} de George est absente. Une case vide ne peut pas être
-    standardisée : elle doit d'abord recevoir une valeur numérique, et cette
-    valeur vient du groupe d'estimation.
+  \begin{vigilance}[Donnée manquante dans le groupe d'évaluation]
+    La note de \VolName{} de George Weasley est manquante. La standardisation
+    exige une valeur numérique : l'imputation la précède nécessairement, et la
+    valeur substituée provient du groupe d'estimation, jamais des observations
+    à évaluer.
   \end{vigilance}
 \end{frame}
 
@@ -354,41 +372,46 @@
     \column{.47\textwidth}
       \begin{coursecallout}{coursedata!88!ink}{Valeurs de remplacement}
         \[
-          \widetilde P=\MicroMedianPotions,
-          \qquad \widetilde V=\MicroMedianVol.
+          m_{\mathrm{pot}}=\MicroMedianPotions,
+          \qquad m_{\mathrm{vol}}=\MicroMedianVol.
         \]
-        Ces médianes ne sont lues que sur les notes \emph{observées} du groupe
-        d'estimation, jamais sur le groupe d'évaluation.
+        Ces médianes sont lues sur les seules notes \emph{observées} du groupe
+        d'estimation ; le groupe d'évaluation n'y contribue pas.
       \end{coursecallout}
     \column{.47\textwidth}
-      \begin{coursecallout}{courseevaluation!88!ink}{Deux substitutions}
+      \begin{coursecallout}{courseevaluation!88!ink}{Substitutions et notes
+        standardisées}
         \[
           \begin{aligned}
-            P_{\text{Ron}}&\leftarrow\MicroMedianPotions
-              &\Longrightarrow x_{\mathrm{pot}}&=0,\\
-            V_{\text{George}}&\leftarrow\MicroMedianVol
-              &\Longrightarrow x_{\mathrm{vol}}&=0{,}35.
+            P_{\text{Ron}}&\leftarrow m_{\mathrm{pot}}
+              &\Longrightarrow x_{\mathrm{pot}}&=\MicroImputedStdPotions,\\
+            V_{\text{George}}&\leftarrow m_{\mathrm{vol}}
+              &\Longrightarrow x_{\mathrm{vol}}&=\MicroImputedStdVol.
           \end{aligned}
         \]
-        En \PotionsName{} la médiane égale la moyenne ; en \VolName{} elle vaut
-        \(\MicroMedianVol\) contre une moyenne de \(\MicroMeanVol\).
+        En \PotionsName{}, médiane et moyenne coïncident : la substitution tombe
+        au centre de l'échelle standardisée. En \VolName{}, la médiane excède la
+        moyenne (\(\MicroMedianVol\) contre \(\MicroMeanVol\)), d'un tiers
+        d'écart type.
       \end{coursecallout}
   \end{columns}
   \vfill
   \centering
   \begin{adjustbox}{max width=.96\textwidth,center}
-  \begin{tikzpicture}[node distance=7mm,
+  % Médiane et centrage-réduction sont des opérations, non des états : elles
+  % portent les flèches. Les posait-on en boîtes que le schéma se lirait comme
+  % une note manquante engendrant une médiane.
+  \begin{tikzpicture}[node distance=30mm,
     box/.style={draw=ink!25,rounded corners=2pt,minimum height=11mm,
       align=center,font=\small,inner xsep=4mm},
-    arr/.style={-{Latex[length=1.8mm]},thick,ink!58}]
+    arr/.style={-{Latex[length=1.8mm]},thick,ink!58},
+    lab/.style={font=\scriptsize,text=ink!62,inner sep=3pt}]
     \node[box,fill=warning!12] (raw) {note manquante};
-    \node[box,fill=coursedata!16,right=of raw] (rule) {médiane\\de la matière};
-    \node[box,fill=rulecolor!16,right=of rule] (ready) {valeur\\numérique $v$};
+    \node[box,fill=rulecolor!16,right=of raw] (ready) {note complétée};
     \node[box,fill=courseprobability!14,right=of ready] (standard)
-      {$x=(v-\mu)/s$\\note standardisée};
-    \draw[arr] (raw) -- (rule);
-    \draw[arr] (rule) -- (ready);
-    \draw[arr] (ready) -- (standard);
+      {note standardisée};
+    \draw[arr] (raw) -- node[lab,above] {médiane de la matière} (ready);
+    \draw[arr] (ready) -- node[lab,above] {centrage et réduction} (standard);
   \end{tikzpicture}
   \end{adjustbox}
 \end{frame}
@@ -1142,9 +1165,9 @@
     arr/.style={-{Latex[length=2mm]},thick,ink!60}]
     \node[box,fill=courseevaluation!14] (row) {une observation\\à évaluer};
     \node[box,fill=coursedata!15,right=of row] (impute)
-      {$\widetilde P=\MicroMedianPotions$ ; $\widetilde V=\MicroMedianVol$\\si une note manque};
+      {$m_{\mathrm{pot}}=\MicroMedianPotions$ ; $m_{\mathrm{vol}}=\MicroMedianVol$\\si une note manque};
     \node[box,fill=courseprobability!15,right=of impute] (scale)
-      {$\mu=(\MicroMeanPotions,\MicroMeanVol)$\\$s=(\MicroSdPotions,\MicroSdVol)$};
+      {$\mu_{\mathrm{pot}},\mu_{\mathrm{vol}}=\MicroMeanPotions,\MicroMeanVol$\\$s_{\mathrm{pot}},s_{\mathrm{vol}}=\MicroSdPotions,\MicroSdVol$};
     \node[box,fill=courseupdate!15,right=of scale] (model)
       {$\MicroRawScore$\\coefficients figés};
     \node[box,fill=courseevaluation!20,right=of model] (out)

@@ -1174,6 +1174,7 @@ def write_tex_values(
         command("MicroSerpentardLabel", SERPENTARD),
         command("MicroNTrain", str(len(train))),
         command("MicroNTest", str(len(test))),
+        command("MicroNTotal", str(len(train) + len(test))),
         command("MicroTrainGryffondor", str(train_gryffondor)),
         command("MicroTrainSerpentard", str(len(train) - train_gryffondor)),
         command("MicroMedianPotions", decimal_tex(MEDIAN_POTIONS, trim=True)),
@@ -1182,6 +1183,10 @@ def write_tex_values(
         command("MicroMeanVol", decimal_tex(flight.mean, trim=True)),
         command("MicroSdPotions", decimal_tex(potions.sd_population, trim=True)),
         command("MicroSdVol", decimal_tex(flight.sd_population, trim=True)),
+        command("MicroImputedStdPotions", decimal_tex(
+            (MEDIAN_POTIONS - potions.mean) / potions.sd_population, trim=True)),
+        command("MicroImputedStdVol", decimal_tex(
+            (MEDIAN_VOL - flight.mean) / flight.sd_population, trim=True)),
         command("MicroTrainCovariance", decimal_tex(COVARIANCE, trim=True)),
         command("MicroTrainCorrelation", CORRELATION_TEX),
         command("MicroTotalStudents", str(len(students))),
