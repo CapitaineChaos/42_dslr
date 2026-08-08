@@ -2,17 +2,19 @@
 """Valide et calcule le micro-cas Gryffondor--Serpentard.
 
 Le CSV est l'unique source de donnees. Le script impute et standardise a partir
-des vingt observations d'apprentissage seulement, verifie l'optimum analytique
-de la regression logistique, execute une descente de gradient, puis regenere les
-artefacts internes du diaporama.
+des vingt observations d'apprentissage seulement, resout la regression
+logistique par Newton-Raphson, verifie la solution par une descente de gradient,
+puis regenere les artefacts internes du diaporama.
 
-Construction du jeu d'apprentissage. La marge brute vaut m = V - 2P - 24 et ne
-prend que trois valeurs : -10, 0 et +20. Sur chaque palier la proportion de
-Gryffondor vaut respectivement 1/4, 1/2 et 9/10, dont les logits -ln3, 0 et
-+2ln3 sont alignes sur la marge. Le maximum de vraisemblance est donc atteint
-exactement en z = (ln3/10)(V - 2P - 24), sans separation parfaite ni forme
-degeneree : la frontiere n'est ni la premiere bissectrice ni centree sur le
-barycentre.
+Construction du jeu. Les observations forment deux agregats compacts dans le
+plan (Potions, Vol) : Gryffondor sur des notes de Potions basses et de Vol
+elevees, Serpentard a l'oppose. Six observations se situent dans l'agregat de la
+maison opposee ; ce recouvrement rend l'optimum fini, contraste les pertes
+individuelles et conditionne l'existence de faux positifs et de faux negatifs.
+
+Les statistiques d'apprentissage sont rondes par construction (moyennes 10 et
+50, ecarts-types 4 et 20, covariance -64, donc correlation -4/5) : chaque
+standardisation reste verifiable sans calculatrice.
 """
 
 from __future__ import annotations
@@ -43,24 +45,26 @@ GRYFFONDOR = "Gryffondor"
 SERPENTARD = "Serpentard"
 HOUSE_TO_Y = {GRYFFONDOR: 1, SERPENTARD: 0}
 USAGES = {"apprentissage", "test"}
-ATYPIQUES = {"E07", "E10", "E12", "E13", "E19", "E24", "E25"}
+# Observations en recouvrement et profils frontaliers : elles concentrent les
+# pertes elevees et l'ensemble des erreurs de classement.
+ATYPIQUES = {"E03", "E10", "E12", "E13", "E19", "E22", "E24", "E25"}
 MISSING = {("E05", "potions"), ("E23", "flight")}
 THRESHOLDS = (0.50, 0.65)
 
 N_TRAIN = 20
 N_TEST = 8
-POTIONS_SLOPE = 2.0
-BOUNDARY_OFFSET = 24.0
-MARGIN_STEP = 10.0
-# palier de marge -> (effectif, nombre de Gryffondor)
-MARGIN_BANDS = {-10.0: (8, 2), 0.0: (2, 1), 20.0: (10, 9)}
 MEAN_POTIONS = 10.0
 MEAN_VOL = 50.0
-SD_POTIONS = 5.0
-SD_VOL = 18.0
-MEDIAN_POTIONS = 9.0
-MEDIAN_VOL = 51.0
-COVARIANCE = 55.0
+SD_POTIONS = 4.0
+SD_VOL = 20.0
+MEDIAN_POTIONS = 10.0
+MEDIAN_VOL = 57.0
+COVARIANCE = -64.0
+CORRELATION_TEX = r"-\frac{4}{5}"
+# Coefficients d'essai des planches pedagogiques : z = x_vol - 2 x_pot.
+TRIAL_WEIGHTS = (0.0, -2.0, 1.0)
+TRIAL_TEX = r"(0,-2,+1)"
+TRIAL_SCORE_TEX = r"z=x_{\mathrm{vol}}-2x_{\mathrm{pot}}"
 
 
 @dataclass(frozen=True)
@@ -75,10 +79,6 @@ class Student:
     atypical: bool
     missing_potions: bool
     missing_flight: bool
-
-    @property
-    def margin(self) -> float:
-        return self.flight - POTIONS_SLOPE * self.potions - BOUNDARY_OFFSET
 
 
 @dataclass(frozen=True)
@@ -298,40 +298,74 @@ def gradient(
     return tuple(value / len(targets) for value in result)
 
 
-def exact_optimum(train: Sequence[Student]) -> tuple[tuple[float, ...], tuple[float, ...]]:
-    """Optimum en forme close deduit des trois paliers de marge."""
-    bands: dict[float, list[Student]] = {}
-    for student in train:
-        bands.setdefault(student.margin, []).append(student)
-    if set(bands) != set(MARGIN_BANDS):
-        raise AssertionError(f"paliers de marge {sorted(bands)}; attendu {sorted(MARGIN_BANDS)}")
-    for margin, members in bands.items():
-        size, gryffondors = MARGIN_BANDS[margin]
-        if len(members) != size or sum(student.y for student in members) != gryffondors:
-            raise AssertionError(
-                f"palier {margin:+g}: {len(members)} eleves dont "
-                f"{sum(student.y for student in members)} Gryffondor; "
-                f"attendu {size} dont {gryffondors}"
-            )
-        # Sur un palier, tous les scores coincident : la proportion observee est
-        # la probabilite ajustee, et son logit doit rester aligne sur la marge.
-        proportion = gryffondors / size
-        expected = math.log(proportion / (1.0 - proportion))
-        if not close(expected, margin * math.log(3.0) / MARGIN_STEP, tolerance=1e-12):
-            raise AssertionError(f"palier {margin:+g}: logit {expected} non aligne")
+def solve3(matrix: Sequence[Sequence[float]], right: Sequence[float]) -> tuple[float, ...]:
+    """Pivot de Gauss sur un systeme 3x3, avec choix du pivot maximal."""
+    rows = [list(row) + [value] for row, value in zip(matrix, right, strict=True)]
+    for column in range(3):
+        pivot = max(range(column, 3), key=lambda index: abs(rows[index][column]))
+        rows[column], rows[pivot] = rows[pivot], rows[column]
+        if abs(rows[column][column]) < 1e-14:
+            raise AssertionError("systeme singulier : la hessienne n'est pas inversible")
+        for index in range(3):
+            if index != column:
+                factor = rows[index][column] / rows[column][column]
+                rows[index] = [a - factor * b for a, b in zip(rows[index], rows[column])]
+    return tuple(rows[index][3] / rows[index][index] for index in range(3))
 
-    unit = math.log(3.0) / MARGIN_STEP
-    raw = (
-        -BOUNDARY_OFFSET * unit,
-        -POTIONS_SLOPE * unit,
-        unit,
+
+def newton_optimum(
+    design: Sequence[Sequence[float]],
+    targets: Sequence[int],
+    *,
+    tolerance: float = 1e-15,
+    maximum: int = 100,
+) -> tuple[float, ...]:
+    """Maximum de vraisemblance par Newton-Raphson sur les scores standardises.
+
+    La perte logistique est strictement convexe des que les deux maisons se
+    recouvrent : l'optimum est unique et Newton l'atteint a la precision
+    machine en une dizaine de tours.
+    """
+    weights = (0.0, 0.0, 0.0)
+    size = len(targets)
+    for _ in range(maximum):
+        probabilities = [sigmoid(dot(weights, row)) for row in design]
+        slope = gradient(weights, design, targets)
+        hessian = [
+            [
+                math.fsum(
+                    probability * (1.0 - probability) * row[j] * row[k]
+                    for probability, row in zip(probabilities, design, strict=True)
+                ) / size
+                for k in range(3)
+            ]
+            for j in range(3)
+        ]
+        step = solve3(hessian, slope)
+        weights = tuple(value - move for value, move in zip(weights, step, strict=True))
+        if max(abs(move) for move in step) <= tolerance:
+            return weights
+    raise AssertionError(f"Newton n'a pas converge en {maximum} tours")
+
+
+def raw_coefficients(
+    weights: Sequence[float],
+    potions: ColumnStats,
+    flight: ColumnStats,
+) -> tuple[float, ...]:
+    """Reecriture du meme modele sur les notes brutes."""
+    beta_potions = weights[1] / potions.sd_population
+    beta_flight = weights[2] / flight.sd_population
+    return (
+        weights[0] - beta_potions * potions.mean - beta_flight * flight.mean,
+        beta_potions,
+        beta_flight,
     )
-    standardized = (
-        unit * (MEAN_VOL - POTIONS_SLOPE * MEAN_POTIONS - BOUNDARY_OFFSET),
-        -POTIONS_SLOPE * SD_POTIONS * unit,
-        SD_VOL * unit,
-    )
-    return raw, standardized
+
+
+def boundary_line(raw: Sequence[float]) -> tuple[float, float]:
+    """Droite V = pente * P + ordonnee ou le score s'annule."""
+    return -raw[1] / raw[2], -raw[0] / raw[2]
 
 
 def gradient_descent(
@@ -400,12 +434,14 @@ def calculate(
     for student in students:
         row = design_row(student, potions, flight)
         score = dot(weights, row)
-        # A l'optimum le score vaut exactement (ln3/12) fois la marge entiere.
-        # Les eleves de marge nulle tombent pile sur le seuil 0,50 : sans ce
-        # recalage, un residu flottant de 1e-16 deciderait de leur prediction.
-        if abs(score) < 1e-9:
-            score = 0.0
         probability = sigmoid(score)
+        # Aucun eleve ne doit tomber sur le seuil : sinon un residu flottant de
+        # 1e-16 deciderait de sa prediction.
+        for threshold in THRESHOLDS:
+            if abs(probability - threshold) < 1e-6:
+                raise AssertionError(
+                    f"{student.ident}: probabilite {probability} collee au seuil {threshold}"
+                )
         calculations.append(
             Calculation(
                 student=student,
@@ -520,6 +556,16 @@ def short_house(house: str) -> str:
     return "Gryff." if house == GRYFFONDOR else "Serp."
 
 
+def house_color(house: str) -> str:
+    """Teinte de la maison, celle-la meme que porte son marqueur dans les nuages."""
+    return "coursescore!88!ink" if house == GRYFFONDOR else "warning!88!ink"
+
+
+def house_tex(house: str, *, short: bool = False) -> str:
+    """Nom de maison teinte, abrege quand la colonne est etroite."""
+    return rf"\textcolor{{{house_color(house)}}}{{{short_house(house) if short else house}}}"
+
+
 def coordinate_list(students: Iterable[Student]) -> str:
     return " ".join(f"({student.potions:g},{student.flight:g})" for student in students)
 
@@ -539,6 +585,11 @@ def standardized_coordinate_list(
     )
 
 
+def pair_list(pairs: Iterable[tuple[float, float]]) -> str:
+    """Suite de couples au point decimal, prete pour un addplot coordinates."""
+    return " ".join(f"({first:.6f},{second:.6f})" for first, second in pairs)
+
+
 def tex_dataset_rows(students: Iterable[Student], *, raw: bool) -> str:
     rows = []
     for student in students:
@@ -553,8 +604,34 @@ def tex_dataset_rows(students: Iterable[Student], *, raw: bool) -> str:
             else f"${student.flight:g}$"
         )
         rows.append(
-            f"{student.ident} & {tex_escape(student.name)} & {student.house} "
+            f"{student.ident} & {tex_escape(student.name)} & {house_tex(student.house)} "
             f"& {potions} & {flight} \\\\"
+        )
+    return "\n".join(rows)
+
+
+def tex_compact_rows(students: Iterable[Student]) -> str:
+    """Liste d'appel du nuage : prenom, maison, deux notes brutes.
+
+    Le prenom et la maison reprennent la couleur du marqueur place en regard ;
+    aucune legende supplementaire n'est necessaire.
+    """
+    rows = []
+    for student in students:
+        potions = (
+            r"\textcolor{warning}{---}"
+            if student.missing_potions
+            else f"${student.potions:g}$"
+        )
+        flight = (
+            r"\textcolor{warning}{---}"
+            if student.missing_flight
+            else f"${student.flight:g}$"
+        )
+        rows.append(
+            rf"\textcolor{{{house_color(student.house)}}}"
+            rf"{{{tex_escape(student.name.split()[0])}}} & "
+            f"{house_tex(student.house)} & {potions} & {flight} \\\\"
         )
     return "\n".join(rows)
 
@@ -562,15 +639,15 @@ def tex_dataset_rows(students: Iterable[Student], *, raw: bool) -> str:
 def tex_calculation_rows(calculations: Iterable[Calculation]) -> str:
     rows = []
     for calculation in calculations:
-        prediction_low = short_house(
-            GRYFFONDOR if calculation.predictions[0] else SERPENTARD
+        prediction_low = house_tex(
+            GRYFFONDOR if calculation.predictions[0] else SERPENTARD, short=True
         )
-        prediction_high = short_house(
-            GRYFFONDOR if calculation.predictions[1] else SERPENTARD
+        prediction_high = house_tex(
+            GRYFFONDOR if calculation.predictions[1] else SERPENTARD, short=True
         )
         rows.append(
             f"{calculation.student.ident} & {tex_escape(calculation.student.name.split()[0])} & "
-            f"{short_house(calculation.student.house)} & "
+            f"{house_tex(calculation.student.house, short=True)} & "
             f"${decimal_tex(calculation.score, signed=True)}$ & "
             f"${decimal_tex(calculation.probability)}$ & "
             f"{prediction_low} & {prediction_high} \\\\"
@@ -582,20 +659,195 @@ def metric_text(metric: Evaluation) -> str:
     return f"VP $={metric.tp}$, FN $={metric.fn}$, FP $={metric.fp}$, VN $={metric.tn}$"
 
 
-# Geometrie du nuage de la planche "Distribution des notes" : la zone tracee
-# mesure environ 344 x 152 points pour Potions dans [0,20] et Vol dans [0,100].
+def plain(value: float, digits: int = 6) -> str:
+    """Nombre au point decimal, pour les expressions lues par pgfplots."""
+    return f"{value:.{digits}f}"
+
+
+def boundary_tex(slope: float, intercept: float) -> str:
+    return (
+        f"V={decimal_tex(slope, 4)}\\,P{decimal_tex(intercept, 4, signed=True)}"
+    )
+
+
+def vector_tex(values: Sequence[float], digits: int = 6) -> str:
+    return (
+        r"\left("
+        + r"\,;\,".join(decimal_tex(value, digits, signed=True) for value in values)
+        + r"\right)"
+    )
+
+
+def trial_rows(
+    students: Sequence[Student],
+    potions: ColumnStats,
+    flight: ColumnStats,
+) -> str:
+    rows = []
+    for student in students:
+        _, x_potions, x_flight = design_row(student, potions, flight)
+        score = dot(TRIAL_WEIGHTS, (1.0, x_potions, x_flight))
+        rows.append(
+            f"{tex_escape(student.name.split()[0])} & "
+            f"${decimal_tex(x_potions, 2, signed=True)}$ & "
+            f"${decimal_tex(x_flight, 2, signed=True)}$ & "
+            f"${decimal_tex(TRIAL_WEIGHTS[1] * x_potions, 2, signed=True)}$ & "
+            f"${decimal_tex(TRIAL_WEIGHTS[2] * x_flight, 2, signed=True)}$ & "
+            f"${decimal_tex(score, 2, signed=True)}$ & "
+            f"${decimal_tex(sigmoid(score), 3)}$ & "
+            f"${decimal_tex(softplus(score) - student.y * score, 3)}$ \\\\"
+        )
+    return "\n".join(rows)
+
+
+def trial_probability_rows(
+    students: Sequence[Student],
+    potions: ColumnStats,
+    flight: ColumnStats,
+) -> str:
+    rows = []
+    for student in students:
+        score = dot(TRIAL_WEIGHTS, design_row(student, potions, flight))
+        favoured = GRYFFONDOR if score > 0.0 else SERPENTARD
+        mark = "" if (score > 0.0) == bool(student.y) else r"\;\textcolor{warning}{$\bullet$}"
+        rows.append(
+            f"{tex_escape(student.name.split()[0])} & {house_tex(student.house)} & "
+            f"${decimal_tex(score, 2, signed=True)}$ & "
+            f"${decimal_tex(sigmoid(score), 3)}$ & {house_tex(favoured)}{mark} \\\\"
+        )
+    return "\n".join(rows)
+
+
+def residual_rows(
+    students: Sequence[Student],
+    potions: ColumnStats,
+    flight: ColumnStats,
+) -> str:
+    """Contribution au gradient a l'initialisation w = 0, ou tous les p valent 1/2."""
+    rows = []
+    for student in students:
+        _, x_potions, x_flight = design_row(student, potions, flight)
+        residual = 0.5 - student.y
+        rows.append(
+            f"{tex_escape(student.name.split()[0])} & ${student.y}$ & "
+            f"${decimal_tex(residual, 1, signed=True)}$ & "
+            f"${decimal_tex(x_potions, 2, signed=True)}$ & "
+            f"${decimal_tex(residual * x_potions, 3, signed=True)}$ & "
+            f"${decimal_tex(residual * x_flight, 3, signed=True)}$ \\\\"
+        )
+    return "\n".join(rows)
+
+
+def first_order_rows(
+    weights: Sequence[float],
+    design: Sequence[Sequence[float]],
+    targets: Sequence[int],
+) -> str:
+    """Les trois conditions du premier ordre, colonne par colonne."""
+    labels = ("1", r"x_{\mathrm{pot}}", r"x_{\mathrm{vol}}")
+    residuals = [sigmoid(dot(weights, row)) - target
+                 for row, target in zip(design, targets, strict=True)]
+    rows = []
+    for column, label in enumerate(labels):
+        total = math.fsum(
+            residual * row[column] for residual, row in zip(residuals, design, strict=True)
+        )
+        rows.append(
+            f"${label}$ & $\\sum_i(p_i-y_i)\\,{label}$ & "
+            f"${compact_magnitude_tex(abs(total))}$ \\\\"
+        )
+    return "\n".join(rows)
+
+
+def contour_polygon(
+    level: float,
+    centre: tuple[float, float],
+    intercept: float,
+    design: Sequence[Sequence[float]],
+    targets: Sequence[int],
+    *,
+    steps: int = 48,
+    reach: float = 6.0,
+) -> list[tuple[float, float]]:
+    """Ligne de niveau exacte de J dans le plan (w_pot, w_vol), a w_0 fige.
+
+    J y est strictement convexe et minimale au centre : chaque rayon issu du
+    centre coupe la ligne de niveau une fois et une seule, ce qu'une bissection
+    localise a la precision voulue. Aucune approximation quadratique.
+    """
+    def value(radius: float, angle: float) -> float:
+        weights = (
+            intercept,
+            centre[0] + radius * math.cos(angle),
+            centre[1] + radius * math.sin(angle),
+        )
+        return mean_loss(weights, design, targets) - level
+
+    polygon = []
+    for index in range(steps):
+        angle = 2.0 * math.pi * index / steps
+        low, high = 0.0, reach
+        if value(high, angle) < 0.0:
+            raise AssertionError(f"niveau {level} hors de portee a l'angle {angle}")
+        for _ in range(60):
+            middle = 0.5 * (low + high)
+            if value(middle, angle) < 0.0:
+                low = middle
+            else:
+                high = middle
+        radius = 0.5 * (low + high)
+        polygon.append(
+            (centre[0] + radius * math.cos(angle), centre[1] + radius * math.sin(angle))
+        )
+    polygon.append(polygon[0])
+    return polygon
+
+
+def slice_gradient(
+    point: tuple[float, float],
+    intercept: float,
+    design: Sequence[Sequence[float]],
+    targets: Sequence[int],
+) -> tuple[float, float]:
+    """Gradient de J restreint au plan (w_pot, w_vol)."""
+    full = gradient((intercept, point[0], point[1]), design, targets)
+    return full[1], full[2]
+
+
+def loss_curve_expression(
+    weights: Sequence[float],
+    design: Sequence[Sequence[float]],
+    targets: Sequence[int],
+) -> str:
+    """J(t) le long du rayon w = t w*, ecrit pour pgfplots.
+
+    softplus(a) - y a vaut ln(1+e^{-a}) quand y = 1 et ln(1+e^{a}) quand y = 0 :
+    chaque eleve apporte donc un terme de meme forme, au signe du score pres.
+    """
+    terms = [
+        f"ln(1+exp({-dot(weights, row) if target else dot(weights, row):+.6f}*x))"
+        for row, target in zip(design, targets, strict=True)
+    ]
+    return f"({'+'.join(terms)})/{len(targets)}"
+
+
+# Geometrie du nuage de la planche "Distribution des notes". Le style rawcloud
+# emploie "scale only axis", donc la boite de cette planche vaut exactement
+# 7,15 cm sur 5,72 cm, soit 203,4 x 162,8 points pour Potions dans [0,20] et Vol
+# dans [0,100]. Ce rapport de 1,25 est ce qui rend les deux groupes ronds a
+# l'ecran plutot qu'etires.
 # Les etiquettes sont posees par recherche de position, jamais a la main : un
 # changement de note deplace automatiquement le nom qui va avec.
-PLOT_WIDTH_PT = 344.0
-PLOT_HEIGHT_PT = 152.0
+PLOT_WIDTH_PT = 203.4
+PLOT_HEIGHT_PT = 162.8
 POTIONS_MAX = 20.0
 VOL_MAX = 100.0
 CHAR_WIDTH_PT = 3.3
 LABEL_PADDING_PT = 2.4
 LABEL_HEIGHT_PT = 7.4
 MARKER_HALF_PT = 3.6
-CANDIDATE_RADII = (9.0, 13.0, 17.0, 22.0)
-CANDIDATE_ANGLES = tuple(range(0, 360, 30))
+CANDIDATE_RADII = (7.5, 10.0, 13.0, 17.0, 21.0)
+CANDIDATE_ANGLES = tuple(range(0, 360, 15))
 
 
 def _boxes_overlap(
@@ -639,7 +891,8 @@ def place_labels(students: Sequence[Student]) -> dict[str, tuple[int, int]]:
         dx, dy, radius = shift
         cx, cy = centres[student.ident]
         box = (cx + dx, cy + dy, half_width[student.ident], LABEL_HEIGHT_PT / 2.0)
-        penalty = 0.28 * radius
+        # Une etiquette lointaine devient ambigue : le rayon coute cher.
+        penalty = 0.75 * radius
         if not (0.0 <= box[0] - box[2] and box[0] + box[2] <= PLOT_WIDTH_PT):
             penalty += 900.0
         if not (0.0 <= box[1] - box[3] and box[1] + box[3] <= PLOT_HEIGHT_PT):
@@ -670,12 +923,28 @@ def tex_all_labels(students: Sequence[Student]) -> str:
     labels = []
     for student in students:
         xshift, yshift = shifts[student.ident]
-        color = "coursescore!88!ink" if student.house == GRYFFONDOR else "warning!88!ink"
         first_name = tex_escape(student.name.split()[0])
         labels.append(
-            rf"\node[font=\tiny\bfseries,text={color},fill=white,fill opacity=.82,"
+            rf"\node[font=\tiny\bfseries,text={house_color(student.house)},"
+            rf"fill=white,fill opacity=.82,"
             rf"text opacity=1,inner sep=.6pt,xshift={xshift}pt,yshift={yshift}pt] "
             rf"at (axis cs:{student.potions:g},{student.flight:g}) {{{first_name}}};"
+        )
+    return "\n".join(labels)
+
+
+def tex_wrong_side_labels(students: Sequence[Student]) -> str:
+    """Etiquettes des eleves du mauvais cote, posees par le meme placeur."""
+    shifts = place_labels(students)
+    labels = []
+    for student in students:
+        xshift, yshift = shifts[student.ident]
+        labels.append(
+            rf"\node[font=\scriptsize\bfseries,text=warning,fill=white,"
+            rf"fill opacity=.85,text opacity=1,inner sep=1pt,"
+            rf"xshift={xshift}pt,yshift={yshift}pt] "
+            rf"at (axis cs:{student.potions:g},{student.flight:g}) "
+            rf"{{{tex_escape(student.name.split()[0])}}};"
         )
     return "\n".join(labels)
 
@@ -692,7 +961,6 @@ def write_calculations(calculations: Sequence[Calculation]) -> None:
         "potions_preparee",
         "vol_prepare",
         "y",
-        "marge",
         "x_potions",
         "x_vol",
         "score",
@@ -720,7 +988,6 @@ def write_calculations(calculations: Sequence[Calculation]) -> None:
                     "potions_preparee": f"{student.potions:g}",
                     "vol_prepare": f"{student.flight:g}",
                     "y": student.y,
-                    "marge": f"{student.margin:g}",
                     "x_potions": csv_number(calculation.z_potions),
                     "x_vol": csv_number(calculation.z_vol),
                     "score": csv_number(calculation.score),
@@ -795,6 +1062,106 @@ def write_tex_values(
     wilson_low, wilson_high = wilson_interval(test_at_half.tp + test_at_half.tn, len(test))
     train_gryffondor = sum(student.y for student in train)
     calculations_by_id = {item.student.ident: item for item in calculations}
+    by_id = {student.ident: student for student in students}
+
+    train_design = [design_row(student, potions, flight) for student in train]
+    targets = [student.y for student in train]
+    slope, intercept = boundary_line(raw_optimum)
+    intercept_high = (
+        math.log(THRESHOLDS[1] / (1.0 - THRESHOLDS[1])) - raw_optimum[0]
+    ) / raw_optimum[2]
+    raw_score_tex = (
+        f"z={decimal_tex(raw_optimum[0], signed=True)}"
+        f"{decimal_tex(raw_optimum[1], signed=True)}\\,P"
+        f"{decimal_tex(raw_optimum[2], signed=True)}\\,V"
+    )
+    harry = design_row(by_id["E01"], potions, flight)
+
+    # Coefficients d'essai : cinq profils contrastes suffisent aux planches.
+    showcase = [by_id[ident] for ident in ("E01", "E02", "E03", "E12", "E07")]
+    trial_scores = {
+        student.ident: dot(TRIAL_WEIGHTS, design_row(student, potions, flight))
+        for student in train
+    }
+    trial_losses = {
+        student.ident: softplus(trial_scores[student.ident])
+        - student.y * trial_scores[student.ident]
+        for student in train
+    }
+    trial_loss = math.fsum(trial_losses.values()) / len(train)
+    trial_agree = sum(
+        1 for student in train
+        if (trial_scores[student.ident] > 0.0) == bool(student.y)
+    )
+    # Un profil dont le signe concorde, un dont il s'oppose : Harry et Hermione.
+    trial_best = by_id["E01"]
+    trial_worst = by_id["E03"]
+    trial_best_score = trial_scores[trial_best.ident]
+    trial_best_loss = trial_losses[trial_best.ident]
+    trial_worst_score = trial_scores[trial_worst.ident]
+    trial_worst_loss = trial_losses[trial_worst.ident]
+
+    # Point de depart de la descente : tous les p valent 1/2, donc p - y = 1/2 - y.
+    zero_gradient = gradient((0.0, 0.0, 0.0), train_design, targets)
+    zero_sums = tuple(value * len(train) for value in zero_gradient)
+    first_step = tuple(-value * gd_alpha for value in zero_gradient)
+    loss_at_zero = mean_loss((0.0, 0.0, 0.0), train_design, targets)
+    loss_after_step = mean_loss(first_step, train_design, targets)
+
+    wrong_side = [
+        item.student for item in train_calculations
+        if (item.score > 0.0) != bool(item.student.y)
+    ]
+    wrong_side_names = ", ".join(
+        tex_escape(student.name.split()[0]) for student in wrong_side
+    )
+    # Les eleves d'evaluation que le passage d'un seuil a l'autre fait basculer.
+    threshold_band = [
+        item.student for item in test_calculations
+        if THRESHOLDS[0] <= item.probability < THRESHOLDS[1]
+    ]
+
+    # Paysage de la perte dans le plan des deux poids, a ordonnee a l'origine
+    # figee : c'est ce relief qui rend lisibles la direction du gradient et la
+    # suite des pas de la descente.
+    slice_centre = (standardized_optimum[1], standardized_optimum[2])
+    slice_intercept = standardized_optimum[0]
+    # Niveaux calibres sur le segment qui joint l'optimum au point de depart de
+    # la descente : les quatre lignes se repartissent donc regulierement sur le
+    # trajet effectivement parcouru, quelle que soit l'echelle du probleme.
+    contour_levels = [
+        mean_loss(
+            (slice_intercept, slice_centre[0] * (1.0 - share), slice_centre[1] * (1.0 - share)),
+            train_design,
+            targets,
+        )
+        for share in (0.42, 0.30, 0.20, 0.12)
+    ]
+    contours = [
+        contour_polygon(level, slice_centre, slice_intercept, train_design, targets)
+        for level in contour_levels
+    ]
+    # Le gradient est lu sur un iteré de la descente elle-meme : la fleche part
+    # donc d'un point que la planche voisine montre parcouru.
+    probe = (gd_trace[2][2][1], gd_trace[2][2][2])
+    probe_slope = slice_gradient(probe, slice_intercept, train_design, targets)
+    probe_norm = math.hypot(*probe_slope)
+    arrow_tip = (
+        probe[0] - 0.36 * probe_slope[0] / probe_norm,
+        probe[1] - 0.36 * probe_slope[1] / probe_norm,
+    )
+    # La fenetre epouse le trajet de la descente ; les lignes de niveau qui la
+    # debordent sont rognees par la boite, comme sur toute carte de relief.
+    span_x = ([weights[1] for _, _, weights, _ in gd_trace]
+              + [0.0] + [x for x, _ in contours[0]])
+    span_y = ([weights[2] for _, _, weights, _ in gd_trace]
+              + [0.0] + [y for _, y in contours[0]])
+
+    # Trois regimes de perte : classement correct et net, correct mais proche du
+    # seuil, incorrect. Ils sont lus dans les calculs, jamais choisis a la main.
+    cheapest = min(train_calculations, key=lambda item: item.loss)
+    costliest = max(train_calculations, key=lambda item: item.loss)
+    borderline = min(train_calculations, key=lambda item: abs(item.probability - 0.5))
 
     def command(name: str, value: str) -> str:
         return rf"\newcommand{{\{name}}}{{{value}}}"
@@ -816,41 +1183,64 @@ def write_tex_values(
         command("MicroSdPotions", decimal_tex(potions.sd_population, trim=True)),
         command("MicroSdVol", decimal_tex(flight.sd_population, trim=True)),
         command("MicroTrainCovariance", decimal_tex(COVARIANCE, trim=True)),
-        command("MicroTrainCorrelation", r"\frac{11}{18}"),
-        command("MicroMarginExpr", "V-2P-24"),
-        command("MicroBoundaryRaw", "V=2P+24"),
-        command("MicroMarginStep", decimal_tex(MARGIN_STEP, trim=True)),
-        command("MicroScoreFromMargin", r"z=\frac{\ln 3}{10}\left(V-2P-24\right)"),
-        command("MicroLogOddsHigh", r"+2\ln 3"),
-        command("MicroLogOddsMid", "0"),
-        command("MicroLogOddsLow", r"-\ln 3"),
-        command("MicroExactProbabilityHigh", r"\frac{9}{10}"),
-        command("MicroExactProbabilityMid", r"\frac{1}{2}"),
-        command("MicroExactProbabilityLow", r"\frac{1}{4}"),
-        command("MicroBandHighSize", str(MARGIN_BANDS[20.0][0])),
-        command("MicroBandMidSize", str(MARGIN_BANDS[0.0][0])),
-        command("MicroBandLowSize", str(MARGIN_BANDS[-10.0][0])),
-        command(
-            "MicroW",
-            r"\left(\frac{3\ln 3}{5}\,;\,-\ln 3\,;\,+\frac{9\ln 3}{5}\right)",
-        ),
-        command(
-            "MicroWDecimal",
-            r"\left(" + r"\,;\,".join(
-                decimal_tex(value, signed=True) for value in standardized_optimum
-            ) + r"\right)",
-        ),
-        command(
-            "MicroRawBeta",
-            r"\left(-\frac{12\ln 3}{5}\,;\,-\frac{\ln 3}{5}\,;\,+\frac{\ln 3}{10}\right)",
-        ),
-        command(
-            "MicroRawBetaDecimal",
-            r"\left(" + r"\,;\,".join(
-                decimal_tex(value, signed=True) for value in raw_optimum
-            ) + r"\right)",
-        ),
+        command("MicroTrainCorrelation", CORRELATION_TEX),
+        command("MicroTotalStudents", str(len(students))),
+        command("MicroWDecimal", vector_tex(standardized_optimum)),
+        command("MicroRawBetaDecimal", vector_tex(raw_optimum)),
+        command("MicroRawScore", raw_score_tex),
+        command("MicroBoundaryRaw", boundary_tex(slope, intercept)),
+        command("MicroBoundarySlope", plain(slope)),
+        command("MicroBoundaryIntercept", plain(intercept)),
+        command("MicroBoundaryInterceptHigh", plain(intercept_high)),
+        command("MicroBoundaryShift", decimal_tex(intercept_high - intercept, 3)),
+        command("MicroHarryPotions", decimal_tex(harry[1], 2, signed=True)),
+        command("MicroHarryVol", decimal_tex(harry[2], 2, signed=True)),
+        command("MicroPotionsMin", f"{min(s.potions for s in students):g}"),
+        command("MicroPotionsMax", f"{max(s.potions for s in students):g}"),
+        command("MicroVolMin", f"{min(s.flight for s in students):g}"),
+        command("MicroVolMax", f"{max(s.flight for s in students):g}"),
+        command("MicroTrialWeights", TRIAL_TEX),
+        command("MicroTrialScore", TRIAL_SCORE_TEX),
+        command("MicroTrialRows", "\n" + trial_rows(showcase, potions, flight)),
+        command("MicroTrialProbabilityRows",
+                "\n" + trial_probability_rows(showcase, potions, flight)),
+        command("MicroTrialLoss", decimal_tex(trial_loss)),
+        command("MicroTrialAgree", str(trial_agree)),
+        command("MicroTrialDisagree", str(len(train) - trial_agree)),
+        command("MicroTrialBestName", tex_escape(trial_best.name.split()[0])),
+        command("MicroTrialBestScore", decimal_tex(trial_best_score, 2, signed=True)),
+        command("MicroTrialBestLoss", decimal_tex(trial_best_loss, 3)),
+        command("MicroTrialWorstName", tex_escape(trial_worst.name.split()[0])),
+        command("MicroTrialWorstScore", decimal_tex(trial_worst_score, 2, signed=True)),
+        command("MicroTrialWorstLoss", decimal_tex(trial_worst_loss, 3)),
+        command("MicroTrialLossRatio", f"{trial_worst_loss / trial_best_loss:.0f}"),
+        command("MicroResidualRows", "\n" + residual_rows(showcase, potions, flight)),
+        command("MicroGradientZero", vector_tex(zero_gradient)),
+        command("MicroGradientZeroSumOne", decimal_tex(zero_sums[0], 4, signed=True)),
+        command("MicroGradientZeroSumPotions", decimal_tex(zero_sums[1], 4, signed=True)),
+        command("MicroGradientZeroSumVol", decimal_tex(zero_sums[2], 4, signed=True)),
+        command("MicroFirstStep", vector_tex(first_step)),
+        command("MicroLossAtZero", decimal_tex(loss_at_zero)),
+        command("MicroLossAfterStep", decimal_tex(loss_after_step)),
+        command("MicroCheapName", tex_escape(cheapest.student.name.split()[0])),
+        command("MicroCheapProbability", decimal_tex(cheapest.probability, 4)),
+        command("MicroCheapLoss", decimal_tex(cheapest.loss, 4)),
+        command("MicroBorderName", tex_escape(borderline.student.name.split()[0])),
+        command("MicroBorderProbability", decimal_tex(borderline.probability, 4)),
+        command("MicroBorderLoss", decimal_tex(borderline.loss, 4)),
+        command("MicroExpensiveName", tex_escape(costliest.student.name.split()[0])),
+        command("MicroExpensiveProbability", decimal_tex(costliest.probability, 4)),
+        command("MicroExpensiveLoss", decimal_tex(costliest.loss, 4)),
+        command("MicroFirstOrderRows", "\n" + first_order_rows(
+            standardized_optimum, train_design, targets)),
+        command("MicroLossCurveExpr", loss_curve_expression(
+            standardized_optimum, train_design, targets)),
+        command("MicroWrongSideNames", wrong_side_names),
+        command("MicroWrongSideCount", str(len(wrong_side))),
+        command("MicroWrongSideLabels", "\n" + tex_wrong_side_labels(wrong_side)),
+        command("MicroThresholdBandLabels", "\n" + tex_wrong_side_labels(threshold_band)),
         command("MicroTrainLoss", decimal_tex(train_loss)),
+        command("MicroTrainLossPlain", plain(train_loss)),
         command("MicroTestLoss", decimal_tex(test_loss)),
         command("MicroGDAlpha", decimal_tex(gd_alpha, 2)),
         command("MicroGDIterations", str(gd_iterations)),
@@ -888,6 +1278,19 @@ def write_tex_values(
         command("MicroTestRecallTauHigh", decimal_tex(metrics[("test", 0.65)].recall, 4)),
         command("MicroTestWilsonLow", decimal_tex(wilson_low, 6)),
         command("MicroTestWilsonHigh", decimal_tex(wilson_high, 6)),
+        command("MicroTrainTP", str(metrics[("apprentissage", 0.50)].tp)),
+        command("MicroTrainFN", str(metrics[("apprentissage", 0.50)].fn)),
+        command("MicroTrainFP", str(metrics[("apprentissage", 0.50)].fp)),
+        command("MicroTrainTN", str(metrics[("apprentissage", 0.50)].tn)),
+        command("MicroTestTP", str(test_at_half.tp)),
+        command("MicroTestFN", str(test_at_half.fn)),
+        command("MicroTestFP", str(test_at_half.fp)),
+        command("MicroTestTN", str(test_at_half.tn)),
+        command("MicroTestTPHigh", str(metrics[("test", 0.65)].tp)),
+        command("MicroTestFNHigh", str(metrics[("test", 0.65)].fn)),
+        command("MicroTestFPHigh", str(metrics[("test", 0.65)].fp)),
+        command("MicroTestTNHigh", str(metrics[("test", 0.65)].tn)),
+        command("MicroTestCorrect", str(test_at_half.tp + test_at_half.tn)),
         command("MicroTrainConfusion", metric_text(metrics[("apprentissage", 0.50)])),
         command("MicroTestConfusion", metric_text(metrics[("test", 0.50)])),
         command("MicroTestConfusionTauHigh", metric_text(metrics[("test", 0.65)])),
@@ -895,6 +1298,33 @@ def write_tex_values(
         command("MicroTrainPreparedRows", "\n" + tex_dataset_rows(train, raw=False)),
         command("MicroTestRawRows", "\n" + tex_dataset_rows(test, raw=True)),
         command("MicroTestPreparedRows", "\n" + tex_dataset_rows(test, raw=False)),
+        command("MicroCompactRows", "\n" + tex_compact_rows(students)),
+        # Vignettes de la planche d'ensemble : chacune trace les valeurs reelles
+        # de l'etape qu'elle annonce, jamais une courbe d'illustration.
+        command("MicroSigmoidGryffondorCoords", pair_list(
+            (item.score, item.probability) for item in train_calculations if item.student.y)),
+        command("MicroSigmoidSerpentardCoords", pair_list(
+            (item.score, item.probability) for item in train_calculations if not item.student.y)),
+        command("MicroDecisionGryffondorCoords", pair_list(
+            (item.probability, 0.66) for item in train_calculations if item.student.y)),
+        command("MicroDecisionSerpentardCoords", pair_list(
+            (item.probability, 0.34) for item in train_calculations if not item.student.y)),
+        command("MicroGDPathCoords", pair_list(
+            (weights[1], weights[2]) for _, _, weights, _ in gd_trace)),
+        command("MicroOptimumCoords", pair_list([slice_centre])),
+        command("MicroContourOuter", pair_list(contours[0])),
+        command("MicroContourThird", pair_list(contours[1])),
+        command("MicroContourSecond", pair_list(contours[2])),
+        command("MicroContourInner", pair_list(contours[3])),
+        command("MicroGradientProbe", pair_list([probe])),
+        command("MicroGradientProbeX", plain(probe[0])),
+        command("MicroGradientProbeY", plain(probe[1])),
+        command("MicroGradientTipX", plain(arrow_tip[0])),
+        command("MicroGradientTipY", plain(arrow_tip[1])),
+        command("MicroSliceXmin", plain(min(span_x) - 0.08, 3)),
+        command("MicroSliceXmax", plain(max(span_x) + 0.08, 3)),
+        command("MicroSliceYmin", plain(min(span_y) - 0.06, 3)),
+        command("MicroSliceYmax", plain(max(span_y) + 0.06, 3)),
         command("MicroAllGryffondorCoords", coordinate_list(s for s in students if s.y == 1)),
         command("MicroAllSerpentardCoords", coordinate_list(s for s in students if s.y == 0)),
         command("MicroTrainGryffondorCoords", coordinate_list(s for s in train if s.y == 1)),
@@ -926,6 +1356,7 @@ def write_tex_values(
         command("MicroProbabilityDaphne", decimal_tex(calculations_by_id["E25"].probability)),
         command("MicroProbabilityAlicia", decimal_tex(calculations_by_id["E24"].probability)),
         command("MicroProbabilityFred", decimal_tex(calculations_by_id["E21"].probability)),
+        command("MicroProbabilityOlivier", decimal_tex(calculations_by_id["E22"].probability)),
         "",
     ]
     TEX_VALUES.write_text("\n".join(lines), encoding="utf-8")
@@ -956,10 +1387,25 @@ def main() -> None:
 
     train_design = [design_row(student, potions, flight) for student in train]
     targets = [student.y for student in train]
-    raw_optimum, standardized_optimum = exact_optimum(train)
-    exact_gradient = gradient(standardized_optimum, train_design, targets)
-    if max(abs(value) for value in exact_gradient) > 2e-15:
-        raise AssertionError(f"gradient non nul a l'optimum exact: {exact_gradient}")
+    standardized_optimum = newton_optimum(train_design, targets)
+    raw_optimum = raw_coefficients(standardized_optimum, potions, flight)
+    optimum_gradient = gradient(standardized_optimum, train_design, targets)
+    if max(abs(value) for value in optimum_gradient) > 2e-15:
+        raise AssertionError(f"gradient non nul a l'optimum: {optimum_gradient}")
+
+    # Le recouvrement des deux maisons rend l'optimum fini : sans au moins une
+    # observation mal classee de chaque cote, la perte tendrait vers zero et les
+    # coefficients divergeraient.
+    wrong_side = {
+        student.ident
+        for student, row in zip(train, train_design, strict=True)
+        if (dot(standardized_optimum, row) > 0.0) != bool(student.y)
+    }
+    if len({student.y for student in train if student.ident in wrong_side}) != 2:
+        raise AssertionError(
+            "les deux maisons doivent chacune fournir un eleve du mauvais cote; "
+            f"observe: {sorted(wrong_side)}"
+        )
 
     # Les deux ecritures du meme modele doivent coincider sur toutes les lignes.
     for student in students:
@@ -989,7 +1435,7 @@ def main() -> None:
 
     expected_confusions = {
         ("apprentissage", 0.50): (10, 2, 2, 6),
-        ("apprentissage", 0.65): (9, 3, 1, 7),
+        ("apprentissage", 0.65): (9, 3, 2, 6),
         ("test", 0.50): (3, 1, 1, 3),
         ("test", 0.65): (2, 2, 0, 4),
     }

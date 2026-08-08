@@ -1,30 +1,88 @@
 % Contenu éditorial du cas Gryffondor--Serpentard.
 % Toutes les valeurs numériques affichées sont fournies par le générateur.
 
+% Maisons et matières portent partout la teinte qui les désigne dans les
+% figures. Les noms sont écrits en entier chaque fois que la place le permet ;
+% les tableaux les plus serrés emploient les formes abrégées de même couleur.
 \newcommand{\GryffondorName}{\textcolor{coursescore!88!ink}{\MicroGryffondorLabel}}
 \newcommand{\SerpentardName}{\textcolor{warning!88!ink}{\MicroSerpentardLabel}}
+\newcommand{\PotionsName}{\textcolor{coursepotions!92!ink}{Potions}}
+\newcommand{\VolName}{\textcolor{coursevol!92!ink}{Vol}}
 \newcommand{\microheader}{\rowcolor{ink!92}\color{white}\bfseries}
 
+% Les deux notes vivent sur des échelles différentes : sans « scale only axis »,
+% la boîte s'étire et les deux groupes d'élèves se lisent comme des traînées
+% obliques. Le rapport 1,25 entre largeur et hauteur rend un disque de notes
+% rond à l'écran.
 \pgfplotsset{
   rawcloud/.style={
-    width=.86\textwidth,height=5.65cm,
+    scale only axis,width=7cm,height=5.6cm,
     xmin=0,xmax=20,ymin=0,ymax=100,
     xtick={0,5,10,15,20},ytick={0,20,40,60,80,100},
     axis lines=box,axis line style={ink!42},
     grid=major,grid style={gridgray!34},
-    xlabel={Potions (sur 20)},ylabel={Vol (sur 100)},
+    xlabel={\PotionsName{} (sur 20)},ylabel={\VolName{} (sur 100)},
     tick label style={font=\scriptsize},label style={font=\scriptsize},
     legend style={at={(.5,1.02)},anchor=south,draw=none,
       font=\scriptsize,legend columns=3,
       /tikz/every even column/.append style={column sep=7pt}}},
+  smallcloud/.style={
+    rawcloud,width=4.5cm,height=3.6cm,
+    xtick={0,10,20},ytick={0,50,100},
+    xlabel={\PotionsName},ylabel={\VolName},
+    tick label style={font=\tiny}},
   stdcloud/.style={
-    width=\textwidth,height=4.8cm,
-    xmin=-2,xmax=2,ymin=-2,ymax=2,
+    scale only axis,width=4.5cm,height=3.6cm,
+    xmin=-2.6,xmax=2.6,ymin=-2.6,ymax=2.6,
     xtick={-2,-1,0,1,2},ytick={-2,-1,0,1,2},
     axis lines=box,axis line style={ink!42},
     grid=major,grid style={gridgray!34},
     xlabel={$x_{\mathrm{pot}}$},ylabel={$x_{\mathrm{vol}}$},
     tick label style={font=\tiny},label style={font=\scriptsize}}}
+
+% Vignettes de la planche d'ensemble. Chaque carte est une image autonome, posée
+% par un nœud : son contenu est donc centré par construction, jamais par des
+% coordonnées ajustées à la main. L'ensemble est enveloppé dans \hyperref, ce qui
+% rend toute la surface de la carte cliquable vers la section correspondante.
+\newlength{\chainw}\setlength{\chainw}{3.06cm}
+\newlength{\chainh}\setlength{\chainh}{3.6cm}
+\pgfplotsset{
+  chainaxis/.style={
+    scale only axis,width=2.55cm,height=1.7cm,
+    axis lines=box,axis line style={ink!30,line width=.4pt},
+    xtick=\empty,ytick=\empty,
+    clip mode=individual,
+    every axis plot/.append style={line width=.7pt}}}
+
+% Lignes de niveau de la perte dans le plan des deux poids, calculées par le
+% générateur. Elles servent de fond commun aux vignettes gradient et mise à
+% jour : l'une y lit une direction, l'autre y suit une suite de pas.
+\newcommand{\microrelief}{%
+  \addplot[courseupdate!22!white,line width=.5pt] coordinates {\MicroContourOuter};
+  \addplot[courseupdate!34!white,line width=.5pt] coordinates {\MicroContourThird};
+  \addplot[courseupdate!48!white,line width=.5pt] coordinates {\MicroContourSecond};
+  \addplot[courseupdate!62!white,line width=.5pt] coordinates {\MicroContourInner};}
+
+\newcommand{\chaincard}[4]{%
+  \hyperref[#1]{%
+    \begin{tikzpicture}
+      \path[draw=ink!24,fill=white,rounded corners=1.6pt,line width=.5pt]
+        (0,0) rectangle (\chainw,\chainh);
+      \path[fill=#2!16,rounded corners=1.6pt]
+        (0,\chainh-.51cm) rectangle (\chainw,\chainh);
+      \node[font=\fontsize{6.3}{7}\selectfont\bfseries,text=ink!92,anchor=west]
+        at (.16,\chainh-.255cm) {#3};
+      \node[inner sep=0pt] at (.5\chainw,.5\chainh-.255cm) {#4};
+    \end{tikzpicture}}}
+
+% Frontière ajustée et frontière décalée par le seuil haut, toutes deux issues
+% des coefficients estimés : aucune constante n'est écrite ici à la main.
+\newcommand{\microboundary}[1]{%
+  \addplot[#1,domain=0:20,samples=2]
+    {\MicroBoundarySlope*x+(\MicroBoundaryIntercept)}}
+\newcommand{\microboundaryhigh}[1]{%
+  \addplot[#1,domain=0:20,samples=2]
+    {\MicroBoundarySlope*x+(\MicroBoundaryInterceptHigh)}}
 
 \courseintro
 
@@ -35,8 +93,8 @@
       \begin{coursecallout}{coursedata!88!ink}{Observations disponibles}
         Pour chaque élève :
         \begin{itemize}
-          \item une note de Potions sur 20 ;
-          \item une note de Vol sur 100.
+          \item une note de \PotionsName{} sur 20 ;
+          \item une note de \VolName{} sur 100.
         \end{itemize}
       \end{coursecallout}
     \column{.47\textwidth}
@@ -53,138 +111,175 @@
   {\large\bfseries Construire une règle qui associe les deux notes à une maison.}
 \end{frame}
 
+% Les titres de planche passent par \MakeUppercase : aucune commande colorée ne
+% peut y figurer, le nom de la couleur serait mis en capitales lui aussi.
 \begin{frame}[t]{Distribution des notes de Potions et de Vol}
-  \centering
-  \begin{tikzpicture}
-    \begin{axis}[rawcloud,width=.94\textwidth,height=6.25cm]
-      \addplot[only marks,mark=square*,mark size=2.5pt,coursescore!88!ink]
-        coordinates {\MicroAllGryffondorCoords};
-      \addlegendentry{Gryffondor}
-      \addplot[only marks,mark=*,mark size=2.5pt,warning!88!ink]
-        coordinates {\MicroAllSerpentardCoords};
-      \addlegendentry{Serpentard}
-      \addplot[only marks,mark=o,mark size=4.4pt,very thick,ink!72]
-        coordinates {\MicroMissingCoords};
-      \addlegendentry{note imputée}
-      \MicroAllNameLabels
-    \end{axis}
-  \end{tikzpicture}
+  \begin{columns}[c,onlytextwidth]
+    \column{.34\textwidth}
+      \scriptsize
+      \renewcommand{\arraystretch}{.66}
+      \setlength{\tabcolsep}{3pt}
+      \begin{tabular}{@{}l l r r@{}}
+        \toprule
+        élève & maison & \PotionsName & \VolName\\
+        \midrule
+        \MicroCompactRows
+        \bottomrule
+      \end{tabular}
+    \column{.64\textwidth}
+      \centering
+      \begin{tikzpicture}
+        \begin{axis}[rawcloud,width=7.15cm,height=5.72cm]
+          \addplot[only marks,mark=square*,mark size=2.6pt,coursescore!88!ink]
+            coordinates {\MicroAllGryffondorCoords};
+          \addlegendentry{\GryffondorName}
+          \addplot[only marks,mark=*,mark size=2.6pt,warning!88!ink]
+            coordinates {\MicroAllSerpentardCoords};
+          \addlegendentry{\SerpentardName}
+          \addplot[only marks,mark=o,mark size=4.6pt,very thick,ink!72]
+            coordinates {\MicroMissingCoords};
+          \addlegendentry{note imputée}
+          \MicroAllNameLabels
+        \end{axis}
+      \end{tikzpicture}
+  \end{columns}
 \end{frame}
 
 \begin{frame}[t]{Chaîne de construction du classifieur}
+\vfill
 \centering
-\begin{slidevisual}
-\begin{tikzpicture}[scale=.97,transform shape,
+\begin{adjustbox}{max totalsize={\textwidth}{.83\textheight},center}
+\begin{tikzpicture}[
   flow/.style={-{Latex[length=1.8mm]},line width=.75pt,ink!62},
-  card/.style={draw=ink!24,fill=white,rounded corners=1.6pt,line width=.5pt},
-  head/.style={font=\fontsize{6.3}{7}\selectfont\bfseries,text=ink!92}]
-  \def\cw{3.25}
-  \def\ch{2.55}
-  \foreach \x/\col/\title in {
-    0/coursedata/DONNÉES,
-    3.8/coursescore/SCORE LINÉAIRE,
-    7.6/courseprobability/SIGMOÏDE,
-    11.4/coursedecision/DÉCISION}
-  {
-    \path[card] (\x,4.15) rectangle ++(\cw,\ch);
-    \path[fill=\col!16,rounded corners=1.6pt]
-      (\x,6.19) rectangle ++(\cw,.51);
-    \node[head,anchor=west] at (\x+.16,6.445) {\title};
-  }
-  \foreach \x/\col/\title in {
-    0/courseupdate/MISE À JOUR,
-    3.8/coursegradient/GRADIENT,
-    7.6/courseloss/PERTE LOGISTIQUE,
-    11.4/courseevaluation/ÉVALUATION}
-  {
-    \path[card] (\x,.35) rectangle ++(\cw,\ch);
-    \path[fill=\col!16,rounded corners=1.6pt]
-      (\x,2.39) rectangle ++(\cw,.51);
-    \node[head,anchor=west] at (\x+.16,2.645) {\title};
-  }
+  slot/.style={inner sep=0pt,outer sep=0pt}]
 
-  % Données : deux échelles et une valeur absente.
-  \draw[ink!55,line width=.45pt] (.42,4.55) -- (.42,5.93);
-  \draw[ink!55,line width=.45pt] (1.25,4.55) -- (1.25,5.93);
-  \fill[coursedata!62] (.58,4.55) rectangle (.86,5.25);
-  \fill[coursedata!32] (1.41,4.55) rectangle (1.69,5.72);
-  \draw[warning,dashed,line width=.7pt] (2.13,4.77) rectangle (2.72,5.35);
-  \node[font=\tiny,text=ink!65] at (.72,5.47) {/20};
-  \node[font=\tiny,text=ink!65] at (1.55,5.92) {/100};
-  \node[font=\tiny,text=warning] at (2.425,5.06) {manq.};
+  \node[slot] (donnees) at (0,4.8) {\chaincard{course-stage-start-1}{coursedata}{DONNÉES}{%
+    \begin{tikzpicture}
+      \begin{axis}[chainaxis,xmin=0,xmax=20,ymin=0,ymax=100,
+        xlabel={\PotionsName},ylabel={\VolName},
+        label style={font=\tiny,inner sep=1.5pt}]
+        \addplot[only marks,mark=square*,mark size=.9pt,coursescore!88!ink]
+          coordinates {\MicroAllGryffondorCoords};
+        \addplot[only marks,mark=*,mark size=.9pt,warning!88!ink]
+          coordinates {\MicroAllSerpentardCoords};
+      \end{axis}
+    \end{tikzpicture}}};
 
-  % Score : nuage et niveau nul oblique.
-  \draw[-{Latex[length=1.1mm]},ink!52] (4.19,4.55) -- (6.64,4.55);
-  \draw[-{Latex[length=1.1mm]},ink!52] (4.19,4.55) -- (4.19,5.95);
-  \draw[coursescore!80!ink,line width=.8pt] (4.45,4.88) -- (6.42,5.65);
-  \foreach \p in {(4.55,5.42),(5.06,5.66),(5.55,5.77)}
-    \node[fill=coursescore,minimum size=2.5pt,inner sep=0pt] at \p {};
-  \foreach \p in {(4.72,4.73),(5.38,4.92),(6.05,5.09)}
-    \fill[warning] \p circle (1.25pt);
+  \node[slot] (score) at (3.78,4.8) {\chaincard{course-stage-start-2}{coursescore}{SCORE LINÉAIRE}{%
+    \begin{tikzpicture}
+      \begin{axis}[chainaxis,xmin=0,xmax=20,ymin=0,ymax=100]
+        \addplot[only marks,mark=square*,mark size=.9pt,coursescore!88!ink]
+          coordinates {\MicroTrainGryffondorCoords};
+        \addplot[only marks,mark=*,mark size=.9pt,warning!88!ink]
+          coordinates {\MicroTrainSerpentardCoords};
+        \microboundary{ink!72,line width=.8pt};
+      \end{axis}
+    \end{tikzpicture}}};
 
-  % Sigmoïde.
-  \begin{scope}[shift={(9.23,4.72)},x=.38cm,y=.9cm]
-    \draw[-{Latex[length=1mm]},ink!50] (-3.1,0) -- (3.2,0);
-    \draw[-{Latex[length=1mm]},ink!50] (0,-.06) -- (0,1.15);
-    \draw[courseprobability!88!ink,line width=.9pt]
-      plot[samples=60,domain=-3:3] (\x,{1/(1+exp(-\x))});
-    \fill[courseprobability] (0,.5) circle (1.4pt);
-  \end{scope}
+  \node[slot] (sigmoide) at (7.56,4.8) {\chaincard{course-stage-start-3}{courseprobability}{SIGMOÏDE}{%
+    \begin{tikzpicture}
+      \begin{axis}[chainaxis,xmin=-3.2,xmax=3.2,ymin=-.06,ymax=1.06]
+        \addplot[courseprobability!88!ink,domain=-3.2:3.2,samples=70]
+          {1/(1+exp(-x))};
+        \addplot[only marks,mark=square*,mark size=.9pt,coursescore!88!ink]
+          coordinates {\MicroSigmoidGryffondorCoords};
+        \addplot[only marks,mark=*,mark size=.9pt,warning!88!ink]
+          coordinates {\MicroSigmoidSerpentardCoords};
+      \end{axis}
+    \end{tikzpicture}}};
 
-  % Décision.
-  \path[fill=warning!14] (11.82,4.78) rectangle (13.02,5.65);
-  \path[fill=coursescore!14] (13.02,4.78) rectangle (14.23,5.65);
-  \draw[ink!68,line width=.7pt] (13.02,4.65) -- (13.02,5.8);
-  \node[font=\tiny\bfseries,text=warning!88!ink] at (12.42,5.23) {SERP.};
-  \node[font=\tiny\bfseries,text=coursescore!88!ink] at (13.62,5.23) {GRYFF.};
-  \node[font=\tiny,text=ink!65] at (13.02,4.57) {$\tau$};
+  \node[slot] (decision) at (11.34,4.8) {\chaincard{course-stage-start-7}{coursedecision}{DÉCISION}{%
+    \begin{tikzpicture}
+      \begin{axis}[chainaxis,height=.95cm,xmin=0,xmax=1,ymin=0,ymax=1]
+        \fill[warning!8] (axis cs:0,0) rectangle (axis cs:.5,1);
+        \fill[coursescore!8] (axis cs:.5,0) rectangle (axis cs:1,1);
+        \draw[coursedecision!88!ink,dashed,line width=.6pt]
+          (axis cs:.5,0) -- (axis cs:.5,1);
+        \addplot[only marks,mark=square*,mark size=.9pt,coursescore!88!ink]
+          coordinates {\MicroDecisionGryffondorCoords};
+        \addplot[only marks,mark=*,mark size=.9pt,warning!88!ink]
+          coordinates {\MicroDecisionSerpentardCoords};
+        \node[font=\tiny,text=warning!88!ink,anchor=north west,yshift=-1pt]
+          at (axis description cs:0,0) {\MicroSerpentardLabel};
+        \node[font=\tiny,text=coursescore!88!ink,anchor=north east,yshift=-1pt]
+          at (axis description cs:1,0) {\MicroGryffondorLabel};
+        \node[font=\tiny,text=coursedecision!88!ink,anchor=north,
+          inner sep=1.5pt] at (axis description cs:.5,1) {$\tau$};
+      \end{axis}
+    \end{tikzpicture}}};
 
-  % Mise à jour : trajectoire de trois coefficients.
-  \draw[courseupdate!35,line width=.45pt] (1.28,1.22) ellipse (.98cm and .58cm);
-  \draw[courseupdate!55,line width=.5pt] (1.28,1.22) ellipse (.61cm and .36cm);
-  \fill[ink!72] (2.32,1.95) circle (1.5pt);
-  \fill[ink!55] (1.85,1.62) circle (1.4pt);
-  \fill[courseupdate] (1.48,1.34) circle (1.5pt);
-  \draw[flow,courseupdate!85!ink] (2.32,1.95) -- (1.89,1.65);
-  \draw[flow,courseupdate!85!ink] (1.79,1.57) -- (1.52,1.37);
+  \node[slot] (maj) at (0,0) {\chaincard{course-stage-start-6}{courseupdate}{MISE À JOUR}{%
+    \begin{tikzpicture}
+      \begin{axis}[chainaxis,xmin=\MicroSliceXmin,xmax=\MicroSliceXmax,
+        ymin=\MicroSliceYmin,ymax=\MicroSliceYmax,
+        xlabel={$w_{\mathrm{pot}}$},ylabel={$w_{\mathrm{vol}}$},
+        label style={font=\tiny,inner sep=1.5pt}]
+        \microrelief
+        \addplot[courseupdate!85!ink,line width=.8pt,mark=*,mark size=.75pt,
+          mark options={fill=courseupdate!85!ink,draw=none}]
+          coordinates {\MicroGDPathCoords};
+        \addplot[only marks,mark=star,mark size=2pt,line width=.7pt,ink!75]
+          coordinates {\MicroOptimumCoords};
+      \end{axis}
+    \end{tikzpicture}}};
 
-  % Gradient : courbes de niveau et flèche locale.
-  \draw[coursegradient!35,line width=.45pt] (5.42,1.62) ellipse (1.1cm and .67cm);
-  \draw[coursegradient!55,line width=.5pt] (5.42,1.62) ellipse (.68cm and .4cm);
-  \fill[ink!74] (6.18,2.06) circle (1.5pt);
-  \draw[-{Latex[length=1.5mm]},coursegradient!88!ink,line width=.9pt]
-    (6.18,2.06) -- (5.68,1.76);
-  \node[font=\tiny,text=coursegradient!88!ink] at (6.18,1.72) {$-\nabla J$};
+  \node[slot] (gradient) at (3.78,0) {\chaincard{course-stage-start-5}{coursegradient}{GRADIENT}{%
+    \begin{tikzpicture}
+      \begin{axis}[chainaxis,xmin=\MicroSliceXmin,xmax=\MicroSliceXmax,
+        ymin=\MicroSliceYmin,ymax=\MicroSliceYmax,
+        xlabel={$w_{\mathrm{pot}}$},ylabel={$w_{\mathrm{vol}}$},
+        label style={font=\tiny,inner sep=1.5pt}]
+        \microrelief
+        \draw[-{Latex[length=1.7mm]},coursegradient!92!ink,line width=1.1pt]
+          (axis cs:\MicroGradientProbeX,\MicroGradientProbeY)
+          -- (axis cs:\MicroGradientTipX,\MicroGradientTipY);
+        \addplot[only marks,mark=*,mark size=1.2pt,coursegradient!92!ink]
+          coordinates {\MicroGradientProbe};
+        \node[font=\tiny,text=coursegradient!92!ink,anchor=south west,inner sep=1pt]
+          at (axis cs:\MicroGradientTipX,\MicroGradientTipY) {$-\nabla J$};
+      \end{axis}
+    \end{tikzpicture}}};
 
-  % Perte : deux courbes opposées, sans codage numérique.
-  \begin{scope}[shift={(9.22,.66)},x=.36cm,y=.43cm]
-    \draw[-{Latex[length=1mm]},ink!50] (-3.1,0) -- (3.2,0);
-    \draw[-{Latex[length=1mm]},ink!50] (-3.0,0) -- (-3.0,3.25);
-    \draw[coursescore!88!ink,line width=.75pt]
-      plot[samples=50,domain=-2.9:2.9] (\x,{ln(1+exp(-\x))});
-    \draw[warning!88!ink,line width=.75pt]
-      plot[samples=50,domain=-2.9:2.9] (\x,{ln(1+exp(\x))});
-    \node[font=\tiny,text=coursescore!88!ink] at (-2.15,2.72) {G};
-    \node[font=\tiny,text=warning!88!ink] at (2.15,2.72) {S};
-  \end{scope}
+  \node[slot] (perte) at (7.56,0) {\chaincard{course-stage-start-4}{courseloss}{PERTE LOGISTIQUE}{%
+    \begin{tikzpicture}
+      \begin{axis}[chainaxis,xmin=-3,xmax=3,ymin=0,ymax=3.2,
+        xlabel={$z$},label style={font=\tiny,inner sep=1.5pt}]
+        \addplot[coursescore!88!ink,domain=-3:3,samples=60] {ln(1+exp(-x))};
+        \addplot[warning!88!ink,domain=-3:3,samples=60] {ln(1+exp(x))};
+        \node[font=\fontsize{5}{5.5}\selectfont,text=coursescore!88!ink,
+          anchor=north west,inner sep=2pt]
+          at (axis description cs:0,1) {\MicroGryffondorLabel};
+        \node[font=\fontsize{5}{5.5}\selectfont,text=warning!88!ink,
+          anchor=north east,inner sep=2pt]
+          at (axis description cs:1,1) {\MicroSerpentardLabel};
+      \end{axis}
+    \end{tikzpicture}}};
 
-  % Évaluation : matrice 2 x 2.
-  \foreach \x/\y/\col in {11.95/1.64/rulecolor,12.72/1.64/warning,
-                            11.95/.88/warning,12.72/.88/rulecolor}
-    \path[fill=\col!18,draw=white] (\x,\y) rectangle ++(.72,.67);
-  \node[font=\tiny,text=ink!68] at (12.69,.60)
-    {observé / prédit};
+  \node[slot] (evaluation) at (11.34,0)
+    {\chaincard{course-stage-start-8}{courseevaluation}{ÉVALUATION}{%
+    \begin{tikzpicture}[x=1.02cm,y=.58cm,
+      cell/.style={draw=white,line width=.7pt,minimum width=1cm,
+        minimum height=.56cm,font=\tiny\bfseries,inner sep=0pt},
+      tag/.style={font=\tiny,text=ink!62}]
+      \node[cell,fill=rulecolor!18,text=rulecolor!75!ink] at (0,1) {VN $=\MicroTrainTN$};
+      \node[cell,fill=warning!16,text=warning!85!ink]     at (1,1) {FP $=\MicroTrainFP$};
+      \node[cell,fill=warning!16,text=warning!85!ink]     at (0,0) {FN $=\MicroTrainFN$};
+      \node[cell,fill=rulecolor!18,text=rulecolor!75!ink] at (1,0) {VP $=\MicroTrainTP$};
+      \node[tag,anchor=south] at (.5,1.62) {maison prédite};
+      \node[tag,anchor=south,rotate=90] at (-.62,.5) {maison observée};
+    \end{tikzpicture}}};
 
-  \draw[flow] (3.25,5.43) -- (3.8,5.43);
-  \draw[flow] (7.05,5.43) -- (7.6,5.43);
-  \draw[flow] (10.85,5.43) -- (11.4,5.43);
-  \draw[flow] (9.225,4.15) -- (9.225,2.9);
-  \draw[flow] (7.6,1.62) -- (7.05,1.62);
-  \draw[flow] (3.8,1.62) -- (3.25,1.62);
-  \draw[flow] (1.625,2.9) -- (1.625,3.45) -- (5.425,3.45) -- (5.425,4.15);
-  \draw[flow] (13.025,4.15) -- (13.025,2.9);
+  \draw[flow] (donnees) -- (score);
+  \draw[flow] (score) -- (sigmoide);
+  \draw[flow] (sigmoide) -- (decision);
+  \draw[flow] (sigmoide) -- (perte);
+  \draw[flow] (perte) -- (gradient);
+  \draw[flow] (gradient) -- (maj);
+  \draw[flow] (decision) -- (evaluation);
+  \draw[flow] (maj.north) -- ++(0,.55) -| (score.south);
 \end{tikzpicture}
-\end{slidevisual}
+\end{adjustbox}
+\vfill
 \end{frame}
 
 % ---------------------------------------------------------------------------
@@ -217,10 +312,10 @@
   les nombres du modèle. Le groupe d'évaluation les reçoit sans les modifier.
 \end{frame}
 
-\begin{frame}[t]{Groupe d'estimation : seize élèves}
+\begin{frame}[t]{Groupe d'estimation : \MicroNTrain{} élèves}
   \centering
   \tiny
-  \renewcommand{\arraystretch}{.98}
+  \renewcommand{\arraystretch}{.9}
   \begin{tabularx}{\textwidth}{c >{\raggedright\arraybackslash}X l c c}
     \microheader ID & \color{white}\bfseries Élève &
       \color{white}\bfseries Maison & \color{white}\bfseries Potions &
@@ -229,7 +324,7 @@
   \end{tabularx}
   \par\vspace{2mm}
   \begin{vigilance}[Une note manque ici même]
-    La note de Potions de Ron est absente. Le trou se trouve donc là où sont
+    La note de \PotionsName{} de Ron est absente. Le trou se trouve donc là où sont
     calculées les statistiques : sa valeur de remplacement participera aux
     médianes, aux moyennes et aux coefficients.
   \end{vigilance}
@@ -247,7 +342,7 @@
   \end{tabularx}
   \vfill
   \begin{vigilance}[Une note manque aussi à l'évaluation]
-    La note de Vol de George est absente. Une case vide ne peut pas être
+    La note de \VolName{} de George est absente. Une case vide ne peut pas être
     standardisée : elle doit d'abord recevoir une valeur numérique, et cette
     valeur vient du groupe d'estimation.
   \end{vigilance}
@@ -275,7 +370,7 @@
               &\Longrightarrow x_{\mathrm{vol}}&=0{,}35.
           \end{aligned}
         \]
-        En Potions la médiane égale la moyenne ; en Vol elle vaut
+        En \PotionsName{} la médiane égale la moyenne ; en \VolName{} elle vaut
         \(\MicroMedianVol\) contre une moyenne de \(\MicroMeanVol\).
       \end{coursecallout}
   \end{columns}
@@ -303,29 +398,29 @@
   \begin{columns}[T,onlytextwidth]
     \column{.46\textwidth}
       \centering
-      {\bfseries\color{coursedata!88!ink} Potions}
+      {\bfseries\PotionsName}
       \begin{tikzpicture}[y=.045cm]
         \draw[-{Latex[length=1.7mm]},ink!58] (0,0) -- (0,23);
         \foreach \v in {0,5,10,15,20}
           \draw[ink!55] (-.12,\v) -- (.12,\v)
             node[right=2mm,font=\scriptsize] {\v};
-        \fill[coursedata!68] (-.35,3) rectangle (.35,17);
+        \fill[coursepotions!62] (-.35,\MicroPotionsMin) rectangle (.35,\MicroPotionsMax);
       \end{tikzpicture}
       \par notée sur 20
     \column{.46\textwidth}
       \centering
-      {\bfseries\color{courseprobability!88!ink} Vol}
+      {\bfseries\VolName}
       \begin{tikzpicture}[y=.009cm]
         \draw[-{Latex[length=1.7mm]},ink!58] (0,0) -- (0,113);
         \foreach \v in {0,25,50,75,100}
           \draw[ink!55] (-.12,\v) -- (.12,\v)
             node[right=2mm,font=\scriptsize] {\v};
-        \fill[courseprobability!58] (-.35,14) rectangle (.35,76);
+        \fill[coursevol!55] (-.35,\MicroVolMin) rectangle (.35,\MicroVolMax);
       \end{tikzpicture}
       \par notée sur 100
   \end{columns}
   \vfill
-  Un point représente 5\% de l'échelle en Potions, contre 1\% en Vol.
+  Un point représente 5\% de l'échelle en \PotionsName, contre 1\% en \VolName.
 \end{frame}
 
 \begin{frame}[t]{Centrage-réduction des deux notes}
@@ -334,7 +429,7 @@
   puis conservés :
   \begin{columns}[T,onlytextwidth]
     \column{.47\textwidth}
-      \begin{coursecallout}{coursedata!88!ink}{Potions}
+      \begin{coursecallout}{coursepotions!92!ink}{\PotionsName}
         \[
           \mu_{\mathrm{pot}}=\MicroMeanPotions,
           \quad s_{\mathrm{pot}}=\MicroSdPotions,
@@ -345,7 +440,7 @@
         \]
       \end{coursecallout}
     \column{.47\textwidth}
-      \begin{coursecallout}{courseprobability!88!ink}{Vol}
+      \begin{coursecallout}{coursevol!92!ink}{\VolName}
         \[
           \mu_{\mathrm{vol}}=\MicroMeanVol,
           \quad s_{\mathrm{vol}}=\MicroSdVol,
@@ -357,8 +452,13 @@
       \end{coursecallout}
   \end{columns}
   \vfill
-  Pour Harry : \(x_{\mathrm{pot}}=+1{,}50\) et
-  \(x_{\mathrm{vol}}=+1{,}20\). Les deux coordonnées sont désormais sans unité.
+  Pour Harry : \(x_{\mathrm{pot}}=\MicroHarryPotions\) et
+  \(x_{\mathrm{vol}}=\MicroHarryVol\). Les deux coordonnées sont désormais sans
+  unité.
+  \par\smallskip
+  La covariance d'estimation vaut \(\MicroTrainCovariance\), soit une
+  corrélation de \(\MicroTrainCorrelation\) : les deux notes varient en sens
+  opposé.
 \end{frame}
 
 \begin{frame}[t]{Effet géométrique de la standardisation}
@@ -367,12 +467,7 @@
     \column{.49\textwidth}
       \centering\small Notes brutes
       \begin{tikzpicture}
-        \begin{axis}[width=\textwidth,height=4.8cm,
-          xmin=0,xmax=20,ymin=0,ymax=100,
-          xtick={0,10,20},ytick={0,50,100},
-          grid=major,grid style={gridgray!34},axis lines=box,
-          xlabel={Potions},ylabel={Vol},
-          tick label style={font=\tiny},label style={font=\scriptsize}]
+        \begin{axis}[smallcloud]
           \addplot[only marks,mark=square*,mark size=2.2pt,coursescore]
             coordinates {\MicroTrainGryffondorCoords};
           \addplot[only marks,mark=*,mark size=2.2pt,warning]
@@ -420,54 +515,62 @@
 
 \begin{frame}[t]{Contributions des deux matières au score}
   \centering
-  Prenons provisoirement \(w^{\mathrm{essai}}=(0,-1,+2)\), donc
-  \(z=2x_{\mathrm{vol}}-x_{\mathrm{pot}}\).
+  Prenons provisoirement \(w^{\mathrm{essai}}=\MicroTrialWeights\), donc
+  \(\MicroTrialScore\).
   \vspace{3mm}
-  \renewcommand{\arraystretch}{1.25}
-  \begin{tabular}{lrrrrr}
+  \scriptsize
+  \renewcommand{\arraystretch}{1.22}
+  \begin{tabular}{lrrrrrrr}
     \toprule
     élève & $x_{\mathrm{pot}}$ & $x_{\mathrm{vol}}$ &
-      $-x_{\mathrm{pot}}$ & $+2x_{\mathrm{vol}}$ & $z$\\
+      $-2x_{\mathrm{pot}}$ & $+x_{\mathrm{vol}}$ & $z$ & $p$ & $\ell$\\
     \midrule
-    Harry   & $+1{,}50$ & $+1{,}20$ & $-1{,}50$ & $+2{,}40$ & $+0{,}90$\\
-    Drago   & $+0{,}50$ & $-1{,}00$ & $-0{,}50$ & $-2{,}00$ & $-2{,}50$\\
-    Neville & $-1{,}25$ & $-1{,}70$ & $+1{,}25$ & $-3{,}40$ & $-2{,}15$\\
+    \MicroTrialRows
     \bottomrule
   \end{tabular}
   \vfill
+  \normalsize
   Le score agrège les contributions ; il ne constitue encore ni une
   probabilité ni une classe prédite.
 \end{frame}
 
 \begin{frame}[t]{Le niveau de score nul définit une droite}
-  \centering
-  \begin{tikzpicture}
-    \begin{axis}[rawcloud,legend columns=2]
-      \addplot[only marks,mark=square*,mark size=2.6pt,coursescore!88!ink]
-        coordinates {\MicroTrainGryffondorCoords};
-      \addlegendentry{Gryffondor}
-      \addplot[only marks,mark=*,mark size=2.6pt,warning!88!ink]
-        coordinates {\MicroTrainSerpentardCoords};
-      \addlegendentry{Serpentard}
-      \addplot[ink!78,very thick,domain=0:20,samples=2] {2*x+18};
-      \node[font=\scriptsize,text=coursescore!88!ink,anchor=south]
-        at (axis cs:6,74) {$z>0$};
-      \node[font=\scriptsize,text=warning!88!ink,anchor=north]
-        at (axis cs:14,24) {$z<0$};
-      \node[font=\scriptsize,fill=white,inner sep=1pt,text=ink!72]
-        at (axis cs:16.5,52) {$V=2P+18$};
-    \end{axis}
-  \end{tikzpicture}
+  \begin{columns}[c,onlytextwidth]
+    \column{.60\textwidth}
+      \begin{tikzpicture}
+        \begin{axis}[rawcloud,legend columns=2]
+          \addplot[only marks,mark=square*,mark size=2.6pt,coursescore!88!ink]
+            coordinates {\MicroTrainGryffondorCoords};
+          \addlegendentry{\GryffondorName}
+          \addplot[only marks,mark=*,mark size=2.6pt,warning!88!ink]
+            coordinates {\MicroTrainSerpentardCoords};
+          \addlegendentry{\SerpentardName}
+          \microboundary{ink!78,very thick};
+          \node[font=\scriptsize,text=coursescore!88!ink,anchor=south]
+            at (axis cs:4,74) {$z>0$};
+          \node[font=\scriptsize,text=warning!88!ink,anchor=north]
+            at (axis cs:16,24) {$z<0$};
+        \end{axis}
+      \end{tikzpicture}
+    \column{.36\textwidth}
+      \begin{coursecallout}{coursescore!88!ink}{Une droite, deux demi-plans}
+        L'ensemble \(z=0\) est une droite du plan des notes ; elle le partage
+        en deux demi-plans où le score est de signe constant.
+      \end{coursecallout}
+      \par\smallskip
+      {\small Après estimation des coefficients, son équation sera
+      \(\MicroBoundaryRaw\).}
+  \end{columns}
 \end{frame}
 
 \begin{frame}[t]{Écriture matricielle des scores}
-  Pour les seize observations du groupe d'estimation :
+  Pour les \MicroNTrain{} observations du groupe d'estimation :
   \[
     X=
     \begin{pmatrix}
       1 & x_{1,\mathrm{pot}} & x_{1,\mathrm{vol}}\\
       \vdots & \vdots & \vdots\\
-      1 & x_{16,\mathrm{pot}} & x_{16,\mathrm{vol}}
+      1 & x_{\MicroNTrain,\mathrm{pot}} & x_{\MicroNTrain,\mathrm{vol}}
     \end{pmatrix},
     \qquad
     w=\begin{pmatrix}w_0\\w_{\mathrm{pot}}\\w_{\mathrm{vol}}\end{pmatrix}.
@@ -476,8 +579,8 @@
     \boxed{z=Xw}
   \]
   \vfill
-  Une même multiplication produit les seize scores ; chaque ligne de \(X\)
-  correspond à un élève.
+  Une même multiplication produit les \MicroNTrain{} scores ; chaque ligne de
+  \(X\) correspond à un élève.
 \end{frame}
 
 % ---------------------------------------------------------------------------
@@ -554,29 +657,28 @@
   \vfill
   \centering
   \begin{tabular}{c|ccccc}
-    $z$ & $-\ln3$ & $-1$ & $0$ & $1$ & $+2\ln3$\\
+    $z$ & $-2$ & $-1$ & $0$ & $1$ & $2$\\
     \midrule
-    $p$ & $1/4$ & $0{,}269$ & $1/2$ & $0{,}731$ & $9/10$
+    $p$ & $0{,}119$ & $0{,}269$ & $1/2$ & $0{,}731$ & $0{,}881$
   \end{tabular}
 \end{frame}
 
-\begin{frame}[t]{Probabilités associées à trois scores}
+\begin{frame}[t]{Probabilités associées aux scores d'essai}
   \centering
   \renewcommand{\arraystretch}{1.35}
-  \begin{tabular}{lccc}
+  \begin{tabular}{llccl}
     \toprule
-    élève & $z$ d'essai & $p=\sigma(z)$ & maison favorisée\\
+    élève & maison observée & $z$ d'essai & $p=\sigma(z)$ & maison favorisée\\
     \midrule
-    Harry   & $+0{,}90$ & $0{,}711$ & Gryffondor\\
-    Drago   & $-2{,}50$ & $0{,}076$ & Serpentard\\
-    Neville & $-2{,}15$ & $0{,}104$ & Serpentard\\
+    \MicroTrialProbabilityRows
     \bottomrule
   \end{tabular}
   \vfill
   \begin{coursecallout}{courseprobability!88!ink}{}
     La sigmoïde étant strictement croissante, deux observations de même score
-    reçoivent la même probabilité selon le modèle. Neville est Gryffondor : ces
-    coefficients d'essai le placent déjà du mauvais côté.
+    reçoivent la même probabilité selon le modèle. Les lignes marquées
+    \textcolor{warning}{$\bullet$} sont celles pour lesquelles la maison
+    favorisée contredit la maison observée.
   \end{coursecallout}
 \end{frame}
 
@@ -588,8 +690,8 @@
   \[
     y_i=
     \begin{cases}
-      1 & \text{si l'élève appartient à Gryffondor},\\
-      0 & \text{si l'élève appartient à Serpentard}.
+      1 & \text{si l'élève appartient à \GryffondorName},\\
+      0 & \text{si l'élève appartient à \SerpentardName}.
     \end{cases}
   \]
   \vspace{5mm}
@@ -607,14 +709,14 @@
   \]
   \begin{columns}[T,onlytextwidth]
     \column{.47\textwidth}
-      \begin{coursecallout}{coursescore!88!ink}{Maison observée : Gryffondor}
+      \begin{coursecallout}{coursescore!88!ink}{Maison observée : \GryffondorName}
         \[
           y=1,\qquad \ell=-\ln p=\ln(1+e^{-z}).
         \]
         La perte décroît lorsque le score augmente.
       \end{coursecallout}
     \column{.47\textwidth}
-      \begin{coursecallout}{warning!88!ink}{Maison observée : Serpentard}
+      \begin{coursecallout}{warning!88!ink}{Maison observée : \SerpentardName}
         \[
           y=0,\qquad \ell=-\ln(1-p)=\ln(1+e^z).
         \]
@@ -631,10 +733,10 @@
       xlabel={$z$},ylabel={$\ell$},legend style={draw=none,font=\scriptsize}]
       \addplot[coursescore!88!ink,thick,domain=-4:4,samples=100]
         {ln(1+exp(-x))};
-      \addlegendentry{Gryffondor observé}
+      \addlegendentry{\GryffondorName{} observé}
       \addplot[warning!88!ink,thick,domain=-4:4,samples=100]
         {ln(1+exp(x))};
-      \addlegendentry{Serpentard observé}
+      \addlegendentry{\SerpentardName{} observé}
     \end{axis}
   \end{tikzpicture}
   \[
@@ -644,24 +746,28 @@
 
 \begin{frame}[t]{Influence des profils en recouvrement}
   Avec les coefficients d'essai, le signe du score concorde avec la maison
-  observée pour treize élèves et s'y oppose pour trois :
+  observée pour \MicroTrialAgree{} élèves et s'y oppose pour
+  \MicroTrialDisagree{} :
   \[
-    J=\frac1{16}\sum_{i=1}^{16}\ell(z_i,y_i)=0{,}520535.
+    J=\frac1{\MicroNTrain}\sum_{i=1}^{\MicroNTrain}\ell(z_i,y_i)
+      =\MicroTrialLoss.
   \]
   \vspace{3mm}
   \begin{columns}[T,onlytextwidth]
     \column{.47\textwidth}
       \begin{coursecallout}{rulecolor!88!ink}{Signe concordant}
-        Colin : \(z=+1{,}55\), \(y=1\), perte \(0{,}193\).
+        \MicroTrialBestName{} : \(z=\MicroTrialBestScore\), \(y=1\), perte
+        \(\MicroTrialBestLoss\).
       \end{coursecallout}
     \column{.47\textwidth}
       \begin{coursecallout}{warning!88!ink}{Signe discordant}
-        Neville : \(z=-2{,}15\), \(y=1\), perte \(2{,}260\), soit près de
-        douze fois plus.
+        \MicroTrialWorstName{} : \(z=\MicroTrialWorstScore\), \(y=1\), perte
+        \(\MicroTrialWorstLoss\), soit un rapport de \MicroTrialLossRatio.
       \end{coursecallout}
   \end{columns}
   \vfill
-  Neville, Seamus et Marcus empêchent une séparation parfaite des maisons.
+  Les observations situées dans l'agrégat de la maison opposée interdisent
+  toute séparation linéaire parfaite et concentrent l'essentiel de la perte.
 \end{frame}
 
 % ---------------------------------------------------------------------------
@@ -687,22 +793,21 @@
     w^{(0)}=(0,0,0)\quad\Longrightarrow\quad z_i=0,
     \quad p_i=\frac12.
   \]
-  Les seize observations donnent exactement
+  Les \MicroNTrain{} observations donnent exactement
   \[
-    \sum_i(p_i-y_i)=-3,\qquad
-    \sum_i(p_i-y_i)x_{i,\mathrm{pot}}=-1{,}5,\qquad
-    \sum_i(p_i-y_i)x_{i,\mathrm{vol}}=-4{,}2.
+    \sum_i(p_i-y_i)=\MicroGradientZeroSumOne,\qquad
+    \sum_i(p_i-y_i)x_{i,\mathrm{pot}}=\MicroGradientZeroSumPotions,\qquad
+    \sum_i(p_i-y_i)x_{i,\mathrm{vol}}=\MicroGradientZeroSumVol.
   \]
   Donc
   \[
-    \boxed{\nabla J(w^{(0)})
-      =(-0{,}1875,\;-0{,}09375,\;-0{,}2625).}
+    \boxed{\nabla J(w^{(0)})=\MicroGradientZero.}
   \]
   La première composante est non nulle : les maisons ne sont pas également
   représentées, l'ordonnée à l'origine bouge dès le premier pas.
 \end{frame}
 
-\begin{frame}[t]{Contribution de quatre observations au gradient}
+\begin{frame}[t]{Contribution de cinq observations au gradient}
   \centering
   \renewcommand{\arraystretch}{1.22}
   \begin{tabular}{lrrrrr}
@@ -710,14 +815,12 @@
     élève & $y$ & $p-y$ à $w=0$ & $x_{\mathrm{pot}}$ &
       $(p-y)x_{\mathrm{pot}}$ & $(p-y)x_{\mathrm{vol}}$\\
     \midrule
-    Harry   & $1$ & $-0{,}5$ & $+1{,}50$ & $-0{,}750$ & $-0{,}600$\\
-    Drago   & $0$ & $+0{,}5$ & $+0{,}50$ & $+0{,}250$ & $-0{,}500$\\
-    Neville & $1$ & $-0{,}5$ & $-1{,}25$ & $+0{,}625$ & $+0{,}850$\\
-    Marcus  & $0$ & $+0{,}5$ & $-0{,}25$ & $-0{,}125$ & $+0{,}250$\\
+    \MicroResidualRows
     \bottomrule
   \end{tabular}
   \vfill
-  Les contributions sont additionnées avant la division par \(n=16\).
+  Les contributions sont additionnées avant la division par
+  \(n=\MicroNTrain\).
 \end{frame}
 
 \begin{frame}[t]{Calcul vectoriel du gradient}
@@ -727,13 +830,13 @@
       z&=Xw,\\
       p&=\sigma(z),\\
       r&=p-y,\\
-      \nabla J(w)&=\frac1{16}X^\top r.
+      \nabla J(w)&=\frac1{\MicroNTrain}X^\top r.
     \end{aligned}
   \]
   \vfill
   \begin{coursecallout}{coursegradient!88!ink}{Dimensions}
-    \(X\in\mathbb R^{16\times3}\), \(w\in\mathbb R^3\),
-    \(p,y,r\in\mathbb R^{16}\) et
+    \(X\in\mathbb R^{\MicroNTrain\times3}\), \(w\in\mathbb R^3\),
+    \(p,y,r\in\mathbb R^{\MicroNTrain}\) et
     \(\nabla J(w)\in\mathbb R^3\).
   \end{coursecallout}
 \end{frame}
@@ -766,14 +869,14 @@
   \]
   À partir de \(w^{(0)}=(0,0,0)\) :
   \[
-    w^{(1)}=(0,0,0)-(-0{,}1875,-0{,}09375,-0{,}2625)
-    =\boxed{(+0{,}1875,\,+0{,}09375,\,+0{,}2625)}.
+    \begin{aligned}
+      w^{(1)}&=(0,0,0)-\MicroGradientZero\\
+             &=\boxed{\MicroFirstStep}.
+    \end{aligned}
   \]
-  Pour Harry, \(x_{\mathrm{pot}}=1{,}50\) et \(x_{\mathrm{vol}}=1{,}20\) :
-  \[
-    z^{(1)}=0{,}643125,\qquad p^{(1)}=0{,}655460.
-  \]
-  La perte moyenne passe de \(0{,}693147\) à \(0{,}598254\).
+  \vspace{1mm}
+  La perte moyenne passe de \(\MicroLossAtZero\) à \(\MicroLossAfterStep\) :
+  une itération réduit le coût sans encore fixer de règle de décision.
 \end{frame}
 
 \begin{frame}[t]{Convergence de la descente de gradient}
@@ -793,30 +896,29 @@
   \(\MicroGDIterations\).
 \end{frame}
 
-\begin{frame}[t]{Expression analytique de l'optimum}
-  \vspace{1mm}
-  La marge brute \(m=\MicroMarginExpr\) ne prend que trois valeurs sur le groupe
-  d'estimation. Tous les élèves d'un palier reçoivent le même score : la
-  vraisemblance y est maximale quand la probabilité ajustée égale la proportion
-  observée.
-  \vspace{2mm}
+\begin{frame}[t]{Ce que caractérise l'optimum}
+  L'optimum n'admet pas de forme close : il est caractérisé par l'annulation du
+  gradient. Les résidus \(p_i-y_i\) y sont de somme nulle et orthogonaux aux
+  deux notes.
+  \par
   \centering
-  \renewcommand{\arraystretch}{1.3}
-  \begin{tabular}{rcccc}
+  \small
+  \renewcommand{\arraystretch}{1.2}
+  \begin{tabular}{ccc}
     \toprule
-    palier $m$ & effectif & Gryffondor & $p^\star$ & $\operatorname{logit}(p^\star)$\\
+    colonne de $X$ & condition & valeur atteinte\\
     \midrule
-    $+24$ & $\MicroBandHighSize$ & $9$ & $\MicroExactProbabilityHigh$ & $\MicroLogOddsHigh$\\
-    $0$   & $\MicroBandMidSize$  & $1$ & $\MicroExactProbabilityMid$  & $\MicroLogOddsMid$\\
-    $-12$ & $\MicroBandLowSize$  & $1$ & $\MicroExactProbabilityLow$  & $\MicroLogOddsLow$\\
+    \MicroFirstOrderRows
     \bottomrule
   \end{tabular}
+  \normalsize
   \vfill
-  Les trois logits sont proportionnels à la marge, dans le rapport
-  \(\ln3\) pour \(\MicroMarginStep\) points :
-  \[
-    \boxed{\MicroScoreFromMargin}
-  \]
+  \begin{coursecallout}{courseupdate!88!ink}{Unicité de l'optimum}
+    Newton–Raphson converge en une dizaine d'itérations, la descente de
+    gradient à pas constant en \MicroGDIterations{}. Les deux méthodes
+    atteignent le même vecteur : la perte logistique est strictement convexe
+    sous recouvrement des deux maisons.
+  \end{coursecallout}
 \end{frame}
 
 \begin{frame}[t]{Paramètres standardisés et paramètres bruts}
@@ -824,29 +926,27 @@
     \column{.48\textwidth}
       \begin{coursecallout}{courseupdate!88!ink}{Variables standardisées}
         \begin{adjustbox}{max width=\linewidth,center}
-          $(w_0,w_{\mathrm{pot}},w_{\mathrm{vol}})=\MicroW$
+          $(w_0,w_{\mathrm{pot}},w_{\mathrm{vol}})=\MicroWDecimal$
         \end{adjustbox}
-        \begin{adjustbox}{max width=\linewidth,center}
-          $\MicroWDecimal$
-        \end{adjustbox}
+        \par\smallskip
+        {\scriptsize Le coefficient de \PotionsName{} vaut deux fois celui de
+        \VolName{} : un écart-type de \PotionsName{} déplace le score deux
+        fois plus qu'un écart-type de \VolName.}
       \end{coursecallout}
     \column{.48\textwidth}
       \begin{coursecallout}{coursescore!88!ink}{Notes brutes}
-        \[
-          \begin{gathered}
-            b=-\frac{3\ln3}{2},\quad
-            \beta_{\mathrm{pot}}=-\frac{\ln3}{6},\\
-            \beta_{\mathrm{vol}}=+\frac{\ln3}{12}.
-          \end{gathered}
-        \]
         \begin{adjustbox}{max width=\linewidth,center}
-          $\MicroRawBetaDecimal$
+          $(b,\beta_{\mathrm{pot}},\beta_{\mathrm{vol}})=\MicroRawBetaDecimal$
         \end{adjustbox}
+        \par\smallskip
+        {\scriptsize Le rapport s'inverse sur les notes brutes : un point de
+        \PotionsName{} équivaut à dix points de \VolName, les deux échelles n'étant pas
+        commensurables.}
       \end{coursecallout}
   \end{columns}
   \vfill
   \[
-    \boxed{\MicroScoreFromMargin}
+    \boxed{\MicroRawScore}
   \]
   L'ordonnée à l'origine n'est pas nulle et les deux poids n'ont pas la même
   intensité : la frontière ne passe ni par le barycentre ni le long d'une
@@ -857,46 +957,51 @@
   \centering
   \begin{tikzpicture}
     \begin{axis}[width=.74\textwidth,height=4.8cm,xmin=0,xmax=2.6,
-      ymin=.40,ymax=.72,axis lines=box,grid=major,grid style={gridgray!30},
+      ymin=.45,ymax=.72,axis lines=box,grid=major,grid style={gridgray!30},
       xlabel={$t$ dans $w=t\,w^\star$},ylabel={$J(t)$},
       tick label style={font=\scriptsize},label style={font=\scriptsize}]
       \addplot[courseupdate!88!ink,very thick,domain=0:2.6,samples=140]
-        {(9*ln(1+exp(-2.197224577*x))+ln(1+exp(2.197224577*x))
-          +2*ln(2)+ln(1+exp(1.098612289*x))
-          +3*ln(1+exp(-1.098612289*x)))/16};
+        {\MicroLossCurveExpr};
       \addplot[only marks,mark=*,mark size=2.8pt,warning]
-        coordinates {(1,.430404)};
+        coordinates {(1,\MicroTrainLossPlain)};
       \node[font=\scriptsize,anchor=north west,text=warning]
-        at (axis cs:1,.430404) {$t=1$};
+        at (axis cs:1,\MicroTrainLossPlain) {$t=1$};
     \end{axis}
   \end{tikzpicture}
   \begin{releve}
-    Neville et Marcus sont du mauvais côté de la frontière, Vincent et Seamus
-    exactement dessus. Sans ces quatre élèves les maisons seraient parfaitement
-    séparées : la perte décroîtrait vers zéro lorsque \(t\) augmente, sans
-    optimum fini.
+    \MicroWrongSideNames{} se situent du côté opposé à leur maison. En
+    l'absence de ces \MicroWrongSideCount{} observations les deux agrégats
+    seraient linéairement séparables : la perte décroîtrait vers zéro lorsque
+    \(t\) croît, les coefficients divergeraient et l'optimum ne serait pas
+    atteint.
   \end{releve}
 \end{frame}
 
 \begin{frame}[t]{Frontière du modèle ajusté}
-  \centering
-  \begin{tikzpicture}
-    \begin{axis}[rawcloud,legend columns=2]
-      \addplot[only marks,mark=square*,mark size=2.6pt,coursescore!88!ink]
-        coordinates {\MicroTrainGryffondorCoords};
-      \addlegendentry{Gryffondor}
-      \addplot[only marks,mark=*,mark size=2.6pt,warning!88!ink]
-        coordinates {\MicroTrainSerpentardCoords};
-      \addlegendentry{Serpentard}
-      \addplot[ink!82,very thick,domain=0:20,samples=2] {2*x+18};
-      \node[font=\scriptsize\bfseries,text=warning,anchor=north west]
-        at (axis cs:5,16) {Neville};
-      \node[font=\scriptsize\bfseries,text=warning,anchor=south east]
-        at (axis cs:9,60) {Marcus};
-      \node[font=\scriptsize,fill=white,inner sep=1pt,text=ink!72]
-        at (axis cs:16.5,52) {$p=0{,}50$};
-    \end{axis}
-  \end{tikzpicture}
+  \begin{columns}[c,onlytextwidth]
+    \column{.60\textwidth}
+      \begin{tikzpicture}
+        \begin{axis}[rawcloud,legend columns=3]
+          \addplot[only marks,mark=square*,mark size=2.6pt,coursescore!88!ink]
+            coordinates {\MicroTrainGryffondorCoords};
+          \addlegendentry{\GryffondorName}
+          \addplot[only marks,mark=*,mark size=2.6pt,warning!88!ink]
+            coordinates {\MicroTrainSerpentardCoords};
+          \addlegendentry{\SerpentardName}
+          \microboundary{ink!82,very thick};
+          \addlegendentry{$p=0{,}50$}
+          \MicroWrongSideLabels
+        \end{axis}
+      \end{tikzpicture}
+    \column{.36\textwidth}
+      \begin{coursecallout}{warning!88!ink}{Observations mal classées}
+        \MicroWrongSideNames.
+      \end{coursecallout}
+      \par\smallskip
+      {\small \(\MicroBoundaryRaw\)\par\smallskip
+      Le modèle ajusté affecte ces \MicroWrongSideCount{} observations à la
+      maison opposée.}
+  \end{columns}
 \end{frame}
 
 % ---------------------------------------------------------------------------
@@ -910,11 +1015,11 @@
   \begin{columns}[T,onlytextwidth]
     \column{.47\textwidth}
       \begin{coursecallout}{warning!88!ink}{$p_i<\tau$}
-        Maison prédite : Serpentard.
+        Maison prédite : \SerpentardName.
       \end{coursecallout}
     \column{.47\textwidth}
       \begin{coursecallout}{coursescore!88!ink}{$p_i\geq\tau$}
-        Maison prédite : Gryffondor.
+        Maison prédite : \GryffondorName.
       \end{coursecallout}
   \end{columns}
   \vfill
@@ -922,46 +1027,40 @@
   standardisation, ni les coefficients.
 \end{frame}
 
-\begin{frame}[t]{Probabilités produites sur le groupe d'estimation}
+\begin{frame}[t]{Distribution de la perte sur le groupe d'estimation}
   \[
-    m=\MicroMarginExpr:\qquad
-    m=+24\Rightarrow p=\tfrac9{10},
-    \quad
-    m=0\Rightarrow p=\tfrac12,
-    \quad
-    m=-12\Rightarrow p=\tfrac14.
+    \ell_i=-\ln p_i \text{ si \GryffondorName},
+    \qquad
+    \ell_i=-\ln(1-p_i) \text{ si \SerpentardName}.
   \]
   \vspace{2mm}
   \begin{columns}[T,onlytextwidth]
     \column{.31\textwidth}
-      \begin{coursecallout}{rulecolor!88!ink}{Neuf Gryffondor à $p=9/10$}
-        \[
-          \ell=-\ln\tfrac9{10}=0{,}105361.
-        \]
+      \begin{coursecallout}{rulecolor!88!ink}{Au centre de son agrégat}
+        \MicroCheapName{} : \(p=\MicroCheapProbability\), perte
+        \(\MicroCheapLoss\).
       \end{coursecallout}
     \column{.31\textwidth}
-      \begin{coursecallout}{coursedecision!88!ink}{Vincent et Seamus à $p=1/2$}
-        \[
-          \ell=\ln2=0{,}693147.
-        \]
+      \begin{coursecallout}{coursedecision!88!ink}{Au voisinage de la frontière}
+        \MicroBorderName{} : \(p=\MicroBorderProbability\), perte
+        \(\MicroBorderLoss\).
       \end{coursecallout}
     \column{.31\textwidth}
-      \begin{coursecallout}{warning!88!ink}{Marcus à $p=9/10$}
-        \[
-          \ell=-\ln\tfrac1{10}=2{,}302585.
-        \]
+      \begin{coursecallout}{warning!88!ink}{Dans l'agrégat opposé}
+        \MicroExpensiveName{} : \(p=\MicroExpensiveProbability\), perte
+        \(\MicroExpensiveLoss\).
       \end{coursecallout}
   \end{columns}
   \vfill
   \centering
-  Neville, Serpentard prédit alors qu'il est Gryffondor, paie
-  \(-\ln\tfrac14=1{,}386294\).
+  La perte moyenne \(J(w^\star)=\MicroTrainLoss\) est concentrée sur un petit
+  nombre d'observations : elle mesure le coût du recouvrement.
 \end{frame}
 
 \begin{frame}[t]{Résultats sur le groupe d'estimation}
   \centering
   \scriptsize
-  \renewcommand{\arraystretch}{1.02}
+  \renewcommand{\arraystretch}{.96}
   \begin{tabular}{cllrrrr}
     \toprule
     ID & élève & maison obs. & score & prob. & préd. 0,50 & préd. 0,65\\
@@ -973,53 +1072,61 @@
 
 \begin{frame}[t]{Matrice de confusion sur le groupe d'estimation}
   \centering
-  \begin{tikzpicture}[x=1.45cm,y=.85cm,
+  \begin{tikzpicture}[x=1.45cm,y=1.02cm,
     cell/.style={draw=white,line width=1pt,minimum width=2.8cm,
       minimum height=1.35cm,font=\Large\bfseries},
     lab/.style={font=\small\bfseries,text=ink!75}]
-    \node[lab] at (1,3.25) {Serpentard prédit};
-    \node[lab] at (3,3.25) {Gryffondor prédit};
-    \node[lab,rotate=90] at (-.35,2.25) {Serpentard obs.};
-    \node[lab,rotate=90] at (-.35,.75) {Gryffondor obs.};
-    \node[cell,fill=rulecolor!18,text=rulecolor!82!ink] at (1,2.25) {VN $=3$};
-    \node[cell,fill=warning!18,text=warning!88!ink] at (3,2.25) {FP $=2$};
-    \node[cell,fill=warning!18,text=warning!88!ink] at (1,.75) {FN $=1$};
-    \node[cell,fill=rulecolor!18,text=rulecolor!82!ink] at (3,.75) {VP $=10$};
+    \node[lab,align=center] at (1,3.35) {\SerpentardName\\prédit};
+    \node[lab,align=center] at (3,3.35) {\GryffondorName\\prédit};
+    \node[lab,align=right,anchor=east] at (-.05,2.25) {\SerpentardName\\observé};
+    \node[lab,align=right,anchor=east] at (-.05,.75) {\GryffondorName\\observé};
+    \node[cell,fill=rulecolor!18,text=rulecolor!82!ink] at (1,2.25)
+      {VN $=\MicroTrainTN$};
+    \node[cell,fill=warning!18,text=warning!88!ink] at (3,2.25)
+      {FP $=\MicroTrainFP$};
+    \node[cell,fill=warning!18,text=warning!88!ink] at (1,.75)
+      {FN $=\MicroTrainFN$};
+    \node[cell,fill=rulecolor!18,text=rulecolor!82!ink] at (3,.75)
+      {VP $=\MicroTrainTP$};
   \end{tikzpicture}
   \vfill
   \[
-    \text{exactitude}=\frac{10+3}{16}=81{,}25\%,
+    \text{exactitude}
+      =\frac{\MicroTrainTP+\MicroTrainTN}{\MicroNTrain}=\MicroTrainAccuracy,
     \qquad
-    \text{prédire toujours Gryffondor}=\frac{11}{16}=68{,}75\%.
+    \text{prédire toujours \GryffondorName}
+      =\frac{\MicroTrainGryffondor}{\MicroNTrain}=\MicroTrainBaseline.
   \]
 \end{frame}
 
 \begin{frame}[t]{Le seuil déplace la frontière sans réestimer le modèle}
-  \[
-    p\geq\tau
-    \Longleftrightarrow
-    V\geq2P+18+\frac{12}{\ln3}\operatorname{logit}(\tau).
-  \]
-  \centering
-  \begin{tikzpicture}
-    \begin{axis}[width=.72\textwidth,height=4.75cm,
-      xmin=0,xmax=20,ymin=0,ymax=100,
-      xtick={0,5,10,15,20},ytick={0,20,40,60,80,100},
-      grid=major,grid style={gridgray!32},axis lines=box,
-      xlabel={Potions (sur 20)},ylabel={Vol (sur 100)},
-      tick label style={font=\tiny},label style={font=\scriptsize},
-      legend style={draw=none,font=\scriptsize,at={(.5,1.02)},anchor=south,legend columns=2}]
-      \addplot[only marks,mark=square*,mark size=2.2pt,coursescore,forget plot]
-        coordinates {\MicroTrainGryffondorCoords};
-      \addplot[only marks,mark=*,mark size=2.2pt,warning,forget plot]
-        coordinates {\MicroTrainSerpentardCoords};
-      \addplot[ink!80,thick,domain=0:20,samples=2] {2*x+18};
-      \addlegendentry{$\tau=0{,}50$}
-      \addplot[coursedecision!88!ink,dashed,thick,domain=0:20,samples=2]
-        {2*x+24.762};
-      \addlegendentry{$\tau=0{,}65$}
-    \end{axis}
-  \end{tikzpicture}
+  \begin{columns}[c,onlytextwidth]
+    \column{.60\textwidth}
+      \begin{tikzpicture}
+        \begin{axis}[rawcloud,legend columns=2]
+          \addplot[only marks,mark=square*,mark size=2.2pt,coursescore,forget plot]
+            coordinates {\MicroTrainGryffondorCoords};
+          \addplot[only marks,mark=*,mark size=2.2pt,warning,forget plot]
+            coordinates {\MicroTrainSerpentardCoords};
+          \microboundary{ink!80,thick};
+          \addlegendentry{$\tau=0{,}50$}
+          \microboundaryhigh{coursedecision!88!ink,dashed,thick};
+          \addlegendentry{$\tau=0{,}65$}
+        \end{axis}
+      \end{tikzpicture}
+    \column{.36\textwidth}
+      \begin{coursecallout}{coursedecision!88!ink}{Translation, pas rotation}
+        \begin{adjustbox}{max width=\linewidth,center}
+          $b+\beta_{\mathrm{pot}}P+\beta_{\mathrm{vol}}V
+            \geq\operatorname{logit}(\tau)$
+        \end{adjustbox}
+      \end{coursecallout}
+      \par\smallskip
+      {\small Pente inchangée, ordonnée à l'origine relevée de
+      \MicroBoundaryShift{} points de \VolName{} : relever le seuil à
+      \(0{,}65\) revient à exiger un \VolName{} supérieur à niveau de
+      \PotionsName{} constant.}
+  \end{columns}
 \end{frame}
 
 % ---------------------------------------------------------------------------
@@ -1039,7 +1146,7 @@
     \node[box,fill=courseprobability!15,right=of impute] (scale)
       {$\mu=(\MicroMeanPotions,\MicroMeanVol)$\\$s=(\MicroSdPotions,\MicroSdVol)$};
     \node[box,fill=courseupdate!15,right=of scale] (model)
-      {$z=(\ln3/12)(V-2P-18)$\\coefficients figés};
+      {$\MicroRawScore$\\coefficients figés};
     \node[box,fill=courseevaluation!20,right=of model] (out)
       {$p$, maison prédite, perte};
     \draw[arr] (row) -- (impute);
@@ -1068,24 +1175,32 @@
 \end{frame}
 
 \begin{frame}[t]{Analyse locale autour du seuil de décision}
-  \centering
-  \begin{tikzpicture}
-    \begin{axis}[rawcloud,legend columns=2]
-      \addplot[only marks,mark=square,mark size=3pt,very thick,coursescore!88!ink]
-        coordinates {\MicroTestGryffondorCoords};
-      \addlegendentry{Gryffondor — évaluation}
-      \addplot[only marks,mark=o,mark size=3pt,very thick,warning!88!ink]
-        coordinates {\MicroTestSerpentardCoords};
-      \addlegendentry{Serpentard — évaluation}
-      \addplot[ink!78,very thick,domain=0:20,samples=2] {2*x+18};
-      \node[font=\scriptsize\bfseries,text=warning,anchor=south,
-        yshift=4pt,fill=white,fill opacity=.85,text opacity=1,inner sep=1.5pt]
-        at (axis cs:5,30) {Daphné : $p=\MicroProbabilityDaphne$};
-      \node[font=\scriptsize\bfseries,text=coursescore!88!ink,anchor=north,
-        yshift=-4pt,fill=white,fill opacity=.85,text opacity=1,inner sep=1.5pt]
-        at (axis cs:17,57) {George : $p=\MicroProbabilityGeorge$};
-    \end{axis}
-  \end{tikzpicture}
+  \begin{columns}[c,onlytextwidth]
+    \column{.60\textwidth}
+      \begin{tikzpicture}
+        \begin{axis}[rawcloud,legend columns=2]
+          \addplot[only marks,mark=square,mark size=3pt,very thick,coursescore!88!ink]
+            coordinates {\MicroTestGryffondorCoords};
+          \addlegendentry{\GryffondorName}
+          \addplot[only marks,mark=o,mark size=3pt,very thick,warning!88!ink]
+            coordinates {\MicroTestSerpentardCoords};
+          \addlegendentry{\SerpentardName}
+          \microboundary{ink!78,very thick};
+          \addlegendentry{$\tau=0{,}50$}
+          \microboundaryhigh{coursedecision!88!ink,dashed,thick};
+          \addlegendentry{$\tau=0{,}65$}
+          \MicroThresholdBandLabels
+        \end{axis}
+      \end{tikzpicture}
+    \column{.36\textwidth}
+      \begin{coursecallout}{coursedecision!88!ink}{Entre les deux droites}
+        Olivier : \(p=\MicroProbabilityOlivier\).\par
+        Daphné : \(p=\MicroProbabilityDaphne\).
+      \end{coursecallout}
+      \par\smallskip
+      {\small Seules ces deux observations changent de classe prédite lors du
+      passage de \(\tau=0{,}50\) à \(\tau=0{,}65\).}
+  \end{columns}
 \end{frame}
 
 \begin{frame}[t]{Effet du seuil sur la matrice de confusion}
@@ -1095,25 +1210,29 @@
       {\bfseries\color{coursedecision!88!ink} $\tau=0{,}50$}\par\medskip
       \begin{tabular}{c|cc}
         & Serp. prédit & Gryff. prédit\\\hline
-        Serp. obs. & $2$ & \cellcolor{warning!18}$1$\\
-        Gryff. obs. & \cellcolor{warning!18}$1$ & \cellcolor{rulecolor!18}$4$
+        Serp. obs. & $\MicroTestTN$ & \cellcolor{warning!18}$\MicroTestFP$\\
+        Gryff. obs. & \cellcolor{warning!18}$\MicroTestFN$ &
+          \cellcolor{rulecolor!18}$\MicroTestTP$
       \end{tabular}
       \par\medskip
-      Daphné passe pour Gryffondor ; Alicia est manquée.
+      Daphné est un faux positif, Alicia un faux négatif.
     \column{.48\textwidth}
       \centering
       {\bfseries\color{coursedecision!88!ink} $\tau=0{,}65$}\par\medskip
       \begin{tabular}{c|cc}
         & Serp. prédit & Gryff. prédit\\\hline
-        Serp. obs. & \cellcolor{rulecolor!18}$3$ & $0$\\
-        Gryff. obs. & \cellcolor{warning!18}$2$ & $3$
+        Serp. obs. & \cellcolor{rulecolor!18}$\MicroTestTNHigh$ &
+          $\MicroTestFPHigh$\\
+        Gryff. obs. & \cellcolor{warning!18}$\MicroTestFNHigh$ &
+          $\MicroTestTPHigh$
       \end{tabular}
       \par\medskip
-      Plus aucun faux positif, mais George est manqué à son tour.
+      Plus aucun faux positif ; Olivier devient un faux négatif.
   \end{columns}
   \vfill
-  L'exactitude reste \(6/8\) ; la nature de l'erreur change. Le seuil élevé
-  achète de la précision (\(\MicroTestPrecisionTauHigh\)) au prix du rappel
+  L'exactitude reste \(\MicroTestCorrect/\MicroNTest\) ; la nature de l'erreur
+  change. Le seuil élevé achète de la précision
+  (\(\MicroTestPrecisionTauHigh\)) au prix du rappel
   (\(\MicroTestRecallTauHigh\)).
 \end{frame}
 
@@ -1133,19 +1252,20 @@
   \(F_1=\MicroTestFScore\).
 \end{frame}
 
-\begin{frame}[t]{Incertitude d'évaluation sur huit observations}
+\begin{frame}[t]{Incertitude d'évaluation sur \MicroNTest{} observations}
   \vspace{3mm}
   \[
-    \widehat{\mathrm{acc}}=\frac68=75\%.
+    \widehat{\mathrm{acc}}
+      =\frac{\MicroTestCorrect}{\MicroNTest}=\MicroTestAccuracy.
   \]
   L'intervalle de Wilson à 95\% vaut
   \[
-    \boxed{[\MicroTestWilsonLow\,;\,\MicroTestWilsonHigh]}
-    \approx[40{,}9\%\,;\,92{,}9\%].
+    \boxed{[\MicroTestWilsonLow\,;\,\MicroTestWilsonHigh]}.
   \]
   \begin{vigilance}[Portée de l'étude de cas]
-    Les vingt-quatre observations sont synthétiques et choisies pour rendre
-    chaque transformation vérifiable à la main. Elles illustrent une méthode ;
-    elles ne mesurent pas la performance attendue sur une population réelle.
+    Les \MicroTotalStudents{} observations sont synthétiques et choisies pour
+    rendre chaque transformation vérifiable à la main. Elles illustrent une
+    méthode ; elles ne mesurent pas la performance attendue sur une population
+    réelle.
   \end{vigilance}
 \end{frame}

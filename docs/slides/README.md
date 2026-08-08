@@ -8,7 +8,7 @@ sur 20, Vol sur 100).
 
 | fichier | rôle |
 |---|---|
-| `data/eleves.csv` | **source unique.** 24 élèves, notes brutes, découpage, décalages d'étiquettes |
+| `data/eleves.csv` | **source unique.** 28 élèves, notes brutes, découpage, marquage des profils atypiques |
 | `scripts/construire_cas.py` | valide le CSV, impute, standardise, ajuste le modèle, écrit `valeurs.tex` et `data/calculs.csv` |
 | `scripts/assembler_corps.py` | contrôle la structure éditoriale, écrit `corps.tex` |
 | `contenu.tex` | contenu éditorial : titres, textes, schémas TikZ |
@@ -39,38 +39,45 @@ latexmk -pdf diaporama.tex
 ## Le jeu de données n'est pas arbitraire
 
 `construire_cas.py` s'arrête si l'une de ces propriétés est rompue. Elles sont
-ce qui rend le cas calculable à la main jusqu'au bout.
+ce qui rend le cas calculable à la main jusqu'au bout — et lisible à l'écran.
 
-- **16 élèves d'apprentissage, 8 d'évaluation.** Les statistiques ne sont lues
-  que sur les 16 premiers.
+- **Deux agrégats compacts.** Gryffondor se concentre sur des notes de Potions
+  basses et de Vol élevé, Serpentard à l'opposé. Sur la boîte de tracé (rapport
+  largeur/hauteur de 1,25, imposé par `scale only axis`), chaque agrégat est un
+  disque et non une traînée oblique.
+- **Six observations en recouvrement.** Hermione, Colin et Alicia sont
+  Gryffondor au sein de l'agrégat Serpentard ; Marcus, Millicent et Daphné
+  présentent la configuration inverse. Ce recouvrement rend l'optimum fini —
+  sans lui les coefficients divergeraient — et conditionne l'existence de faux
+  positifs, de faux négatifs et de pertes individuelles élevées.
+- **20 élèves d'apprentissage, 8 d'évaluation.** Les statistiques ne sont lues
+  que sur les 20 premiers.
 - **Deux notes manquantes**, une de chaque côté : Potions de Ron (E05, dans
-  l'apprentissage) et Vol de George (E20, dans l'évaluation). Toutes deux sont
+  l'apprentissage) et Vol de George (E23, dans l'évaluation). Toutes deux sont
   remplacées par la médiane d'apprentissage — 10 et 57.
 - **Statistiques rondes** après imputation : moyennes 10 et 50, écarts-types 4
-  et 20.
-- **Trois paliers de marge.** Avec `m = V - 2P - 18`, l'apprentissage ne prend
-  que `m = -12` (4 élèves, 1 Gryffondor), `m = 0` (2 élèves, 1) et `m = +24`
-  (10 élèves, 9). Les proportions valent donc 1/4, 1/2 et 9/10, dont les logits
-  `-ln3`, `0` et `+2ln3` sont proportionnels à la marge.
+  et 20, covariance −64, donc corrélation exactement −4/5. La standardisation
+  `(P − 10)/4` et `(V − 50)/20` reste vérifiable sans calculatrice.
 
-Il en découle un optimum en forme close, que le script vérifie contre une
-descente de gradient :
+L'optimum n'a pas de forme close : le script le résout par Newton–Raphson,
+vérifie que le gradient y est nul à 2·10⁻¹⁵ près, puis contrôle qu'une descente
+de gradient à pas constant rejoint le même vecteur.
 
 ```
-z = (ln3 / 12) (V - 2P - 18)
-w = (ln3 ; -2ln3/3 ; +5ln3/3)        variables standardisées
-β = (-3ln3/2 ; -ln3/6 ; +ln3/12)     notes brutes
+w = (+0,603740 ; -1,029417 ; +0,514094)     variables standardisées
+β = (+1,892048 ; -0,257354 ; +0,025705)     notes brutes
+frontière : V = 10,0120 P - 73,6071
 ```
 
-L'ordonnée à l'origine est non nulle et les deux poids ont des intensités
-différentes : la frontière ne passe ni par le barycentre, ni le long d'une
-bissectrice. Elle vaut `x_vol = 0,4 x_pot - 0,6` en coordonnées standardisées.
+Le poids de Potions vaut deux fois celui de Vol sur l'échelle standardisée ;
+les intensités s'inversent sur les notes brutes, parce que les deux matières
+n'ont pas la même échelle.
 
-Vincent et Seamus tombent exactement sur la frontière (`p = 0,50`) : c'est
-voulu, et le script fige ce cas pour qu'un résidu flottant ne décide pas de leur
-prédiction. Côté évaluation, Daphné (0,5456) et George (0,6125) basculent entre
-les seuils 0,50 et 0,65 — même exactitude 6/8, précision 0,80 → 1,00, rappel
-0,80 → 0,60.
+Aucun élève ne tombe sur un seuil de décision — le script refuse une
+probabilité collée à 0,50 ou 0,65, pour qu'un résidu flottant ne décide jamais
+d'une prédiction. Côté évaluation, Olivier (0,6105) et Daphné (0,5920)
+basculent entre les deux seuils : même exactitude 6/8, précision 0,75 → 1,00,
+rappel 0,75 → 0,50.
 
-Modifier une note sans respecter les paliers casse la forme close : le script
-refusera de produire quoi que ce soit plutôt que d'écrire des valeurs fausses.
+Modifier une note casse en général l'une de ces propriétés : le script refusera
+de produire quoi que ce soit plutôt que d'écrire des valeurs fausses.
