@@ -1,0 +1,130 @@
+/* Colonne de cours : en-tête, formule, prose, atelier, puis la barre de
+   navigation qui reste au bas de la colonne. */
+
+.lesson {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.lesson-scroll {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 1.25rem 1.75rem 1.5rem;
+}
+
+.lesson h2 {
+  max-width: 30ch;
+  margin: 0 0 0.9rem;
+  font-size: var(--t-2xl);
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+.formula {
+  max-width: 62ch;
+  margin: 0 0 1.1rem;
+  padding: 0.7rem 1rem;
+  background: var(--sunk);
+  border-left: 3px solid var(--ink);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  overflow-x: auto;
+}
+.formula:empty { display: none; }
+
+.prose {
+  max-width: 62ch;
+  font-size: var(--t-lg);
+  line-height: 1.68;
+}
+.prose p { margin: 0 0 0.85rem; }
+.prose p:last-child { margin-bottom: 0; }
+.prose strong { font-weight: 600; }
+.prose code { color: var(--ink-soft); }
+
+/* Les valeurs de l'itération courante, distinguées du texte permanent. */
+.prose .now {
+  display: block;
+  margin: 0.9rem 0;
+  padding: 0.6rem 0.8rem;
+  background: var(--sunk);
+  border-left: 3px solid var(--house-a);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-size: var(--t-sm);
+}
+.prose .now b { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* ------------------------------------------------------------------ atelier */
+
+.lab {
+  max-width: 62ch;
+  margin: 1.4rem 0 0;
+  padding: 0.9rem 1rem 1rem;
+  background: var(--sunk);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.lab-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+.lab-head h3 { font-size: var(--t-sm); font-weight: 600; }
+.lab-head output {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-md);
+  font-weight: 700;
+}
+
+.lab input[type="range"] { margin: 0.5rem 0 0.75rem; }
+
+.lab table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-sm);
+}
+.lab th {
+  padding: 0.25rem 0.4rem;
+  font-size: var(--t-xs);
+  font-weight: 400;
+  color: var(--ink-faint);
+  text-align: right;
+  border-bottom: 1px solid var(--line);
+}
+.lab th:first-child, .lab td:first-child { text-align: left; }
+.lab td { padding: 0.28rem 0.4rem; text-align: right; }
+.lab td:first-child { color: var(--ink-soft); }
+.lab td.void { color: var(--ink-faint); }
+.lab .broken { color: var(--alert); font-weight: 700; }
+
+.lab-note {
+  margin: 0.8rem 0 0;
+  font-size: var(--t-sm);
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+.lab-note b { color: var(--alert); }
+
+/* -------------------------------------------------------------- navigation */
+
+.lesson-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.75rem;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.lesson-nav .progress {
+  flex: 1 1 auto;
+  font-size: var(--t-xs);
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 63.99rem), (max-height: 41.99rem) {
+  .lesson-scroll { padding: 1rem 1rem 1.25rem; }
+  .lesson-nav { padding: 0.6rem 1rem; }
+}

@@ -1,0 +1,137 @@
+/* Éléments, commandes et utilitaires partagés. */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { font-size: 100%; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: var(--t-md);
+  line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
+}
+
+h1, h2, h3 { margin: 0; font-weight: 600; }
+
+/* Anneau noir de 3 px, décollé de 2 px, doublé d'un fond gris : visible sur le
+   blanc des cartes comme sur les barres pleines. */
+:where(a, button, select, summary, input, [tabindex]):focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+  background: var(--sunk);
+  color: var(--ink);
+  border-radius: var(--radius);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skip {
+  position: absolute;
+  left: 0.5rem;
+  top: -3rem;
+  z-index: 100;
+  padding: 0.6rem 1rem;
+  background: var(--bar);
+  color: var(--on-bar);
+  border-radius: var(--radius);
+  text-decoration: none;
+}
+.skip:focus { top: 0.5rem; }
+
+/* ------------------------------------------------------------------ boutons */
+
+.button {
+  min-height: 2.25rem;
+  padding: 0.35rem 0.85rem;
+  font: inherit;
+  font-size: var(--t-sm);
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.button:hover:not(:disabled) { background: var(--sunk); }
+.button:disabled { color: var(--ink-faint); border-color: var(--line); cursor: not-allowed; }
+
+.button.strong {
+  background: var(--bar);
+  color: var(--on-bar);
+  border-color: var(--bar);
+  font-weight: 600;
+}
+.button.strong:hover:not(:disabled) { background: var(--ink-soft); border-color: var(--ink-soft); }
+
+/* ------------------------------------------------------- champs et curseurs */
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.25rem;
+  padding: 0 0.3rem;
+  font-size: var(--t-sm);
+  cursor: pointer;
+}
+.check input {
+  width: 1.05rem;
+  height: 1.05rem;
+  margin: 0;
+  accent-color: var(--ink);
+  cursor: pointer;
+}
+
+input[type="range"] {
+  appearance: none;
+  width: 100%;
+  height: 1.5rem;
+  margin: 0;
+  background: none;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  background: var(--sunk);
+  border: 1px solid var(--edge);
+  border-radius: 3px;
+}
+input[type="range"]::-moz-range-track {
+  height: 6px;
+  background: var(--sunk);
+  border: 1px solid var(--edge);
+  border-radius: 3px;
+}
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-top: -0.4rem;
+  border-radius: 50%;
+  background: var(--bar);
+  border: 2px solid var(--surface);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  background: var(--bar);
+  border: 2px solid var(--surface);
+}
+
+code { font-family: var(--mono); font-size: 0.92em; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}

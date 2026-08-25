@@ -1,0 +1,110 @@
+/* Les quatre figures en grille, et l'agrandissement de l'une d'elles sur la
+   zone des figures et de la liste.
+
+   Chaque cadre de tracé garde le rapport 4:3 : sans lui, la hauteur de la
+   colonne étirerait le plan des poids et la projection de la nappe, et les
+   distances lues sur ces deux figures seraient fausses. */
+
+.figure-column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+.plots {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(4, auto);
+  background: var(--surface);
+}
+
+.plot {
+  display: grid;
+  grid-template-rows: auto auto;
+  min-width: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  cursor: zoom-in;
+}
+.plot:nth-child(2n) { border-right: 0; }
+.plot:hover .plot-name { background: var(--sunk); }
+.plot:focus-visible { outline: 3px solid var(--ink); outline-offset: -3px; }
+
+.plot-name {
+  padding: 0.25rem 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--t-xs);
+  font-weight: 600;
+  color: var(--ink-soft);
+  border-bottom: 1px solid var(--line);
+}
+
+/* Le paramètre que le tracé fixe, quand la figure en déclare un. */
+.plot-note {
+  font-family: var(--mono);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+/* La figure que l'étape courante commente. */
+.plot.spot .plot-name {
+  background: var(--bar);
+  color: var(--on-bar);
+  border-bottom-color: var(--bar);
+}
+
+.plot-body {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  padding: 3px;
+}
+.plot canvas { display: block; width: 100%; height: 100%; }
+
+/* Scène Plotly : hors du flux, sinon la taille qu'elle s'applique elle-même
+   reprend la main sur celle du cadre et les deux se relancent sans fin. */
+.plot-scene {
+  position: absolute;
+  inset: 3px;
+}
+.plots.zoomed .plot.active .plot-scene { touch-action: none; }
+
+/* Réduite, la scène est couverte : le geste doit agrandir la carte, pas tourner
+   le relief. Un verre par-dessus plutôt qu'un tracé figé, qui empêcherait la
+   scène WebGL de se construire. */
+.plots:not(.zoomed) .plot-scene::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.plots.zoomed {
+  position: relative;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto;
+}
+.plots.zoomed .plot { border-right: 0; }
+.plots.zoomed .plot { display: none; cursor: default; }
+.plots.zoomed .plot.active { display: grid; }
+.plots.zoomed .plot:hover .plot-name { background: var(--bar); }
+
+.plots-close {
+  position: absolute;
+  top: 0.2rem;
+  right: 0.4rem;
+  z-index: 5;
+  min-height: 1.8rem;
+  padding: 0.1rem 0.6rem;
+  font: inherit;
+  font-size: var(--t-xs);
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.plots-close:hover { background: var(--sunk); }

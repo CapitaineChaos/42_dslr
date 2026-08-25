@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Régression logistique</title>
+
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/shell.css">
+<link rel="stylesheet" href="css/contents.css">
+<link rel="stylesheet" href="css/lesson.css">
+<link rel="stylesheet" href="css/figures.css">
+<link rel="stylesheet" href="css/roster.css">
+
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+    svg: { fontCache: 'global' },
+    startup: { typeset: false }
+  };
+</script>
+<script defer src="vendor/tex-svg.js"></script>
+<script defer src="vendor/plotly-gl3d.min.js"></script>
+</head>
+<body>
+
+<a class="skip" href="#lesson">Contenu</a>
+
+<div class="app" id="app">
+
+  <header class="topbar">
+    <h1>Régression logistique</h1>
+
+    <div class="settings">
+      <label class="check">
+        <input type="checkbox" id="raw"> notes brutes
+      </label>
+      <span class="scale" id="scale"></span>
+    </div>
+  </header>
+
+  <nav class="contents" id="contents" aria-label="Plan du cours"></nav>
+
+  <main class="lesson" id="lesson" tabindex="-1">
+    <div class="lesson-scroll">
+      <h2 id="title"></h2>
+      <div class="formula" id="formula"></div>
+      <div class="prose" id="prose"></div>
+      <div id="lab"></div>
+    </div>
+    <div class="lesson-nav">
+      <span class="progress" id="progress"></span>
+      <button type="button" class="button" id="prev">précédent</button>
+      <button type="button" class="button" id="exit" hidden>sortir de la boucle</button>
+      <button type="button" class="button strong" id="next">suivant</button>
+    </div>
+  </main>
+
+  <aside class="figure-column" aria-label="Figures">
+    <div class="plots" id="plots">
+
+      <section class="plot" data-plot="frontiere" role="button" tabindex="0"
+               aria-label="Agrandir la figure Frontière">
+        <h2 class="plot-name">Frontière</h2>
+        <div class="plot-body"><canvas data-canvas="frontiere" role="img"></canvas></div>
+      </section>
+
+      <section class="plot" data-plot="scores" role="button" tabindex="0"
+               aria-label="Agrandir la figure z">
+        <h2 class="plot-name">z</h2>
+        <div class="plot-body"><canvas data-canvas="scores" role="img"></canvas></div>
+      </section>
+
+      <section class="plot" data-plot="sigmoide" role="button" tabindex="0"
+               aria-label="Agrandir la figure Sigmoïde">
+        <h2 class="plot-name">Sigmoïde</h2>
+        <div class="plot-body"><canvas data-canvas="sigmoide" role="img"></canvas></div>
+      </section>
+
+      <section class="plot" data-plot="surface" role="button" tabindex="0"
+               aria-label="Agrandir la figure p(x)">
+        <h2 class="plot-name">p(x) <span class="plot-note" data-note="surface"></span></h2>
+        <div class="plot-body"><div class="plot-scene" data-canvas="surface" role="img"></div></div>
+      </section>
+
+      <section class="plot" data-plot="perte" role="button" tabindex="0"
+               aria-label="Agrandir la figure Perte">
+        <h2 class="plot-name">Perte</h2>
+        <div class="plot-body"><canvas data-canvas="perte" role="img"></canvas></div>
+      </section>
+
+      <section class="plot" data-plot="chemin" role="button" tabindex="0"
+               aria-label="Agrandir la figure Trajectoire">
+        <h2 class="plot-name">Trajectoire <span class="plot-note" data-note="chemin"></span></h2>
+        <div class="plot-body"><div class="plot-scene" data-canvas="chemin" role="img"></div></div>
+      </section>
+
+      <section class="plot" data-plot="roc" role="button" tabindex="0"
+               aria-label="Agrandir la figure ROC">
+        <h2 class="plot-name">ROC <span class="plot-note" data-note="roc"></span></h2>
+        <div class="plot-body"><canvas data-canvas="roc" role="img"></canvas></div>
+      </section>
+
+      <button type="button" class="plots-close" id="plots-close" hidden>fermer</button>
+    </div>
+  </aside>
+
+  <section class="roster" aria-labelledby="roster-title">
+    <div class="roster-head">
+      <h2 id="roster-title">Élèves</h2>
+      <span class="count" id="roster-count"></span>
+      <span class="legend" id="roster-legend"></span>
+    </div>
+    <div id="roster"></div>
+  </section>
+
+  <footer class="transport" aria-label="Itération">
+    <p class="iteration">
+      <output id="iteration" for="iter">0</output>
+      <span class="of">sur <span id="iteration-max">0</span></span>
+    </p>
+
+    <div class="jog" id="jog"></div>
+
+    <div class="track">
+      <label class="visually-hidden" for="iter">Itération</label>
+      <input type="range" id="iter" min="0" max="100" step="1" value="0">
+      <p class="track-scale">
+        <span>0</span>
+        <span id="track-end"></span>
+      </p>
+    </div>
+
+    <dl class="readout" id="readout"></dl>
+  </footer>
+
+  <p class="visually-hidden" id="live" role="status" aria-live="polite"></p>
+
+</div>
+
+<script type="module" src="src/app.js"></script>
+</body>
+</html>

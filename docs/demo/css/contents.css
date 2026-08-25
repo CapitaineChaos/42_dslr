@@ -1,0 +1,80 @@
+/* Sommaire : les huit sections dans l'ordre, les étapes de la section courante
+   dépliées sous elle, la boucle d'ajustement en groupe encadré. */
+
+.contents {
+  padding: 0.75rem 0.5rem 1rem;
+  overflow-y: auto;
+}
+
+.contents ol { list-style: none; margin: 0; padding: 0; }
+
+.contents .group {
+  margin: 0.35rem 0;
+  padding: 0.15rem 0 0.35rem 0.4rem;
+  border-left: 3px solid var(--edge);
+}
+
+.contents .group-label {
+  display: block;
+  padding: 0.1rem 0.35rem 0.25rem;
+  font-size: var(--t-xs);
+  color: var(--ink-faint);
+}
+
+.section-link,
+.step-link {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: var(--ink);
+  background: none;
+  border: 0;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.section-link {
+  padding: 0.4rem 0.5rem;
+  font-size: var(--t-sm);
+  font-weight: 600;
+  min-height: 2rem;
+}
+.section-link:hover { background: var(--sunk); }
+.section-link[aria-current] { background: var(--bar); color: var(--on-bar); }
+
+.contents .steps { margin: 0.15rem 0 0.5rem 0.6rem; }
+
+.step-link {
+  padding: 0.3rem 0.5rem;
+  font-size: var(--t-xs);
+  color: var(--ink-soft);
+  border-left: 2px solid transparent;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  min-height: 1.9rem;
+}
+.step-link:hover { background: var(--sunk); color: var(--ink); }
+.step-link[aria-current] {
+  border-left-color: var(--ink);
+  color: var(--ink);
+  font-weight: 600;
+  background: var(--sunk);
+}
+
+/* En régime document, le sommaire tient sur une bande repliée plutôt que de
+   pousser le cours hors de l'écran. */
+@media (max-width: 77.99rem), (max-height: 39.99rem) {
+  .contents { padding: 0.5rem 1rem; }
+  .contents ol { display: flex; flex-wrap: wrap; gap: 0.2rem; }
+  .contents .group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2rem;
+    align-items: center;
+    margin: 0;
+    padding: 0.1rem 0 0.1rem 0.4rem;
+  }
+  .contents .group-label { padding: 0 0.3rem 0 0; }
+  .contents .steps { display: none; }
+  .section-link { padding: 0.35rem 0.6rem; }
+}

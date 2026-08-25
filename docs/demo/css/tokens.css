@@ -1,0 +1,45 @@
+/* Palette et échelle typographique.
+
+   Un seul thème, clair, à contraste élevé : le texte courant tient le seuil AAA
+   de 7:1 sur son fond, les couleurs de données 4,5:1, les traits de figure 3:1.
+   Aucune couleur n'est écrite ailleurs : une valeur posée en dur dans un autre
+   fichier échapperait à scripts/verifie_contraste.py.
+
+   Les teintes portent les classes d'observation : maison cible, autres maisons,
+   observation mal classée. Le reste de l'interface est en niveaux de gris
+   neutres. */
+
+:root {
+  color-scheme: light;
+
+  --ground: #DDE1E6;
+  --surface: #FFFFFF;
+  --sunk: #EFF2F5;
+  --bar: #0E1216;
+  --on-bar: #FFFFFF;
+
+  --ink: #0E1216;
+  --ink-soft: #2E353B;
+  --ink-faint: #4A5259;
+
+  --line: #B8BFC6;
+  --edge: #5C646B;
+  --grid: #C0C8CF;
+
+  --house-a: #0B4B8F;
+  --house-b: #8A4600;
+  --alert: #B3001B;
+  --trace: #0E1216;
+
+  --body: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+
+  --t-xs: 0.8125rem;
+  --t-sm: 0.875rem;
+  --t-md: 1rem;
+  --t-lg: 1.0625rem;
+  --t-xl: 1.25rem;
+  --t-2xl: 1.5rem;
+
+  --radius: 2px;
+}

@@ -1,0 +1,150 @@
+/* Découpage de la page, barre haute, barre d'itération.
+
+   Deux régimes. Par défaut la page est un document qui défile : c'est ce qui
+   reste lisible à 200 % de zoom, où une hauteur fixe couperait la moitié du
+   texte. Au-delà de 78 rem de large et 40 rem de haut, la mise en page bascule
+   en quatre colonnes : cours, figures, liste et commandes visibles ensemble, la
+   liste des 22 élèves tenant entière dans sa colonne. */
+
+.app {
+  display: grid;
+  grid-template-areas:
+    "topbar"
+    "contents"
+    "lesson"
+    "figure"
+    "roster"
+    "transport";
+  gap: 1px;
+  background: var(--line);
+  min-height: 100dvh;
+}
+
+.topbar { grid-area: topbar; }
+.contents { grid-area: contents; }
+.lesson { grid-area: lesson; }
+.figure-column { grid-area: figure; }
+.roster { grid-area: roster; }
+.transport { grid-area: transport; }
+
+.topbar,
+.contents,
+.lesson,
+.figure-column,
+.roster,
+.transport { background: var(--surface); min-width: 0; }
+
+/* ---------------------------------------------------------------- barre haute */
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 1.5rem;
+  padding: 0.5rem 1rem;
+}
+
+.topbar h1 {
+  font-size: var(--t-lg);
+  font-weight: 600;
+}
+
+.settings { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem 1.25rem; }
+
+/* L'entraînement sur les notes non transformées est une démonstration : l'écart
+   se voit sans lire le libellé. */
+body.raw-mode .topbar { box-shadow: inset 0 -3px 0 var(--alert); }
+body.raw-mode .check { color: var(--alert); font-weight: 600; }
+
+.scale {
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------- transport */
+
+.transport {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1.5rem;
+  padding: 0.6rem 1rem;
+}
+
+.iteration {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin: 0;
+  white-space: nowrap;
+}
+.iteration output {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-xl);
+  font-weight: 700;
+  white-space: pre;
+}
+.iteration .of { font-size: var(--t-sm); color: var(--ink-faint); }
+
+.jog { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+.jog .button { min-width: 3rem; font-family: var(--mono); }
+.jog .button[data-play] { min-width: 5.5rem; font-family: var(--body); }
+
+.track { flex: 1 1 16rem; min-width: 10rem; }
+.track-scale {
+  display: flex;
+  justify-content: space-between;
+  margin: 0;
+  font-size: var(--t-xs);
+  color: var(--ink-faint);
+}
+
+.readout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.25rem;
+  margin: 0;
+}
+.readout div { display: flex; flex-direction: column; }
+.readout dt { font-size: var(--t-xs); color: var(--ink-faint); }
+.readout dd {
+  margin: 0;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-sm);
+  white-space: pre;
+}
+.readout dd.wide { font-weight: 700; }
+
+/* ------------------------------------------------------------ quatre colonnes */
+
+@media (min-width: 78rem) and (min-height: 40rem) {
+  html, body { height: 100%; overflow: hidden; }
+
+  .app {
+    grid-template-areas:
+      "topbar topbar topbar topbar"
+      "contents lesson figure roster"
+      "transport transport transport transport";
+    grid-template-columns: 13rem minmax(0, 1fr) minmax(21rem, 28rem) 17rem;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    height: 100dvh;
+    min-height: 0;
+  }
+
+  .contents, .lesson, .figure-column, .roster { min-height: 0; }
+
+  /* Figure agrandie : elle prend la colonne des figures et celle des élèves. */
+  .app.zoomed {
+    grid-template-areas:
+      "topbar topbar topbar topbar"
+      "contents lesson figure figure"
+      "transport transport transport transport";
+  }
+}
+
+.app.zoomed .roster { display: none; }

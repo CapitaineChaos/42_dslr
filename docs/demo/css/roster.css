@@ -1,0 +1,81 @@
+/* Liste des élèves, colonne pleine hauteur : les 22 lignes des deux groupes
+   tiennent sans défilement dans le régime à quatre colonnes.
+
+   Ordre du fichier, jamais trié par score : les lignes changeraient de place à
+   chaque itération et un élève donné deviendrait impossible à suivre. */
+
+.roster {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.roster-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 0.75rem;
+  padding: 0.5rem 0.75rem 0.4rem;
+  border-bottom: 1px solid var(--line);
+}
+.roster-head h2 { font-size: var(--t-sm); }
+.roster-head .count { font-size: var(--t-xs); color: var(--ink-soft); white-space: pre; font-family: var(--mono); }
+.roster-head .count.some { color: var(--alert); font-weight: 600; }
+.roster-head .legend { font-size: var(--t-xs); color: var(--ink-soft); }
+.roster-head .legend { display: flex; gap: 0.75rem; }
+.roster-head .legend .a { color: var(--house-a); }
+.roster-head .legend .b { color: var(--house-b); }
+
+/* Colonnes figées : à largeur automatique, elles se redistribuent à chaque
+   itération et la table tremble sous le curseur. */
+.roster table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-xs);
+}
+
+.roster caption {
+  caption-side: top;
+  padding: 0.5rem 0.75rem 0.2rem;
+  font-family: var(--body);
+  font-size: var(--t-xs);
+  color: var(--ink-faint);
+  text-align: left;
+}
+
+.roster th {
+  padding: 0.2rem 0.5rem;
+  font-weight: 400;
+  font-size: var(--t-xs);
+  color: var(--ink-faint);
+  text-align: right;
+  border-bottom: 1px solid var(--line);
+}
+.roster th:first-child { text-align: left; }
+
+.roster td {
+  padding: 0.22rem 0.5rem;
+  text-align: right;
+  border-bottom: 1px solid var(--sunk);
+}
+.roster td:first-child { text-align: left; }
+
+/* Un élève mal classé porte trois marques indépendantes de la couleur : la case
+   FP ou FN, la graisse, et le filet à gauche de la ligne. */
+.roster tr.miss td { background: color-mix(in srgb, var(--alert) 9%, transparent); }
+.roster tr.miss td:first-child {
+  font-weight: 700;
+  box-shadow: inset 3px 0 0 var(--alert);
+}
+.roster .case { width: 2.4rem; }
+.roster .case.ko { color: var(--alert); font-weight: 700; }
+
+.roster .label { width: 1.6rem; font-weight: 700; }
+.roster th:nth-child(3), .roster td:nth-child(3) { width: 3.5rem; }
+.roster th:nth-child(4), .roster td:nth-child(4) { width: 3.2rem; }
+.roster .label.a { color: var(--house-a); }
+.roster .label.b { color: var(--house-b); }
