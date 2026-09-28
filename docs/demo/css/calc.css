@@ -1,0 +1,117 @@
+/* Calcul déroulé et tableau des élèves.
+
+   Les nombres sont en chasse fixe et alignés à droite : une colonne se lit de
+   haut en bas sans que les virgules dansent. La ligne de l'élève sélectionné
+   porte le liseré cyan du parcours ; une ligne mal classée, un liseré ambre. */
+
+.worked {
+  max-width: 62ch;
+  margin: 1.2rem 0 0;
+  padding: 0.75rem 1rem 0.85rem;
+  background: var(--sunk);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  box-shadow: 0 0 18px -6px var(--accent-glow);
+}
+
+.worked-head {
+  margin: 0 0 0.4rem;
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.worked-head b { color: var(--ink); letter-spacing: normal; text-transform: none; font-size: var(--t-sm); }
+
+.worked-line {
+  margin: 0.15rem 0;
+  font-family: var(--mono);
+  font-size: var(--t-sm);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+.worked-line b { color: var(--accent); font-weight: 700; }
+
+.table-wrap {
+  margin: 1.1rem 0 0;
+  overflow-x: auto;
+}
+
+.students {
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: var(--t-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.students caption {
+  padding: 0 0 0.45rem;
+  font-family: var(--body);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-align: left;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.table-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.1rem;
+  margin: 0 0 0.35rem;
+  font-size: var(--t-xs);
+}
+
+.students th, .students td {
+  padding: 0.24rem 0.55rem;
+  text-align: right;
+  white-space: nowrap;
+}
+.students thead th {
+  font-family: var(--body);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  color: var(--ink-faint);
+  border-bottom: 1px solid var(--edge);
+}
+.students th:first-child, .students td:first-child { text-align: left; padding-left: 0.6rem; }
+.students tbody tr { border-bottom: 1px solid var(--line); }
+.students tbody tr:hover { background: var(--raised); }
+
+.students tr.miss td:first-child { box-shadow: inset 3px 0 0 var(--alert); }
+.students tr.picked { background: var(--accent-deep); }
+.students tr.picked td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+
+.pick {
+  padding: 0;
+  font: inherit;
+  font-family: var(--body);
+  color: var(--ink);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.pick:hover { color: var(--accent); text-decoration: underline; }
+.pick[aria-pressed='true'] { font-weight: 700; }
+
+.students tfoot th {
+  padding-top: 0.35rem;
+  font-family: var(--body);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  text-align: right;
+  color: var(--ink-faint);
+}
+.students tfoot tr:first-child th, .students tfoot tr:first-child td { border-top: 1px solid var(--edge); }
+.students tfoot td { color: var(--ink-soft); }
+.students tfoot tr.key th { color: var(--accent); }
+.students tfoot tr.key td { color: var(--accent); font-weight: 700; }
+
+.house.a { color: var(--house-a); }
+.house.b { color: var(--house-b); }
+.ko { margin-left: 0.3rem; color: var(--alert); font-weight: 700; }
+.case.ko { margin-left: 0; }
+.up { color: var(--house-a); }
+.down { color: var(--house-b); }

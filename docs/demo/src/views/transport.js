@@ -1,7 +1,8 @@
-// Barre d'itération : compteur, sauts, curseur, lecture continue, métriques.
+// Commandes d'itération sous le schéma : compteur, sauts, curseur, lecture
+// continue, et les trois mesures qui suivent la descente.
 
-import { CONVERGED, LAST, N, ROWS, TRACE, Y, at, wAt } from '../dataset.js';
-import { confusion, gradient, norm } from '../model.js';
+import { LAST, N, ROWS, TRACE, Y, at, wAt } from '../dataset.js';
+import { confusion } from '../model.js';
 import { setIteration } from '../navigation.js';
 import { on, state } from '../state.js';
 
@@ -9,7 +10,6 @@ const output = document.getElementById('iteration');
 const maximum = document.getElementById('iteration-max');
 const jog = document.getElementById('jog');
 const range = document.getElementById('iter');
-const trackEnd = document.getElementById('track-end');
 const readout = document.getElementById('readout');
 
 // Douze secondes du premier au dernier pas, quel que soit le jeu : à cadence
@@ -23,12 +23,10 @@ let carry = 0;
 
 // Largeurs figées, en caractères, de chaque mesure : une valeur plus courte que
 // la précédente décalerait tout ce qui la suit.
-const COST = Math.max(8, TRACE[0].cost.toFixed(6).length);
-const RATE_WIDTH = 'indéfinie'.length;
-const CELLS = 4 * String(N).length + 3;
+const COST = Math.max(6, TRACE[0].cost.toFixed(4).length);
+const WRONG = 2 * String(N).length + 1;
 
 const pad = (text, width) => String(text).padStart(width);
-const percent = (value) => pad(value === null ? 'indéfinie' : `${(value * 100).toFixed(1)} %`, RATE_WIDTH);
 
 function playButton() {
   return jog.querySelector('[data-play]');
@@ -70,29 +68,24 @@ function play() {
 
 function update() {
   const weights = wAt(state.t);
-  const slope = gradient(ROWS, Y, weights);
   const matrix = confusion(ROWS, Y, weights);
+  const wrong = matrix.fp + matrix.fn;
 
   output.textContent = pad(state.t, String(LAST).length);
   range.value = state.t;
   range.setAttribute('aria-valuetext', `itération ${state.t} sur ${LAST}`);
 
   readout.innerHTML = [
-    ['perte J', pad(at(state.t).cost.toFixed(6), COST), true],
-    ['‖∇J‖', pad(norm(slope).toExponential(2), 8), false],
-    ['exactitude', percent(matrix.accuracy), true],
-    ['précision', percent(matrix.precision), false],
-    ['rappel', percent(matrix.recall), false],
-    ['VP/FP/FN/VN', pad(`${matrix.tp}/${matrix.fp}/${matrix.fn}/${matrix.tn}`, CELLS), false],
-    ['arrêt', CONVERGED ? 'critère' : 'limite', false],
-  ].map(([term, value, wide]) =>
-    `<div><dt>${term}</dt><dd class="${wide ? 'wide' : ''}">${value}</dd></div>`).join('');
+    ['perte J', pad(at(state.t).cost.toFixed(4), COST), ''],
+    ['erreurs', pad(`${wrong}/${N}`, WRONG), wrong ? 'warn' : ''],
+    ['exactitude', pad(`${(matrix.accuracy * 100).toFixed(1)} %`, 7), ''],
+  ].map(([term, value, cls]) =>
+    `<div><dt>${term}</dt><dd class="${cls}">${value}</dd></div>`).join('');
 }
 
 export function mount() {
   maximum.textContent = LAST;
   range.max = LAST;
-  trackEnd.textContent = LAST;
 
   // Un saut manuel interrompt la lecture : reprendre la main sur l'itération et
   // voir le compteur continuer de défiler serait incompréhensible.

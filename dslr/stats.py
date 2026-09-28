@@ -9,17 +9,19 @@ class Stats:
 
         self.count = 0
         self.sum = 0
-        squares = 0
         for x in self.values:
             self.count += 1
             self.sum += x
-            squares += (x - self.mean) ** 2
 
         if not self.count:
             self.mean = self.std = self.min = self.max = self.median = float("nan")
             return
-        
+
         self.mean = self.sum / self.count
+
+        squares = 0
+        for x in self.values:
+            squares += (x - self.mean) ** 2
         self.std = (squares / self.count) ** 0.5
 
         self.min = self.values[0]

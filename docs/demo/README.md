@@ -11,21 +11,31 @@ Depuis la racine du dépôt. Aucune compilation : un serveur statique suffit.
 
 | zone | contenu |
 |---|---|
-| barre haute | centrage et réduction, effectifs, α |
-| sommaire | les huit sections, les étapes de la section courante, la boucle encadrée |
-| cours | titre, formule, prose chiffrée à l'itération courante, atelier |
-| figures | les sept figures en grille, au rapport 4:3 |
-| élèves | les 22 lignes des deux groupes : `y`, `z`, `p`, case de la matrice de confusion |
-| bas | itération, sauts, lecture continue, curseur, mesures |
+| barre haute | notes brutes, effectifs, α |
+| parcours | schéma des dix nœuds : préparation, boucle de correction, décision, évaluation |
+| itération | compteur, sauts, lecture continue, curseur ; perte J, erreurs, exactitude |
+| cours | position, titre, formule, texte chiffré, calcul déroulé, tableau des élèves, atelier, détail mathématique replié |
+| figures | la figure de l'étape en tête, les six autres en vignettes |
 
-Score, probabilité, perte, gradient et mise à jour forment une boucle : arrivé
-au bout, `suivant` repart au score en incrémentant l'itération. Un passage
-complet vaut exactement une itération. On en sort par `sortir de la boucle`,
-vers décision puis évaluation.
+Le schéma place la boucle dans un cadre : score, probabilité, perte, gradient,
+correction, et une flèche de retour qui porte le compteur d'itérations. On n'en
+sort que par la flèche d'arrêt. Une pastille par étape sous chaque nœud ; un clic
+sur un nœud ou une pastille y mène. Le nœud courant s'allume et la flèche qui y
+mène s'anime : l'entrée de la boucle à l'itération 0, le retour ensuite, l'arrêt
+à la sortie.
 
-La figure que l'étape courante commente porte un en-tête plein. Un clic, Entrée
-ou Espace sur une carte l'agrandit sur la zone des figures et de la liste ;
-`fermer` ou Échap reviennent aux sept.
+Au bout de la boucle, `suivant` devient `itération t+1` et repart au score.
+`aller à l'arrêt` saute à la dernière itération, sur l'étape du critère, comme le
+code qui ne sort de la boucle qu'au critère ; `suivant` mène alors à la décision.
+
+Le tableau des élèves change de colonnes à chaque étape : notes, `x`, `z`, `p`,
+`ℓ`, `p − y`, contributions au gradient, réponse, cas. Sa ligne de pied donne
+`J`, la somme des contributions et le gradient, la correction des trois poids ou
+le décompte VP, FN, FP, VN. Le calcul déroulé réécrit l'opération de l'étape
+avec les nombres de l'élève sélectionné ; un clic sur un nom en change.
+
+Un clic, Entrée ou Espace sur une carte de figure l'ouvre en superposition ;
+`fermer`, un clic sur le voile ou Échap la referment.
 
 `lecture` parcourt la descente du premier au dernier pas en douze secondes. Un
 saut manuel ou le curseur l'interrompent.
@@ -35,21 +45,27 @@ lance et arrête la lecture, Échap referme un agrandissement.
 
 ## Lisibilité
 
-Palette unique, claire, en gris neutres : le texte de l'interface tient le seuil
-AAA de 7:1 sur son fond, les trois couleurs de données 4,5:1, les traits de
-figure 3:1. `verifie_contraste.py` échoue si une paire descend sous son seuil.
+Thème sombre, un seul accent cyan réservé au parcours : étape courante, boucle
+active, commandes d'itération. Maisons dans le rouge et le vert des graphiques
+Python, éclaircis pour le fond sombre ; erreurs de classement en ambre. Le texte
+de l'interface tient le seuil AAA de 7:1 sur son fond, les couleurs de données
+4,5:1, les traits de figure 3:1. `verifie_contraste.py` échoue si une paire
+descend sous son seuil.
 
 Corps de base à 16 px, plancher à 13 px, longueur de ligne bornée à 62
 caractères.
 
-La page est un document qui défile ; les quatre colonnes ne s'appliquent
-qu'au-delà de 78 rem de large et 40 rem de haut. À 200 % de zoom, la mise en
-page repasse d'elle-même en colonne unique.
+La grille parcours, cours et figures ne s'applique qu'au-delà de 78 rem de large
+et 40 rem de haut ; en dessous, la page est un document qui défile, et à 200 % de
+zoom la mise en page repasse d'elle-même en colonne unique. Le calcul passe à
+droite du texte quand la colonne de cours dépasse 60 rem. Le schéma garde une
+largeur minimale et défile seul sur un écran étroit.
 
 Chaque distinction porte une marque de forme en plus de sa teinte : les maisons
-se lisent au carré et au disque sur les figures, à la valeur de `y` dans la
-liste ; une observation mal classée porte la case `FP` ou `FN`, la graisse et un
-filet à gauche de sa ligne.
+se lisent au carré et au disque sur les figures, à la valeur de `y` dans le
+tableau ; une observation mal classée porte un filet ambre à gauche de sa ligne
+et la case `FP` ou `FN`. Les animations du schéma s'arrêtent sous
+`prefers-reduced-motion`.
 
 Chaque tracé est un `role="img"` dont le nom accessible est réécrit à chaque
 rendu. Le changement d'étape et le changement d'itération sont annoncés dans une
@@ -59,14 +75,14 @@ clavier : leur orientation de départ est celle qui se lit le mieux.
 
 Le plan des notes est tracé à échelles égales sur les deux axes et la ROC dans
 un carré : les bornes de l'axe le moins étiré sont élargies pour que l'angle de
-la frontière reste juste. Le cadre de tracé garde le rapport 4:3 quelle que soit
-la hauteur de la colonne. Les valeurs qu'une figure fixe sans les montrer — la
-section `w₀` de la trajectoire, la hauteur où son relief est coupé, l'aire sous
-la ROC — sont écrites dans l'en-tête de leur carte.
+la frontière reste juste. Le cadre de tracé garde le rapport 4:3. Les valeurs
+qu'une figure fixe sans les montrer — la section `w₀` de la trajectoire, la
+hauteur où son relief est coupé, l'aire sous la ROC — sont écrites dans l'en-tête
+de leur carte.
 
 Les nombres qui changent à chaque itération sont calés à largeur fixe, compteur,
-mesures et liste comprises : sans cela la barre du bas se déplace sous le curseur
-à chaque cran.
+mesures et tableau compris : sans cela les commandes se déplaceraient sous le
+curseur à chaque cran.
 
 ## Deux démonstrations
 
@@ -93,8 +109,8 @@ curseur sur `z`, et les mêmes calculs en version naïve et en version du code.
 | +710 | 1 | 1 | **+∞** | 710 |
 
 Au-delà de `\|z\| ≈ 709,8`, `exp` dépasse la borne du flottant double. En
-JavaScript la perte cesse d'être un nombre ; en Python, `pow(E, -x)` lève
-`OverflowError`.
+JavaScript la perte cesse d'être un nombre ; en Python, `np.exp(750)` renvoie
+`inf` avec un avertissement.
 
 ## Le jeu de données
 
@@ -121,7 +137,7 @@ la norme des coefficients.
 
 ## Cohérence avec le code Python
 
-`src/model.js` est un portage de `logreg_train.py` : sigmoïde à deux branches,
+`src/model.js` est un portage de la descente de `dslr/model.py` : sigmoïde à deux branches,
 softplus, critère d'arrêt sur la variation relative de la perte mesurée avant la
 mise à jour des coefficients.
 
@@ -138,7 +154,7 @@ recalcule à la main et est vérifiée par `docs/slides/scripts/construire_cas.p
 
 ## Contrôles
 
-    python3 docs/demo/scripts/verifie_contraste.py   # 19 paires
+    python3 docs/demo/scripts/verifie_contraste.py   # 28 paires
     python3 docs/demo/scripts/verifie_figures.py     # les sept figures dans un navigateur
     python3 docs/demo/scripts/construire_scenario.py # régénère et vérifie le scénario
     python3 docs/demo/scripts/exporter_donnees.py    # régénère src/data.js
@@ -149,21 +165,21 @@ recalcule à la main et est vérifiée par `docs/slides/scripts/construire_cas.p
 
     css/tokens.css             palette et échelle typographique
     css/base.css               éléments, boutons, champs, anneau de focus
-    css/shell.css              grille de page, barre haute, barre d'itération
-    css/contents.css           sommaire
-    css/lesson.css             colonne de cours et ateliers
-    css/figures.css            grille des figures et agrandissement
-    css/roster.css             liste des élèves
+    css/shell.css              grille de page et barre haute
+    css/flow.css               schéma du parcours et commandes d'itération
+    css/lesson.css             colonne de cours, détail replié, ateliers
+    css/calc.css               calcul déroulé et tableau des élèves
+    css/figures.css            colonne des figures et agrandissement
 
     src/app.js                 amorçage, annonces, clavier
     src/state.js               état courant et deux canaux d'abonnement
     src/navigation.js          déplacements dans le cours et dans la descente
     src/dataset.js             matrices, trace de la descente, cadrage des figures
-    src/context.js             les nombres que la prose peut citer
-    src/model.js               portage de logreg_train.py
+    src/context.js             les nombres que les textes peuvent citer
+    src/model.js               portage de la descente de dslr/model.py
     src/data.js                généré par scripts/exporter_donnees.py
 
-    src/content/steps.js       les 18 étapes, contenu du cours
+    src/content/steps.js       les dix nœuds et les 18 étapes : texte, détail, tableau
     src/content/labs.js        les ateliers attachés à une étape
 
     src/figures/canevas.js     palette, repère, grille, marqueurs
@@ -177,12 +193,12 @@ recalcule à la main et est vérifiée par `docs/slides/scripts/construire_cas.p
     src/figures/roc.js         la courbe ROC et son aire
     src/figures/index.js       registre et ordre des cartes
 
-    src/views/contents.js      sommaire
+    src/views/flow.js          schéma du parcours
     src/views/lesson.js        cours, séparé en rendu d'étape et rendu de valeurs
-    src/views/figures.js       grille des quatre figures et agrandissement
-    src/views/roster.js        liste des élèves
-    src/views/transport.js     itération, sauts, lecture, métriques
-    src/views/nav.js           précédent, suivant, sortir de la boucle
+    src/views/calc.js          calcul déroulé et tableau des élèves
+    src/views/figures.js       colonne des figures et agrandissement
+    src/views/transport.js     itération, sauts, lecture, mesures
+    src/views/nav.js           précédent, aller à l'arrêt, suivant
     src/views/settings.js      centrage et réduction, effectifs
     src/views/live.js          région d'annonce
 

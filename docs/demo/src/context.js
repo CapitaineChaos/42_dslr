@@ -8,6 +8,7 @@ import {
 } from './dataset.js';
 
 const f3 = (value) => value.toFixed(3);
+const signed = (value) => `${value < 0 ? '−' : '+'}${Math.abs(value).toFixed(3)}`;
 
 export function buildContext(t) {
   const w = wAt(t);
@@ -20,9 +21,27 @@ export function buildContext(t) {
   const m = confusion(ROWS, Y, w);
   const jNow = at(t).cost;
   const jNext = at(Math.min(t + 1, LAST)).cost;
+  const jPrev = at(Math.max(t - 1, 0)).cost;
+
+  const stat = (index) => STATS[COURSES[index]];
 
   return {
     t,
+    label0: stat(0).label,
+    label1: stat(1).label,
+    max0: stat(0).max,
+    max1: stat(1).max,
+    median0: stat(0).median,
+    median1: stat(1).median,
+    mu0: stat(0).mu,
+    mu1: stat(1).mu,
+    sd0: stat(0).sd,
+    sd1: stat(1).sd,
+    negatives: N - Y.reduce((total, y) => total + y, 0),
+    wf: w.map(signed),
+    wnf: wNext.map(signed),
+    gf: g.map(signed),
+    slope: (Math.hypot(w[1], w[2]) / 4).toFixed(3),
     last: LAST,
     converged: CONVERGED,
     alpha: ALPHA,
@@ -41,8 +60,8 @@ export function buildContext(t) {
     stepText: g.map((value) => f3(-ALPHA * value)).join('  '),
     gradText: g.map(f3).join('  '),
     gradNorm: norm(g).toExponential(3),
-    zMin: f3(Math.min(...zs)),
-    zMax: f3(Math.max(...zs)),
+    zMin: signed(Math.min(...zs)),
+    zMax: signed(Math.max(...zs)),
     pMin: f3(Math.min(...zs.map(sigmoid))),
     pMax: f3(Math.max(...zs.map(sigmoid))),
     cost: jNow.toFixed(6),
@@ -50,6 +69,8 @@ export function buildContext(t) {
     costStart: TRACE[0].cost.toFixed(6),
     costEnd: TRACE[LAST].cost.toFixed(6),
     relative: (Math.abs(jNow - jNext) / Math.max(1, Math.abs(jNext))).toExponential(2),
+    costPrev: jPrev.toFixed(6),
+    relativePrev: (Math.abs(jPrev - jNow) / Math.max(1, Math.abs(jNow))).toExponential(2),
     errors: wrong,
     accuracy: ((1 - wrong / N) * 100).toFixed(1),
     tp: m.tp, fp: m.fp, fn: m.fn, tn: m.tn,

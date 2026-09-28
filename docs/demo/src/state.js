@@ -8,6 +8,8 @@ export const state = {
   step: 0,
   t: 0,
   zoom: null,
+  pick: 0,
+  pickTest: 0,
 };
 
 const channels = { step: [], iteration: [] };

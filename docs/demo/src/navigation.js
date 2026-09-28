@@ -47,6 +47,9 @@ export function goPrev() {
   goto(state.step - 1);
 }
 
+// La boucle du code ne s'interrompt qu'au critère d'arrêt : en sortir, c'est
+// aller à la dernière itération, sur l'étape du critère.
 export function exitLoop() {
-  goto(LOOP_END + 1);
+  setIteration(LAST);
+  goto(LOOP_END);
 }

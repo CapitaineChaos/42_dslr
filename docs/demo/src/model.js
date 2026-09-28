@@ -1,4 +1,4 @@
-// Portage JavaScript de V.3_Logistic_regression/logreg_train.py.
+// Portage JavaScript de la descente de dslr/model.py.
 // Les deux implémentations doivent rendre les mêmes nombres : mêmes parades
 // numériques, même ordre des opérations, même critère d'arrêt.
 

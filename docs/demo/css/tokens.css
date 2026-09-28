@@ -1,45 +1,52 @@
 /* Palette et échelle typographique.
 
-   Un seul thème, clair, à contraste élevé : le texte courant tient le seuil AAA
-   de 7:1 sur son fond, les couleurs de données 4,5:1, les traits de figure 3:1.
-   Aucune couleur n'est écrite ailleurs : une valeur posée en dur dans un autre
-   fichier échapperait à scripts/verifie_contraste.py.
+   Thème sombre de poste de contrôle : fond bleu nuit, un seul accent cyan
+   réservé au parcours (étape courante, boucle active, commandes d'itération).
+   Le texte de l'interface tient le seuil AAA de 7:1 sur son fond, les couleurs
+   de données 4,5:1, les traits de figure 3:1. Aucune couleur n'est écrite
+   ailleurs : une valeur posée en dur dans un autre fichier échapperait à
+   scripts/verifie_contraste.py.
 
-   Les teintes portent les classes d'observation : maison cible, autres maisons,
-   observation mal classée. Le reste de l'interface est en niveaux de gris
-   neutres. */
+   Maisons : le rouge et le vert des graphiques Python, éclaircis pour tenir
+   4,5:1 sur le fond sombre. Les erreurs de classement sont en ambre, seule
+   teinte libre une fois le rouge pris par Gryffondor. */
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 
-  --ground: #DDE1E6;
-  --surface: #FFFFFF;
-  --sunk: #EFF2F5;
-  --bar: #0E1216;
-  --on-bar: #FFFFFF;
+  --ground: #070B11;
+  --surface: #0E151F;
+  --sunk: #0A1018;
+  --raised: #152030;
+  --bar: #1B2A3D;
+  --on-bar: #EAF1F8;
 
-  --ink: #0E1216;
-  --ink-soft: #2E353B;
-  --ink-faint: #4A5259;
+  --ink: #EAF1F8;
+  --ink-soft: #C2CEDB;
+  --ink-faint: #A3B2C3;
 
-  --line: #B8BFC6;
-  --edge: #5C646B;
-  --grid: #C0C8CF;
+  --line: #1F2D3F;
+  --edge: #5E7590;
+  --grid: #1A2635;
 
-  --house-a: #0B4B8F;
-  --house-b: #8A4600;
-  --alert: #B3001B;
-  --trace: #0E1216;
+  --house-a: #FF7070;
+  --house-b: #3FD69A;
+  --alert: #FFC857;
+  --trace: #EAF1F8;
+
+  --accent: #3CC8FF;
+  --accent-deep: #0B3550;
+  --accent-glow: #3CC8FF66;
 
   --body: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  --mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, 'Liberation Mono', monospace;
 
   --t-xs: 0.8125rem;
   --t-sm: 0.875rem;
   --t-md: 1rem;
   --t-lg: 1.0625rem;
   --t-xl: 1.25rem;
-  --t-2xl: 1.5rem;
+  --t-2xl: 1.625rem;
 
-  --radius: 2px;
+  --radius: 6px;
 }

@@ -57,7 +57,7 @@ export const LABS = {
 
       const broken = !Number.isFinite(naive.sp) || !Number.isFinite(-Math.log(naive.s)) || naive.s === 0;
       note.innerHTML = broken
-        ? `<code>exp</code> dépasse la borne du flottant double. En JavaScript le résultat vaut <b>Infinity</b> et la perte cesse d'être un nombre ; en Python, <code>pow(E, -x)</code> lève <code>OverflowError</code>. L'écriture stable reste définie.`
+        ? `<code>exp</code> dépasse la borne du flottant double. En JavaScript le résultat vaut <b>Infinity</b> et la perte cesse d'être un nombre ; en Python, <code>np.exp(750)</code> renvoie <code>inf</code> avec un avertissement. L'écriture stable reste définie.`
         : `Les deux écritures coïncident pour <code>|z| &lt; 709,78</code>.`;
     };
 

@@ -1,5 +1,5 @@
-// Les trois commandes de bas de colonne. Leurs libellés sont cités par le
-// cours : itération suivante relance la boucle, sortir en fait sortir.
+// Les trois commandes de bas de colonne. Au bout de la boucle, suivant devient
+// itération suivante ; aller à l'arrêt saute à la dernière itération.
 
 import { STEPS } from '../content/steps.js';
 import { LAST } from '../dataset.js';
@@ -11,10 +11,12 @@ const next = document.getElementById('next');
 const exit = document.getElementById('exit');
 
 function update() {
+  const inLoop = STEPS[state.step].phase === 'boucle';
   const atLoopEnd = state.step === LOOP_END;
-  next.textContent = atLoopEnd && state.t < LAST ? 'itération suivante' : 'suivant';
+  next.textContent = atLoopEnd && state.t < LAST ? `itération ${state.t + 1}` : 'suivant';
   next.disabled = state.step === STEPS.length - 1;
-  exit.hidden = !atLoopEnd;
+  exit.hidden = !inLoop || (atLoopEnd && state.t === LAST);
+  exit.textContent = `aller à l'arrêt · ${LAST}`;
   previous.disabled = state.step === 0 && state.t === 0;
 }
 

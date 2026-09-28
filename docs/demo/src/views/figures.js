@@ -1,8 +1,8 @@
-// Les quatre figures ensemble, et l'agrandissement de l'une d'elles.
+// Les sept figures en colonne latérale, et l'agrandissement de l'une d'elles.
 //
-// Un clic, Entrée ou Espace sur une carte l'agrandit sur la zone des figures et
-// de la liste ; la commande de fermeture ou Échap reviennent aux quatre. La
-// figure que l'étape courante commente porte un en-tête plein.
+// La figure que l'étape courante commente passe en tête, en grand ; les autres
+// suivent en vignettes. Un clic, Entrée ou Espace sur une carte l'ouvre en
+// superposition sur la page ; fermer, un clic à côté ou Échap la referment.
 //
 // describe() ne sert plus qu'au nom accessible du canevas ; note(), quand une
 // figure en déclare une, porte le paramètre que le tracé fixe.
@@ -15,6 +15,7 @@ import { on, state } from '../state.js';
 const app = document.getElementById('app');
 const plots = document.getElementById('plots');
 const close = document.getElementById('plots-close');
+const scrim = document.getElementById('scrim');
 const canvases = {};
 const notes = {};
 
@@ -62,6 +63,7 @@ export function zoom(key) {
   plots.classList.toggle('zoomed', key !== null);
   app.classList.toggle('zoomed', key !== null);
   close.hidden = key === null;
+  scrim.hidden = key === null;
   document.querySelectorAll('.plot').forEach((card) => {
     const active = card.dataset.plot === key;
     card.classList.toggle('active', active);
@@ -98,6 +100,7 @@ export function mount() {
   });
 
   close.addEventListener('click', () => zoom(null));
+  scrim.addEventListener('click', () => zoom(null));
 
   new ResizeObserver(() => paint()).observe(plots);
 

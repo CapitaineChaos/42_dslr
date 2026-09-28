@@ -6,20 +6,20 @@ import { errors } from './model.js';
 import { goNext, goPrev, goto } from './navigation.js';
 import { on, state } from './state.js';
 
-import * as contents from './views/contents.js';
+import * as calc from './views/calc.js';
 import * as figures from './views/figures.js';
+import * as flow from './views/flow.js';
 import * as lesson from './views/lesson.js';
 import * as nav from './views/nav.js';
-import * as roster from './views/roster.js';
 import * as settings from './views/settings.js';
 import * as transport from './views/transport.js';
 import { say } from './views/live.js';
 
 settings.mount();
-contents.mount(goto);
+flow.mount(goto);
 lesson.mount();
+calc.mount();
 figures.mount();
-roster.mount();
 transport.mount();
 nav.mount();
 
@@ -27,7 +27,7 @@ figures.follow();
 
 on('step', () => {
   const step = STEPS[state.step];
-  say(`${step.title}. Étape ${state.step + 1} sur ${STEPS.length}, section ${step.section}.`);
+  say(`${step.title}. Étape ${state.step + 1} sur ${STEPS.length}.`);
 });
 
 on('iteration', () => {
