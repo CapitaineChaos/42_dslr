@@ -19,5 +19,7 @@ __pycache__/
 *.snm
 
 weights.csv
+houses.csv
 
 .claude/settings.local.json
+*.egg-info/

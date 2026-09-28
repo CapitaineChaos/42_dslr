@@ -1,7 +1,7 @@
 # Statistiques descriptives
 
 ```bash
-./describe.py ../datasets/dataset_train.csv
+./programs/describe.py datasets/dataset_train.csv
 ```
 
 ## 1. Cadres de travail

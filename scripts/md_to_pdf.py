@@ -11,8 +11,8 @@ Usage :
     ./scripts/md_to_pdf.py <input.md> [output.pdf]
 
 Exemples :
-    ./scripts/md_to_pdf.py V.1_Data_Analysis/README.md
-    ./scripts/md_to_pdf.py V.1_Data_Analysis/README.md /tmp/stats.pdf
+    ./scripts/md_to_pdf.py docs/data_analysis.md
+    ./scripts/md_to_pdf.py docs/data_analysis.md /tmp/stats.pdf
 """
 
 import sys

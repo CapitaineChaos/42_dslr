@@ -13,28 +13,47 @@ DEMO_BUILDER  := $(DEMO_DIR)/scripts/construire_scenario.py
 DEMO_CONTRAST := $(DEMO_DIR)/scripts/verifie_contraste.py
 PORT ?= 8000
 
-.PHONY: install describe histogram scatter pair demo contraste clean fclean re
+.PHONY: install train predict describe histogram histograms scatter scatters pair heatmap cross demo contraste clean fclean re
 
-$(STAMP): requirements.txt
+$(STAMP): requirements.txt pyproject.toml
 	python3 -m venv $(VENV)
 	$(PIP) install --upgrade pip
 	$(PIP) install -r requirements.txt
+	$(PIP) install -e . --config-settings editable_mode=compat
 	touch $(STAMP)
 
 install: $(STAMP)
 
 
+train: $(STAMP)
+	$(PY) programs/logreg_train.py $(DATASET_TRAIN)
+
+predict: $(STAMP)
+	$(PY) programs/logreg_predict.py $(DATASET_TEST) weights.csv
+
 describe: $(STAMP)
-	$(PY) V.1_Data_Analysis/describe.py $(DATASET_TEST)
+	$(PY) programs/describe.py $(DATASET_TEST)
 
 histogram: $(STAMP)
-	$(PY) V.2_Data_Visualisation/trace_histogram.py $(DATASET_TRAIN)
+	$(PY) programs/histogram.py $(DATASET_TRAIN)
+
+histograms: $(STAMP)
+	$(PY) programs/histograms.py $(DATASET_TRAIN)
 
 scatter: $(STAMP)
-	$(PY) V.2_Data_Visualisation/trace_scatter_plot.py $(DATASET_TRAIN)
+	$(PY) programs/scatter_plot.py $(DATASET_TRAIN)
+
+scatters: $(STAMP)
+	$(PY) programs/scatter_plots.py $(DATASET_TRAIN)
 
 pair: $(STAMP)
-	$(PY) V.2_Data_Visualisation/trace_pair_plot.py $(DATASET_TRAIN)
+	$(PY) programs/pair_plot.py $(DATASET_TRAIN)
+
+heatmap: $(STAMP)
+	$(PY) programs/heatmap.py $(DATASET_TRAIN)
+
+cross: $(STAMP)
+	$(PY) programs/cross_validation.py $(DATASET_TRAIN)
 
 # Atelier interactif : aucune compilation, un serveur statique suffit.
 $(DEMO_SCENARIO): $(DEMO_BUILDER)
@@ -54,6 +73,6 @@ clean:
 	find . -type d -name __pycache__ -exec rm -rf {} +
 
 fclean: clean
-	rm -rf $(VENV)
+	rm -rf $(VENV) dslr.egg-info
 
 re: fclean install

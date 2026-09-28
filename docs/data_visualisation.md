@@ -6,7 +6,8 @@ Pour répondre à la question « quelle matière a la distribution de notes la p
 Pour tracer les histogrammes de chaque matière pour chaque maison, il faut d'abord séparer les notes par maison, puis séparer les notes par intervalles et compter le nombre d'élèves dans chaque intervalle.
 
 ```bash
-python3 histogram.py ../datasets/dataset_train.csv
+python3 programs/histograms.py datasets/dataset_train.csv   # les 13 matières
+python3 programs/histogram.py datasets/dataset_train.csv    # Arithmancy, η² = 0,0007
 ```
 
 ## Exercice 2.2 - Nuages de points
@@ -14,7 +15,8 @@ python3 histogram.py ../datasets/dataset_train.csv
 Pour répondre à la question « quelles matières sont les plus corrélées entre elles ? », on peut tracer un nuage de points pour chaque paire de matières, en représentant les notes d'une matière sur l'axe des abscisses et les notes de l'autre matière sur l'axe des ordonnées. Les paires de matières les plus corrélées seront celles dont les points forment une ligne droite (positive ou négative). On peut ainsi expliquer que si un élève obtient une note dans une matière, on peut en déduire sa note dans l'autre matière. De plus si l'elève a une note élevée dans une matière, il a tendance à avoir une note élevée dans l'autre matière (corrélation positive) ou une note basse (corrélation négative).
 
 ```bash
-python3 scatter.py ../datasets/dataset_train.csv
+python3 programs/scatter_plots.py datasets/dataset_train.csv   # les 78 paires
+python3 programs/scatter_plot.py datasets/dataset_train.csv    # Astronomy / Defense Against the Dark Arts
 ```
 
 ## Exercice 2.3 - Matrice de dispersion
@@ -26,7 +28,7 @@ Pour répondre à la question « quelles matières sont les plus similaires entr
 
 
 ```bash
-python3 pair_plot.py ../datasets/dataset_train.csv
+python3 programs/pair_plot.py datasets/dataset_train.csv
 ```
 
 
