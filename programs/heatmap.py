@@ -6,14 +6,14 @@ import matplotlib.pyplot as plt
 
 from dslr.analysis import pearson
 from dslr.data import courses, load
-from dslr.plots import heatmap
+from dslr.plots import heatmap, show
 
 
 def main(path: str) -> None:
     df = load(path)
     matrix = pearson(df, list(courses(df).columns))
     heatmap(matrix, "Pearson correlation", ".2f", cmap="coolwarm", vmin=-1, vmax=1)
-    plt.show()
+    show()
 
 
 if __name__ == "__main__":

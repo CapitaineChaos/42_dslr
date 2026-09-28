@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 from dslr.analysis import eta_squared
 from dslr.data import houses, load
-from dslr.plots import detail
+from dslr.plots import detail, show
 
 # η² le plus faible des 13 matières : la maison explique 0,07 % de la variance
 HOMOGENEOUS = "Arithmancy"
@@ -18,7 +18,7 @@ def main(path: str) -> None:
     detail(df, HOMOGENEOUS, HOMOGENEOUS)
     eta = eta_squared(df, [HOMOGENEOUS])[HOMOGENEOUS]
     plt.gca().set_title(f"η² = {eta:.4f}")
-    plt.show()
+    show()
 
 
 if __name__ == "__main__":

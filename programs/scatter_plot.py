@@ -5,7 +5,7 @@ import sys
 import matplotlib.pyplot as plt
 
 from dslr.data import houses, load
-from dslr.plots import detail
+from dslr.plots import detail, show
 
 SIMILAR = ("Astronomy", "Defense Against the Dark Arts")
 
@@ -14,7 +14,7 @@ def main(path: str) -> None:
     df = load(path, SIMILAR)
     houses(df)
     detail(df, *SIMILAR)
-    plt.show()
+    show()
 
 
 if __name__ == "__main__":

@@ -9,7 +9,7 @@ import pandas as pd
 from dslr.analysis import accuracy, confusion, folds, scores
 from dslr.data import HOUSE, HOUSES, houses, load
 from dslr.model import REQUIRED, fit_scaler, predict, train, transform
-from dslr.plots import confusion_figure
+from dslr.plots import confusion_figure, show
 
 K = 5
 
@@ -44,7 +44,7 @@ def main(path: str) -> None:
     print(f"\naccuracy  {accuracy(matrix):.4f}  on {len(truth)} students")
 
     confusion_figure(matrix)
-    plt.show()
+    show()
 
 
 if __name__ == "__main__":

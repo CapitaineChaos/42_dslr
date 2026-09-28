@@ -5,14 +5,14 @@ import sys
 import matplotlib.pyplot as plt
 
 from dslr.data import courses, houses, load
-from dslr.plots import matrix
+from dslr.plots import matrix, show
 
 
 def main(path: str) -> None:
     df = load(path)
     houses(df)
     matrix(df, list(courses(df).columns), "Pair plot", lower_only=False)
-    plt.show()
+    show()
 
 
 if __name__ == "__main__":

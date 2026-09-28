@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 from dslr.analysis import eta_squared
 from dslr.data import courses, houses, load
-from dslr.plots import histograms
+from dslr.plots import histograms, show
 
 
 def main(path: str) -> None:
@@ -14,7 +14,7 @@ def main(path: str) -> None:
     houses(df)
     features = list(courses(df).columns)
     histograms(df, features, eta_squared(df, features))
-    plt.show()
+    show()
 
 
 if __name__ == "__main__":

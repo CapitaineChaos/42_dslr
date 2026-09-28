@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 from dslr.analysis import accuracy, confusion, scores
 from dslr.data import HOUSE, HOUSES, houses, load
-from dslr.plots import confusion_figure
+from dslr.plots import confusion_figure, show
 
 INDEX = "Index"
 
@@ -28,12 +28,12 @@ def main(preds_csv: str, truth_csv: str) -> None:
     print(f"\naccuracy  {accuracy(matrix):.4f}  on {len(pairs)} students")
 
     confusion_figure(matrix)
-    plt.show()
+    show()
 
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
-        sys.exit(f"usage: {sys.argv[0]} houses.csv validation.csv")
+        sys.exit(f"usage: {sys.argv[0]} houses.csv truth.csv")
     try:
         main(sys.argv[1], sys.argv[2])
     except (OSError, ValueError) as e:

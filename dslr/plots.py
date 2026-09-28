@@ -147,3 +147,13 @@ def confusion_figure(matrix: pd.DataFrame) -> None:
     heatmap(matrix, "Confusion matrix", "d", cmap="Blues")
     plt.xlabel("Predicted")
     plt.ylabel("Truth")
+
+
+# https://matplotlib.org/stable/api/backend_bases_api.html#matplotlib.backend_bases.FigureCanvasBase.new_timer
+# La boucle Tk ne voit le Ctrl-C qu'au prochain événement de la fenêtre : un minuteur la réveille
+# toutes les 200 ms, comme _keep_alive dans describe
+def show() -> None:
+    timer = plt.gcf().canvas.new_timer(interval=200)
+    timer.add_callback(lambda: None)
+    timer.start()
+    plt.show()
