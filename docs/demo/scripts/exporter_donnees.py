@@ -19,7 +19,7 @@ SOURCE = HERE / "data" / "scenario.csv"
 OUTPUT = HERE / "src" / "data.js"
 
 ALPHA = 1.0
-POSITIVE = "Gryffondor"
+HOUSES = ["Gryffondor", "Poufsouffle", "Serpentard"]
 COURSES = ["potions", "vol"]
 LABELS = {"potions": "Potions", "vol": "Vol"}
 MAX = {"potions": 20, "vol": 100}
@@ -85,7 +85,7 @@ def collect(source: Path) -> dict:
                 "name": row["eleve"].split()[0],
                 "full": row["eleve"],
                 "house": row["maison"],
-                "y": 1 if row["maison"] == POSITIVE else 0,
+                "h": HOUSES.index(row["maison"]),
                 "usage": usage,
                 "raw": raw,
                 "x": x,
@@ -95,8 +95,7 @@ def collect(source: Path) -> dict:
 
     return {
         "alpha": ALPHA,
-        "positive": POSITIVE,
-        "negative": next(row["maison"] for row in rows if row["maison"] != POSITIVE),
+        "houses": HOUSES,
         "courses": COURSES,
         "stats": stats,
         "train": build(train, "apprentissage"),
@@ -109,8 +108,8 @@ def main() -> None:
         raise SystemExit(f"{SOURCE} absent : lancer construire_scenario.py")
 
     payload = collect(SOURCE)
-    positives = sum(student["y"] for student in payload["train"])
-    print(f"{len(payload['train'])} élèves d'apprentissage ({positives} {POSITIVE}), {len(payload['test'])} d'évaluation")
+    counts = ", ".join(f"{sum(s['h'] == h for s in payload['train'])} {name}" for h, name in enumerate(HOUSES))
+    print(f"{len(payload['train'])} élèves d'apprentissage ({counts}), {len(payload['test'])} d'évaluation")
 
     OUTPUT.write_text(
         "// Fichier généré par scripts/exporter_donnees.py, ne pas éditer.\n"

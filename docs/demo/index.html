@@ -9,9 +9,13 @@
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/shell.css">
 <link rel="stylesheet" href="css/flow.css">
+<link rel="stylesheet" href="css/console.css">
+<link rel="stylesheet" href="css/frise.css">
 <link rel="stylesheet" href="css/lesson.css">
+<link rel="stylesheet" href="css/lab.css">
 <link rel="stylesheet" href="css/calc.css">
 <link rel="stylesheet" href="css/figures.css">
+<link rel="stylesheet" href="css/loader.css">
 
 <script>
   window.MathJax = {
@@ -23,41 +27,58 @@
 <script defer src="vendor/tex-svg.js"></script>
 <script defer src="vendor/plotly-gl3d.min.js"></script>
 </head>
-<body>
+<body class="booting">
+
+<div class="loader" id="loader" role="progressbar" aria-label="Préparation de la démonstration"
+     aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+  <p class="loader-title">Régression logistique</p>
+  <div class="loader-bar"><div class="loader-fill" id="loader-fill"></div></div>
+  <p class="loader-line"><span id="loader-stage"></span><span id="loader-percent">0 %</span></p>
+</div>
 
 <a class="skip" href="#lesson">Contenu</a>
 
 <div class="app" id="app">
 
-  <header class="topbar">
-    <h1>Régression logistique <span class="subtitle" id="subtitle"></span></h1>
-
-    <div class="settings">
-      <label class="check">
-        <input type="checkbox" id="raw"> notes brutes
-      </label>
-      <span class="scale" id="scale"></span>
-    </div>
-  </header>
+  <h1 class="visually-hidden">Régression logistique</h1>
 
   <nav class="flow" aria-label="Parcours">
     <div class="flow-map" id="flow"></div>
 
-    <div class="transport" aria-label="Itération">
-      <p class="iteration">
-        <span class="iteration-label">itération</span>
-        <output id="iteration" for="iter">0</output>
-        <span class="of">/ <span id="iteration-max">0</span></span>
-      </p>
+    <div class="console">
 
-      <div class="jog" id="jog"></div>
+      <section class="console-group console-pli" aria-labelledby="console-pli">
+        <h2 class="console-label" id="console-pli">passage</h2>
+        <div class="pli" id="pli" role="group" aria-labelledby="console-pli"></div>
+        <h2 class="console-label console-sublabel" id="console-house">maison</h2>
+        <div class="houses" id="house" role="group" aria-labelledby="console-house"></div>
+      </section>
 
-      <div class="track">
-        <label class="visually-hidden" for="iter">Itération</label>
-        <input type="range" id="iter" min="0" max="100" step="1" value="0">
-      </div>
+      <section class="console-group console-step" aria-labelledby="console-step">
+        <h2 class="console-label" id="console-step">étape</h2>
+        <div class="step-controls">
+          <button type="button" class="button" id="prev">Précédent</button>
+          <p class="console-count"><output id="step-count">1</output><span class="of">/ <span id="step-max">0</span></span></p>
+          <button type="button" class="button strong" id="next">Suivant</button>
+        </div>
+      </section>
+
+      <dl class="readout console-params" id="params"></dl>
+
+      <section class="console-group console-loop" aria-labelledby="console-loop">
+        <h2 class="console-label" id="console-loop">itération</h2>
+        <p class="console-count"><output id="iteration" for="iter">0</output><span class="of stop">arrêt à <span id="iteration-max">0</span> · <span id="stop-kind"></span></span></p>
+        <div class="jog" id="jog"></div>
+        <div class="track">
+          <div class="frise" id="frise" aria-hidden="true"></div>
+          <label class="visually-hidden" for="iter">Passage et itération</label>
+          <input type="range" id="iter" min="0" max="100" step="1" value="0">
+        </div>
+        <button type="button" class="button" id="exit">Aller à l'arrêt</button>
+      </section>
 
       <dl class="readout" id="readout"></dl>
+
     </div>
   </nav>
 
@@ -74,16 +95,11 @@
           <div id="calc"></div>
           <div id="lab"></div>
         </div>
-        <details class="more" id="more-box">
-          <summary>Détail mathématique</summary>
+        <section class="more" id="more-box" aria-labelledby="more-title">
+          <h3 class="more-title" id="more-title">Détail mathématique</h3>
           <div class="prose" id="more"></div>
-        </details>
+        </section>
       </div>
-    </div>
-    <div class="lesson-nav">
-      <button type="button" class="button" id="prev">précédent</button>
-      <button type="button" class="button" id="exit" hidden>aller à l'arrêt</button>
-      <button type="button" class="button strong" id="next">suivant</button>
     </div>
   </main>
 
@@ -132,7 +148,7 @@
         <div class="plot-body"><canvas data-canvas="roc" role="img"></canvas></div>
       </section>
 
-      <button type="button" class="plots-close" id="plots-close" hidden>fermer</button>
+      <button type="button" class="plots-close" id="plots-close" hidden>Fermer</button>
     </div>
   </aside>
 
@@ -142,6 +158,6 @@
 
 </div>
 
-<script type="module" src="src/app.js"></script>
+<script type="module" src="src/boot.js"></script>
 </body>
 </html>

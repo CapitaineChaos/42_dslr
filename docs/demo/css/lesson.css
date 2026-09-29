@@ -1,5 +1,6 @@
-/* Colonne de cours : position dans le parcours, titre, formule, texte, atelier,
-   tableau de calcul, détail replié, puis la navigation au bas de la colonne. */
+/* Colonne de cours, réservée à la lecture : position dans le parcours, titre,
+   formule, texte, tableau de calcul, atelier, détail replié. Les commandes sont
+   toutes dans la console, sous le schéma. */
 
 .lesson {
   display: flex;
@@ -32,21 +33,24 @@
   .lesson-grid .more { grid-area: more; }
   .lesson-calc #calc > :first-child,
   .lesson-calc #calc:empty + #lab > :first-child { margin-top: 0; }
+
+  /* Sans calcul ni atelier, le détail prend la colonne de droite. */
+  .lesson-grid:has(#calc:empty):has(#lab:empty) .more { grid-area: calc; margin-top: 0; }
 }
 
 .where {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 0.75rem;
+  gap: 0.75rem;
+  white-space: nowrap;
   margin: 0 0 0.35rem;
   font-size: var(--t-xs);
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
-.where-phase { color: var(--ink-faint); }
+.where-phase { min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--ink-faint); }
 .where-phase.phase-boucle { color: var(--accent); }
-.where-node { color: var(--ink-soft); }
+.where-node { flex: none; color: var(--ink-soft); }
 
 .lesson h2 {
   max-width: 30ch;
@@ -56,18 +60,27 @@
   text-wrap: balance;
 }
 
+/* Hauteur fixe : la formule écrite par MathJax arrive après le texte, et sans
+   cadre figé elle pousserait tout ce qui suit. Masquée tant qu'elle n'est pas
+   écrite, pour ne pas montrer le code TeX. */
 .formula {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 5.5rem;
   max-width: 62ch;
   margin: 0 0 1rem;
-  padding: 0.65rem 1rem;
+  padding: 0 1rem;
   color: var(--ink);
   background: var(--sunk);
   border: 1px solid var(--line);
   border-left: 3px solid var(--accent);
   border-radius: var(--radius);
-  overflow-x: auto;
+  overflow: auto hidden;
 }
 .formula:empty { display: none; }
+.formula.pending > * { visibility: hidden; }
+.formula.pending { color: transparent; }
 
 .prose {
   max-width: 62ch;
@@ -90,6 +103,40 @@
 }
 .prose .now b { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 
+/* ------------------------------------------------------------------- fiche */
+
+/* Texte principal en fiche : intitulé à gauche, contenu à droite. La ligne de
+   l'itération courante porte l'accent du parcours. */
+.spec {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+  gap: 0.55rem 1rem;
+  margin: 0;
+  font-size: var(--t-md);
+  line-height: 1.55;
+}
+.spec dt {
+  padding-top: 0.2rem;
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.spec dd { margin: 0; color: var(--ink-soft); }
+.spec dt.is-now { color: var(--accent); }
+.spec dt.is-now + dd {
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: var(--t-sm);
+  padding-top: 0.1rem;
+}
+
+@container (max-width: 30rem) {
+  .spec { grid-template-columns: 1fr; gap: 0.1rem; }
+  .spec dd { margin-bottom: 0.5rem; }
+}
+
 /* ------------------------------------------------------------------ détail */
 
 .more {
@@ -97,84 +144,16 @@
   margin: 1.5rem 0 0;
   border-top: 1px solid var(--line);
 }
-.more summary {
-  padding: 0.7rem 0;
-  font-size: var(--t-sm);
-  font-weight: 600;
-  color: var(--ink-soft);
-  cursor: pointer;
-}
-.more summary:hover { color: var(--accent); }
-.more .prose { font-size: var(--t-md); color: var(--ink-soft); }
-
-/* ------------------------------------------------------------------ atelier */
-
-.lab {
-  max-width: 62ch;
-  margin: 1.2rem 0 0;
-  padding: 0.9rem 1rem 1rem;
-  background: var(--sunk);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-}
-
-.lab-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
-.lab-head h3 { font-size: var(--t-sm); font-weight: 600; }
-.lab-head output {
-  font-family: var(--mono);
-  font-variant-numeric: tabular-nums;
-  font-size: var(--t-md);
-  font-weight: 700;
-  color: var(--accent);
-}
-
-.lab input[type="range"] { margin: 0.5rem 0 0.75rem; }
-
-.lab table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: var(--mono);
-  font-variant-numeric: tabular-nums;
-  font-size: var(--t-sm);
-}
-.lab th {
-  padding: 0.25rem 0.4rem;
+.more-title {
+  padding: 0.8rem 0 0.5rem;
   font-size: var(--t-xs);
-  font-weight: 400;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--ink-faint);
-  text-align: right;
-  border-bottom: 1px solid var(--line);
 }
-.lab th:first-child, .lab td:first-child { text-align: left; }
-.lab td { padding: 0.28rem 0.4rem; text-align: right; }
-.lab td:first-child { color: var(--ink-soft); }
-.lab td.void { color: var(--ink-faint); }
-.lab .broken { color: var(--alert); font-weight: 700; }
-
-.lab-note {
-  margin: 0.8rem 0 0;
-  font-size: var(--t-sm);
-  line-height: 1.55;
-  color: var(--ink-soft);
-}
-.lab-note b { color: var(--alert); }
-
-/* -------------------------------------------------------------- navigation */
-
-.lesson-nav {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1.75rem;
-  border-top: 1px solid var(--line);
-  background: var(--surface);
-}
-.lesson-nav #prev { margin-right: auto; }
-.lesson-nav .button { min-height: 2.5rem; padding: 0.4rem 1.1rem; font-size: var(--t-md); }
+.more .prose { font-size: var(--t-md); line-height: 1.6; color: var(--ink-soft); }
 
 @media (max-width: 63.99rem), (max-height: 41.99rem) {
   .lesson-scroll { padding: 1rem 1rem 1.25rem; }
-  .lesson-nav { padding: 0.6rem 1rem; }
 }

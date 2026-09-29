@@ -101,6 +101,11 @@ def main() -> int:
         page.goto(f"{base}/index.html", wait_until="load")
         page.wait_for_timeout(4000)
 
+        # L'itération n'avance qu'à l'intérieur de l'entraînement : les crans
+        # se mesurent depuis une étape de la boucle de correction.
+        page.locator('.node[aria-label^="Score,"]').click()
+        page.wait_for_timeout(800)
+
         for key in RELIEFS:
             if page.locator(f'[data-canvas="{key}"] canvas').count() == 0:
                 faults.append(f"{key} : scène vide en vignette")
@@ -108,8 +113,14 @@ def main() -> int:
         print("mosaïque : %.0f ms par cran" % page.evaluate(CRANS))
 
         for key in PLOTS:
+            # Une miniature passe d'abord en tête ; la figure de tête s'agrandit.
             page.locator(f'[data-plot="{key}"]').click()
+            if page.locator(".plots.zoomed").count() == 0:
+                page.wait_for_timeout(300)
+                page.locator(f'[data-plot="{key}"]').click()
             page.wait_for_timeout(2500 if key in RELIEFS else 400)
+            if page.locator(f'.plots.zoomed [data-plot="{key}"].active').count() == 0:
+                faults.append(f"{key} : la figure ne s'agrandit pas")
             if key in RELIEFS:
                 start = page.evaluate(f"document.querySelector('[data-canvas={key}]')._fullLayout.scene.camera.eye")
                 turned = turn(page, key)
@@ -126,13 +137,6 @@ def main() -> int:
                 page.screenshot(path=str(options.images / f"{key}.png"))
             page.locator("#plots-close").click()
             page.wait_for_timeout(300)
-
-        # Notes brutes : autres bornes, autre relief, mêmes figures.
-        page.goto(f"{base}/index.html?brut=1", wait_until="load")
-        page.wait_for_timeout(3500)
-        for key in RELIEFS:
-            if page.locator(f'[data-canvas="{key}"] canvas').count() == 0:
-                faults.append(f"{key} : scène vide sur les notes brutes")
 
         browser.close()
 

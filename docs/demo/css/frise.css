@@ -1,0 +1,82 @@
+/* Frise des passages sous le curseur : un segment par passage, le courant
+   rempli jusqu'à l'itération affichée, les franchis pleins. Elle est décalée
+   d'une demi-largeur de poignée de chaque côté, pour que le début et la fin
+   d'un segment tombent sous le centre de la poignée. */
+.track {
+  position: relative;
+  flex: 1 1 12rem;
+  min-width: 8rem;
+  height: 2.4rem;
+}
+.frise {
+  position: absolute;
+  inset: 0.3rem 3px;
+  display: flex;
+}
+.pass {
+  position: relative;
+  display: flex;
+  flex: 1;
+  border: 1px solid var(--edge);
+  border-left-width: 0;
+}
+.pass:first-child { border-left-width: 1px; border-radius: 4px 0 0 4px; }
+.pass:last-child { border-radius: 0 4px 4px 0; }
+.pass.is-current { outline: 1px solid var(--accent); outline-offset: -1px; }
+.pass-label {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  left: 0.3rem;
+  font-family: var(--mono);
+  font-size: var(--t-xs);
+  line-height: 1.5rem;
+  color: var(--ink-faint);
+  pointer-events: none;
+}
+.pass.is-current .pass-label { color: var(--accent); font-weight: 700; }
+
+/* Un segment par maison, repéré par un filet de sa couleur en bas. */
+.seg {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  background: var(--sunk);
+  border-bottom: 3px solid;
+}
+.seg + .seg { box-shadow: inset 1px 0 0 var(--line); }
+.seg.h0 { border-bottom-color: var(--house-0); }
+.seg.h1 { border-bottom-color: var(--house-1); }
+.seg.h2 { border-bottom-color: var(--house-2); }
+.seg-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--raised);
+}
+.seg.is-current .seg-fill { background: var(--accent-deep); }
+.seg.limit { background: repeating-linear-gradient(135deg, var(--sunk) 0 4px, var(--raised) 4px 6px); }
+
+/* Curseur posé sur la frise : piste transparente, poignée en barre fine. */
+.track input[type='range'] {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+}
+.track input[type='range']::-webkit-slider-runnable-track { height: 100%; background: none; border: 0; }
+.track input[type='range']::-moz-range-track { height: 100%; background: none; border: 0; }
+.track input[type='range']::-webkit-slider-thumb {
+  width: 6px;
+  height: 2.2rem;
+  margin-top: 0;
+  border: 0;
+  border-radius: 3px;
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+.track input[type='range']::-moz-range-thumb {
+  width: 6px;
+  height: 2.2rem;
+  border: 0;
+  border-radius: 3px;
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+.track input[type='range']:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }

@@ -1,9 +1,9 @@
-/* Schéma du parcours et commandes d'itération.
+/* Schéma du parcours.
 
    Les nœuds à venir restent en filet discret, les nœuds franchis gardent un
    liseré plein, le nœud courant s'allume en cyan avec un halo. La flèche qui
-   mène au nœud courant porte un flux qui défile ; le cadre de la boucle
-   s'allume tant qu'on y est. */
+   mène au nœud courant porte un flux qui défile ; la flèche de retour de la
+   boucle en cours reste teintée. */
 
 .flow {
   background:
@@ -21,34 +21,10 @@
   display: block;
   width: 100%;
   min-width: 56rem;
-  max-height: 13rem;
+  max-height: 14rem;
   height: auto;
   font-family: var(--body);
 }
-
-/* ------------------------------------------------------------------ cadre */
-
-.frame-box {
-  fill: none;
-  stroke: var(--edge);
-  stroke-width: 1.5;
-  stroke-dasharray: 6 5;
-}
-.frame-label {
-  fill: var(--ink-faint);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-.loop-frame.is-active .frame-box {
-  stroke: var(--accent);
-  stroke-dasharray: none;
-  fill: var(--accent-deep);
-  fill-opacity: 0.35;
-}
-.loop-frame.is-active .frame-label { fill: var(--accent); }
-.loop-frame.is-done .frame-box { stroke-dasharray: none; }
 
 /* ------------------------------------------------------------------ nœuds */
 
@@ -62,7 +38,7 @@
 }
 .node-label {
   fill: var(--ink-soft);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   text-anchor: middle;
 }
@@ -128,73 +104,4 @@
   text-transform: uppercase;
 }
 
-.badge-box { fill: var(--ground); stroke: var(--edge); stroke-width: 1.25; }
-.badge-box.is-on { stroke: var(--accent); }
-.badge {
-  fill: var(--ink);
-  font-family: var(--mono);
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
-  text-anchor: middle;
-}
-
-/* --------------------------------------------------- commandes d'itération */
-
-.transport {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem 1.25rem;
-  padding: 0.45rem 1.25rem 0.6rem;
-}
-
-.iteration {
-  display: flex;
-  align-items: baseline;
-  gap: 0.4rem;
-  margin: 0;
-  font-variant-numeric: tabular-nums;
-}
-.iteration-label {
-  font-size: var(--t-xs);
-  font-weight: 600;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-.iteration output {
-  min-width: 3ch;
-  font-family: var(--mono);
-  font-size: var(--t-xl);
-  font-weight: 700;
-  text-align: right;
-  color: var(--ink);
-}
-.iteration .of { font-family: var(--mono); font-size: var(--t-sm); color: var(--ink-faint); }
-
-.jog { display: flex; flex-wrap: wrap; gap: 0.25rem; }
-.jog .button { min-width: 2.6rem; font-family: var(--mono); }
-.jog [data-play] { min-width: 5.5rem; font-family: var(--body); }
-.jog [aria-pressed='true'] { background: var(--accent); color: var(--ground); border-color: var(--accent); }
-
-.track { flex: 1 1 14rem; min-width: 10rem; }
-
-.readout {
-  display: flex;
-  gap: 1.25rem;
-  margin: 0;
-}
-.readout div { display: flex; flex-direction: column; }
-.readout dt {
-  font-size: var(--t-xs);
-  color: var(--ink-faint);
-}
-.readout dd {
-  margin: 0;
-  font-family: var(--mono);
-  font-size: var(--t-md);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  white-space: pre;
-}
-.readout dd.warn { color: var(--alert); }
+.edge.is-live { stroke: var(--accent); stroke-opacity: 0.55; }

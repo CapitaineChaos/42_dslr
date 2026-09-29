@@ -1,0 +1,52 @@
+/* Atelier attaché à une étape : un curseur, un tableau de valeurs calculées
+   en direct, une note. */
+
+.lab {
+  max-width: 62ch;
+  margin: 1.2rem 0 0;
+  padding: 0.9rem 1rem 1rem;
+  background: var(--sunk);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.lab-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+.lab-head h3 { font-size: var(--t-sm); font-weight: 600; }
+.lab-head output {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-md);
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.lab input[type="range"] { margin: 0.5rem 0 0.75rem; }
+
+.lab table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--t-sm);
+}
+.lab th {
+  padding: 0.25rem 0.4rem;
+  font-size: var(--t-xs);
+  font-weight: 400;
+  color: var(--ink-faint);
+  text-align: right;
+  border-bottom: 1px solid var(--line);
+}
+.lab th:first-child, .lab td:first-child { text-align: left; }
+.lab td { padding: 0.28rem 0.4rem; text-align: right; }
+.lab td:first-child { color: var(--ink-soft); }
+.lab td.void { color: var(--ink-faint); }
+.lab .broken { color: var(--alert); font-weight: 700; }
+
+.lab-note {
+  margin: 0.8rem 0 0;
+  font-size: var(--t-sm);
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+.lab-note b { color: var(--alert); }

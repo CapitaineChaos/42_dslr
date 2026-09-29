@@ -4,7 +4,7 @@
 // Le tracé est confié à Plotly : voir scene.js pour ce que les deux figures en
 // relief partagent.
 
-import { AX, AY, COURSES, FEATURES, ROWS, STATS, TRAIN, Y, wAt } from '../dataset.js';
+import { AX, AY, COURSES, FEATURES, HOUSE, HOUSES, ROWS, STATS, TRAIN, Y, wAt } from '../dataset.js';
 import { score, sigmoid } from '../model.js';
 import { scene } from './scene.js';
 
@@ -15,10 +15,12 @@ const steps = (range) => Array.from(
   (_, i) => range[0] + ((range[1] - range[0]) * i) / M,
 );
 
+// Carrés pour la maison du modèle, disques pour les autres.
 function houses(p) {
-  const groups = [[1, 'Gryffondor', p.houseA, 'square'], [0, 'Serpentard', p.houseB, 'circle']];
-  return groups.map(([label, name, color, symbol]) => {
-    const members = TRAIN.filter((student, i) => Y[i] === label);
+  return HOUSES.map((name, h) => {
+    const members = TRAIN.filter((student) => student.h === h);
+    const color = p.house[h];
+    const symbol = h === HOUSE ? 'square' : 'circle';
     return {
       type: 'scatter3d',
       mode: 'markers',
@@ -68,7 +70,7 @@ function nappe(weights, p, full) {
     // Un gris franc au milieu plutôt que le blanc du fond : sans lui, la nappe
     // s'efface là où elle vaut 1/2, c'est-à-dire tout entière au départ de la
     // descente.
-    colorscale: [[0, p.houseB], [0.5, p.line], [1, p.houseA]],
+    colorscale: [[0, p.edge], [0.5, p.line], [1, p.house[HOUSE]]],
     opacity: 0.92,
     showscale: full,
     colorbar: { title: { text: 'p' }, thickness: 10, len: 0.6, outlinewidth: 0, tickvals: [0, 0.25, 0.5, 0.75, 1] },

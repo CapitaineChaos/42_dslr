@@ -1,5 +1,8 @@
-// Les trois commandes de bas de colonne. Au bout de la boucle, suivant devient
-// itération suivante ; aller à l'arrêt saute à la dernière itération.
+// Commandes d'étape de la console. Les libellés ne changent jamais : un bouton
+// qui change de texte change de largeur et pousse ses voisins. Au bout de la
+// boucle, suivant repart au score à l'itération suivante, ce que le schéma
+// montre ; aller à l'arrêt, grisé hors de la boucle, saute à la dernière
+// itération.
 
 import { STEPS } from '../content/steps.js';
 import { LAST } from '../dataset.js';
@@ -9,22 +12,26 @@ import { on, state } from '../state.js';
 const previous = document.getElementById('prev');
 const next = document.getElementById('next');
 const exit = document.getElementById('exit');
+const count = document.getElementById('step-count');
+const total = document.getElementById('step-max');
+
+const WIDTH = String(STEPS.length).length;
 
 function update() {
   const inLoop = STEPS[state.step].phase === 'boucle';
-  const atLoopEnd = state.step === LOOP_END;
-  next.textContent = atLoopEnd && state.t < LAST ? `itération ${state.t + 1}` : 'suivant';
   next.disabled = state.step === STEPS.length - 1;
-  exit.hidden = !inLoop || (atLoopEnd && state.t === LAST);
-  exit.textContent = `aller à l'arrêt · ${LAST}`;
-  previous.disabled = state.step === 0 && state.t === 0;
+  previous.disabled = state.step === 0;
+  exit.disabled = !inLoop || (state.step === LOOP_END && state.t === LAST);
+  count.textContent = String(state.step + 1).padStart(WIDTH);
 }
 
 export function mount() {
+  total.textContent = STEPS.length;
   previous.addEventListener('click', goPrev);
   next.addEventListener('click', goNext);
   exit.addEventListener('click', exitLoop);
   on('step', update);
   on('iteration', update);
+  on('model', update);
   update();
 }

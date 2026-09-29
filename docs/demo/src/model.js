@@ -87,29 +87,53 @@ export function confusion(rows, targets, weights) {
   };
 }
 
-// Descente complète, avec le critère d'arrêt de logreg_train.py : variation
-// relative de la perte sous EPSILON, mesurée avant la mise à jour des poids.
-export function descend(rows, targets, { alpha = 1.0, epsilon = 1e-6, maxIter = 6000 } = {}) {
+// Indice du plus grand score ; à égalité, le premier, comme argmax de numpy.
+export function argmax(values) {
+  return values.reduce((best, value, i) => (value > values[best] ? i : best), 0);
+}
+
+// Matrice de confusion à partir de couples (maison réelle, maison attribuée) :
+// une ligne par maison réelle, une colonne par maison attribuée.
+export function matrixOf(pairs, size) {
+  const matrix = Array.from({ length: size }, () => new Array(size).fill(0));
+  pairs.forEach(([real, predicted]) => { matrix[real][predicted] += 1; });
+  return matrix;
+}
+
+// Scores de chaque maison, comme le rapport du projet : précision sur sa
+// colonne, rappel sur sa ligne, F1 leur moyenne harmonique. Un taux dont le
+// dénominateur est nul vaut null.
+export function report(matrix) {
+  const ratio = (num, den) => (den === 0 ? null : num / den);
+  const total = matrix.flat().reduce((sum, value) => sum + value, 0);
+  const good = matrix.reduce((sum, row, h) => sum + row[h], 0);
+  const houses = matrix.map((row, h) => {
+    const predicted = matrix.reduce((sum, line) => sum + line[h], 0);
+    const real = row.reduce((sum, value) => sum + value, 0);
+    const precision = ratio(row[h], predicted);
+    const recall = ratio(row[h], real);
+    const f1 = precision === null || recall === null || precision + recall === 0
+      ? null
+      : (2 * precision * recall) / (precision + recall);
+    return { precision, recall, f1, total: real };
+  });
+  return { houses, good, total, accuracy: good / total };
+}
+
+// Descente complète, avec le critère d'arrêt de logreg_train.py : norme du
+// gradient sous EPSILON, mesurée avant la mise à jour des poids. L'entrée t de
+// la trace porte les poids après t mises à jour ; à la limite, maxIter.
+export function descend(rows, targets, { alpha = 1.0, epsilon = 1e-3, maxIter = 6000 } = {}) {
   let weights = new Array(rows[0].length).fill(0);
-  let previous = Infinity;
   const trace = [];
-  for (let iteration = 1; iteration <= maxIter; iteration += 1) {
-    const current = cost(rows, targets, weights);
+  for (let iteration = 0; ; iteration += 1) {
     const slope = gradient(rows, targets, weights);
-    trace.push({ iteration: iteration - 1, cost: current, weights: weights.slice(), norm: norm(slope) });
-    if (Math.abs(previous - current) / Math.max(1, Math.abs(current)) < epsilon) break;
-    previous = current;
+    const size = norm(slope);
+    trace.push({ iteration, cost: cost(rows, targets, weights), weights: weights.slice(), norm: size });
+    if (size < epsilon) return { weights, trace, converged: true };
+    if (iteration === maxIter) return { weights, trace, converged: false };
     weights = weights.map((value, col) => value - alpha * slope[col]);
   }
-  return { weights, trace };
 }
 
-// Étiquettes binaires d'une maison contre toutes les autres.
-export function targetsFor(students, house) {
-  return students.map((student) => (student.house === house ? 1 : 0));
-}
 
-// Colonne de 1 en tête : le biais devient un poids comme les autres.
-export function designMatrix(students) {
-  return students.map((student) => [1, ...student.x]);
-}

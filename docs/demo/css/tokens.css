@@ -7,9 +7,10 @@
    ailleurs : une valeur posée en dur dans un autre fichier échapperait à
    scripts/verifie_contraste.py.
 
-   Maisons : le rouge et le vert des graphiques Python, éclaircis pour tenir
-   4,5:1 sur le fond sombre. Les erreurs de classement sont en ambre, seule
-   teinte libre une fois le rouge pris par Gryffondor. */
+   Maisons, dans l'ordre des données : le rouge, le jaune et le vert des
+   graphiques Python, éclaircis pour tenir 4,5:1 sur le fond sombre. Les
+   erreurs de classement sont en violet, seule teinte libre une fois le rouge,
+   le jaune, le vert et le cyan pris. */
 
 :root {
   color-scheme: dark;
@@ -29,9 +30,10 @@
   --edge: #5E7590;
   --grid: #1A2635;
 
-  --house-a: #FF7070;
-  --house-b: #3FD69A;
-  --alert: #FFC857;
+  --house-0: #FF7070;
+  --house-1: #F2D24B;
+  --house-2: #3FD69A;
+  --alert: #C9A2FF;
   --trace: #EAF1F8;
 
   --accent: #3CC8FF;

@@ -4,7 +4,7 @@
 // montre tel quel : une droite, les élèves posés à leur score, et la graduation
 // 0 où le signe bascule. σ n'intervient qu'ensuite.
 
-import { N, ROWS, Y, wAt } from '../dataset.js';
+import { N, ROWS, TRAIN, Y, wAt } from '../dataset.js';
 import { score } from '../model.js';
 import { niceStep, tick } from './canevas.js';
 
@@ -61,7 +61,7 @@ export const scores = {
       ctx.beginPath();
       if (Y[i]) ctx.rect(px - size, axis - size, size * 2, size * 2);
       else ctx.arc(px, axis, size, 0, 6.284);
-      ctx.fillStyle = Y[i] ? p.houseA : p.houseB;
+      ctx.fillStyle = p.house[TRAIN[i].h];
       ctx.fill();
       ctx.strokeStyle = p.surface;
       ctx.lineWidth = 1;

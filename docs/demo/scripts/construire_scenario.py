@@ -23,6 +23,13 @@ L'étiquette dépend d'un écart perpendiculaire plus étroit, dans un rapport q
 Des étiquettes contredites interdisent la séparation parfaite. Sans elles les
 poids partiraient à l'infini et la nappe deviendrait verticale.
 
+Une troisième maison s'ajoute ensuite au bout de l'axe commun : ses élèves sont
+bons dans les deux matières. L'écart perpendiculaire ne les distingue pas, si
+bien que les modèles un contre tous des deux premières maisons doivent aussi
+les écarter, et que les premiers recouvrent le haut de la bande des deux
+autres. Les bornes de scenario_calcul.py portent sur la descente des deux
+premières maisons ; le rapport final donne les trois modèles un contre tous.
+
 La configuration n'est pas devinée : le script balaie quelques réglages et
 retient le premier qui satisfait toutes les bornes, ou échoue en le disant.
 """
@@ -30,14 +37,17 @@ retient le premier qui satisfait toutes les bornes, ou échoue en le disant.
 from __future__ import annotations
 
 import csv
-import math
 from pathlib import Path
+
+from scenario_calcul import conforms, descend, measure, predictions, show, standardize
 
 HERE = Path(__file__).resolve().parents[1]
 OUTPUT = HERE / "data" / "scenario.csv"
 
 POSITIVE = "Gryffondor"
 NEGATIVE = "Serpentard"
+THIRD = "Poufsouffle"
+HOUSES = [POSITIVE, THIRD, NEGATIVE]
 
 PRENOMS = [
     "Alice", "Basile", "Camille", "Damien", "Elsa", "Félix", "Gaspard", "Hélène",
@@ -71,27 +81,18 @@ TRIALS = [
     (28, 2.4, {5, 14, 19, 22}, 1.0),
 ]
 
-# Bornes de conformité : marqué, mais ni plat ni vertical.
-NORM_RANGE = (2.5, 9.0)
-LAST_FLIP_RANGE = (20, 300)
-MAX_ITERATIONS = 700
-MIN_LATE = 2
-MIN_LEVELS = 4
+# Troisième maison : (position le long de l'axe commun, écart perpendiculaire).
+THIRD_POINTS = [(1.4, 0.18), (1.5, -0.22), (1.6, 0.05), (1.7, -0.12),
+                (1.8, 0.25), (1.9, -0.04), (1.65, -0.28), (1.85, 0.1)]
 
+# Notes effacées après coup, pour que l'imputation par la médiane ait quelque
+# chose à combler. Choisies près de la médiane de leur matière : la valeur
+# imputée reste proche de la note effacée, et la descente vérifiée plus haut
+# n'en est presque pas modifiée.
+MISSING = {"S10": "vol", "S14": "potions"}
 
 def clamp(value: float, lo: float, hi: float) -> float:
     return max(lo, min(hi, value))
-
-
-def sigmoid(x: float) -> float:
-    if x >= 0:
-        return 1 / (1 + math.exp(-x))
-    ex = math.exp(x)
-    return ex / (1 + ex)
-
-
-def softplus(x: float) -> float:
-    return max(0.0, x) + math.log(1 + math.exp(-abs(x)))
 
 
 def build(count: int, spread: float, contradicted: set[int]):
@@ -111,114 +112,40 @@ def build(count: int, spread: float, contradicted: set[int]):
     return rows
 
 
-def standardize(rows):
-    pot = [r[1] for r in rows]
-    vol = [r[2] for r in rows]
-    def stat(col):
-        mu = sum(col) / len(col)
-        sd = (sum((v - mu) ** 2 for v in col) / len(col)) ** 0.5
-        return mu, sd
-    mu_p, sd_p = stat(pot)
-    mu_v, sd_v = stat(vol)
-    design = [[1.0, (r[1] - mu_p) / sd_p, (r[2] - mu_v) / sd_v] for r in rows]
-    targets = [1 if r[3] == POSITIVE else 0 for r in rows]
-    return design, targets, (mu_p, sd_p, mu_v, sd_v)
+def third(start: int):
+    rows = []
+    for offset, (along, margin) in enumerate(THIRD_POINTS):
+        potions = round(clamp(10 + 4 * (along + margin), 0, 20), 4)
+        vol = round(clamp(50 + 20 * (along - margin), 0, 100), 4)
+        rows.append((PRENOMS[(start + offset) % len(PRENOMS)], potions, vol, THIRD))
+    return rows
 
 
-def descend(design, targets, alpha, max_iter=6000, epsilon=1e-6):
-    weights = [0.0, 0.0, 0.0]
-    trace = []
-    previous = float("inf")
-    for _ in range(max_iter):
-        cost = 0.0
-        slope = [0.0, 0.0, 0.0]
-        for row, y in zip(design, targets):
-            z = sum(w * x for w, x in zip(weights, row))
-            cost += softplus(z) - y * z
-            delta = sigmoid(z) - y
-            for col in range(3):
-                slope[col] += delta * row[col]
-        cost /= len(targets)
-        for col in range(3):
-            slope[col] /= len(targets)
-        trace.append((cost, list(weights)))
-        if abs(previous - cost) / max(1, abs(cost)) < epsilon:
-            break
-        previous = cost
-        for col in range(3):
-            weights[col] -= alpha * slope[col]
-    return trace
-
-
-def predictions(design, weights):
-    return [1 if sum(w * x for w, x in zip(weights, row)) > 0 else 0 for row in design]
-
-
-def measure(design, targets, trace):
-    """Mesure les propriétés visées, sans juger."""
-    n = len(targets)
-    flips = {}
-    previous = predictions(design, trace[0][1])
-    for t in range(1, len(trace)):
-        current = predictions(design, trace[t][1])
-        for i in range(n):
-            if current[i] != previous[i]:
-                flips.setdefault(i, []).append(t)
-        previous = current
-
-    def accuracy(t):
-        pred = predictions(design, trace[t][1])
-        return sum(1 for p, y in zip(pred, targets) if p == y) / n
-
-    marks = [t for t in (0, 1, 2, 5, 10, 25, 50, 100, 200, len(trace) - 1)
-             if t < len(trace)]
-    return {
-        "iterations": len(trace),
-        "norm": math.hypot(*trace[-1][1][1:]),
-        "last_flip": max((max(v) for v in flips.values()), default=0),
-        "late": sum(1 for v in flips.values() if max(v) > 10),
-        "levels": len({round(accuracy(t), 3) for t in marks}),
-        "marks": [(t, trace[t][0], accuracy(t)) for t in marks],
-        "accuracy_final": accuracy(len(trace) - 1),
-    }
-
-
-def conforms(m) -> list[str]:
-    """Renvoie la liste des bornes violées, vide si tout tient."""
-    faults = []
-    if not NORM_RANGE[0] <= m["norm"] <= NORM_RANGE[1]:
-        faults.append(f"‖w‖ {m['norm']:.2f} hors [{NORM_RANGE[0]}, {NORM_RANGE[1]}]")
-    if not LAST_FLIP_RANGE[0] <= m["last_flip"] <= LAST_FLIP_RANGE[1]:
-        faults.append(f"dernier basculement {m['last_flip']} hors "
-                      f"[{LAST_FLIP_RANGE[0]}, {LAST_FLIP_RANGE[1]}]")
-    if m["iterations"] > MAX_ITERATIONS:
-        faults.append(f"{m['iterations']} itérations, plafond {MAX_ITERATIONS}")
-    if m["late"] < MIN_LATE:
-        faults.append(f"{m['late']} basculement(s) tardif(s), minimum {MIN_LATE}")
-    if m["levels"] < MIN_LEVELS:
-        faults.append(f"{m['levels']} paliers d'exactitude, minimum {MIN_LEVELS}")
-    return faults
-
-
-def show(label, m, faults):
-    print(f"{label}")
-    print(f"  {m['iterations']} tours, ‖w‖ {m['norm']:.2f}, "
-          f"dernier basculement t={m['last_flip']}, {m['late']} tardifs, "
-          f"{m['levels']} paliers")
-    if faults:
-        for fault in faults:
-            print(f"    rejeté : {fault}")
-    else:
-        print("  t      J        exactitude")
-        for t, cost, acc in m["marks"]:
-            print(f"  {t:<6} {cost:.4f}   {acc * 100:5.1f} %")
+def one_vs_all(rows) -> None:
+    """Un modèle par maison sur les élèves d'apprentissage, puis la maison du
+    plus grand score."""
+    learn = [row for index, row in enumerate(rows, start=1) if index % 6]
+    design, _, _ = standardize(learn, POSITIVE)
+    weights = {}
+    print("\nun contre tous, élèves d'apprentissage")
+    for house in HOUSES:
+        targets = [1 if row[3] == house else 0 for row in learn]
+        trace = descend(design, targets, 1.0)
+        weights[house] = trace[-1][1]
+        wrong = sum(1 for p, y in zip(predictions(design, weights[house]), targets) if p != y)
+        print(f"  {house:<12} {len(trace) - 1:>5} itérations, {wrong} erreurs sur {len(learn)}")
+    good = 0
+    for row, x in zip(learn, design):
+        scores = {house: sum(w * v for w, v in zip(weights[house], x)) for house in HOUSES}
+        good += max(scores, key=scores.get) == row[3]
+    print(f"  plus grand score : {good} sur {len(learn)}")
 
 
 def main() -> None:
     chosen = None
     for count, spread, contradicted, alpha in TRIALS:
         rows = build(count, spread, contradicted)
-        design, targets, _ = standardize(rows)
+        design, targets, _ = standardize(rows, POSITIVE)
         trace = descend(design, targets, alpha)
         m = measure(design, targets, trace)
         faults = conforms(m)
@@ -233,14 +160,20 @@ def main() -> None:
         raise SystemExit("aucun réglage ne tient les bornes, élargir TRIALS")
 
     rows, alpha, m = chosen
+    rows = rows + third(len(rows))
+    one_vs_all(rows)
     OUTPUT.parent.mkdir(exist_ok=True)
     with OUTPUT.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.writer(handle, delimiter=";")
         writer.writerow(["id", "eleve", "maison", "potions", "vol", "usage", "alpha"])
         for index, (name, potions, vol, house) in enumerate(rows, start=1):
+            ident = f"S{index:02d}"
             usage = "test" if index % 6 == 0 else "apprentissage"
-            writer.writerow([f"S{index:02d}", name, house, f"{potions:g}",
-                             f"{vol:g}", usage, f"{alpha:g}"])
+            notes = {"potions": f"{potions:g}", "vol": f"{vol:g}"}
+            if ident in MISSING:
+                notes[MISSING[ident]] = ""
+            writer.writerow([ident, name, house, notes["potions"], notes["vol"],
+                             usage, f"{alpha:g}"])
     print(f"\n{OUTPUT}: {len(rows)} élèves, α = {alpha}, "
           f"{m['iterations']} tours, exactitude finale "
           f"{m['accuracy_final'] * 100:.1f} %")

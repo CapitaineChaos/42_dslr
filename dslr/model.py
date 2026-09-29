@@ -23,7 +23,7 @@ DEFENSE = "Defense Against the Dark Arts"
 REQUIRED = COURSES + [DEFENSE]
 
 ALPHA = 1.0
-EPSILON = 1e-6
+EPSILON = 1e-3
 MAX_ITER = 6000
 
 
@@ -68,29 +68,25 @@ def transform(df: pd.DataFrame, scaler: pd.DataFrame) -> np.ndarray:
 
 
 # https://web.stanford.edu/class/archive/cs/cs109/cs109.1264/lectures/20-LogisticRegression/20-LogisticRegression.pdf
-def gradient_descent(x: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, float, int]:
+def gradient_descent(x: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, float, float, int]:
     m = len(y)
     theta = np.zeros(x.shape[1])
-    prev_cost = float("inf")
 
-    for iteration in range(1, MAX_ITER + 1):
+    for iteration in range(MAX_ITER + 1):
         # z = θᵀx
         z = x @ theta
 
-        # J(θ) = -1/m Σ y·log(h) + (1-y)·log(1-h), écrit log(1 + eᶻ) - y·z pour rester fini
-        cost = np.sum(softplus(z) - y * z) / m
-        if not np.isfinite(cost):
-            raise ValueError(f"cost is not finite after {iteration} iterations, lower ALPHA")
-
-        # Les deux coûts comparés viennent du même θ : on teste avant la mise à jour
-        if abs(prev_cost - cost) / max(1, abs(cost)) < EPSILON:
-            break
-        prev_cost = cost
-
         # ∂J/∂θⱼ = 1/m Σ (h(xⁱ) - yⁱ)·xⱼⁱ
-        theta -= ALPHA * x.T @ (sigmoid(z) - y) / m
+        gradient = x.T @ (sigmoid(z) - y) / m
+        norm = np.linalg.norm(gradient)
+        if norm < EPSILON or iteration == MAX_ITER:
+            break
 
-    return theta, cost, iteration
+        theta -= ALPHA * gradient
+
+    # J(θ) = -1/m Σ y·log(h) + (1-y)·log(1-h), écrit log(1 + eᶻ) - y·z pour rester fini
+    cost = np.sum(softplus(z) - y * z) / m
+    return theta, cost, norm, iteration
 
 
 def train(x: np.ndarray, houses: pd.Series) -> tuple[pd.DataFrame, dict]:
@@ -102,9 +98,9 @@ def train(x: np.ndarray, houses: pd.Series) -> tuple[pd.DataFrame, dict]:
         y = (houses == house).to_numpy(dtype=float)
         if not y.any():
             raise ValueError(f"no student in {house}")
-        theta, cost, iteration = gradient_descent(x, y)
+        theta, cost, norm, iteration = gradient_descent(x, y)
         weights[house] = theta
-        report[house] = (cost, iteration)
+        report[house] = (cost, norm, iteration)
 
     return weights, report
 

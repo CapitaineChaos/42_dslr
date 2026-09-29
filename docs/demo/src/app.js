@@ -1,7 +1,8 @@
-// Amorçage : monte les vues, branche le clavier, lance le premier rendu.
+// Monte les vues, branche le clavier, lance le premier rendu. Importé par
+// boot.js une fois les données calculées.
 
 import { STEPS } from './content/steps.js';
-import { LAST, N, ROWS, Y, at, wAt } from './dataset.js';
+import { FINAL, HOUSES, K, LAST, N, ROWS, Y, at, wAt } from './dataset.js';
 import { errors } from './model.js';
 import { goNext, goPrev, goto } from './navigation.js';
 import { on, state } from './state.js';
@@ -11,11 +12,9 @@ import * as figures from './views/figures.js';
 import * as flow from './views/flow.js';
 import * as lesson from './views/lesson.js';
 import * as nav from './views/nav.js';
-import * as settings from './views/settings.js';
 import * as transport from './views/transport.js';
 import { say } from './views/live.js';
 
-settings.mount();
 flow.mount(goto);
 lesson.mount();
 calc.mount();
@@ -28,6 +27,11 @@ figures.follow();
 on('step', () => {
   const step = STEPS[state.step];
   say(`${step.title}. Étape ${state.step + 1} sur ${STEPS.length}.`);
+});
+
+on('model', () => {
+  const pass = state.pli === FINAL ? `Modèle final, ${N} élèves` : `Pli ${state.pli + 1} sur ${K} mis de côté, ${N} élèves d'entraînement`;
+  say(`${pass}, modèle ${HOUSES[state.house]}.`);
 });
 
 on('iteration', () => {
@@ -51,3 +55,10 @@ window.addEventListener('keydown', (event) => {
     transport.togglePlay();
   }
 });
+
+// Tenue quand la première formule est écrite et que les figures ont eu deux
+// images pour se dessiner.
+export async function ready() {
+  await lesson.typeset();
+  await new Promise((resolve) => { requestAnimationFrame(() => requestAnimationFrame(resolve)); });
+}

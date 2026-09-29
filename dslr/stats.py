@@ -26,7 +26,9 @@ class Stats:
 
         self.min = self.values[0]
         self.max = self.values[-1]
+        self.p25 = self.percentile(0.25)
         self.median = self.percentile(0.50)
+        self.p75 = self.percentile(0.75)
 
     def percentile(self, q: float) -> float:
         if not self.count:
@@ -43,9 +45,9 @@ class Stats:
             self.mean,
             self.std,
             self.min,
-            self.percentile(0.25),
+            self.p25,
             self.median,
-            self.percentile(0.75),
+            self.p75,
             self.max,
         ]
 

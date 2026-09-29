@@ -9,10 +9,14 @@ import { ROWS, Y, wAt } from '../dataset.js';
 import { score } from '../model.js';
 import { clip, frame, grid, marker } from './canevas.js';
 
-const POSITIVES = Y.reduce((total, y) => total + y, 0);
-const NEGATIVES = Y.length - POSITIVES;
+// Effectifs des deux maisons dans le passage affiché.
+function counts() {
+  const positives = Y.reduce((total, y) => total + y, 0);
+  return [positives, Y.length - positives];
+}
 
 function curve(t) {
+  const [POSITIVES, NEGATIVES] = counts();
   const weights = wAt(t);
   const rows = ROWS.map((row, i) => ({ z: score(weights, row), y: Y[i] }));
   rows.sort((a, b) => b.z - a.z);
@@ -40,6 +44,7 @@ function curve(t) {
 
 // Le point de fonctionnement du seuil courant, tau = 1/2, soit z > 0.
 function operating(t) {
+  const [POSITIVES, NEGATIVES] = counts();
   const weights = wAt(t);
   let truePositives = 0;
   let falsePositives = 0;

@@ -1,54 +1,15 @@
 /* Grille de page.
 
-   Grand écran : en-tête, schéma du parcours sur toute la largeur, puis le cours
-   et la colonne des figures, chacun avec son propre défilement. En dessous de
-   78 rem de large ou 40 rem de haut, la page redevient un document qui défile,
-   ce qui garde la mise en page juste à 200 % de zoom. */
+   Grand écran : schéma du parcours et console sur toute la largeur, puis le
+   cours et la colonne des figures, chacun avec son propre défilement. En
+   dessous de 78 rem de large ou 40 rem de haut, la page redevient un document
+   qui défile, ce qui garde la mise en page juste à 200 % de zoom. */
 
 .app {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
 }
-
-.topbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem 1.25rem;
-  padding: 0.55rem 1.25rem;
-  background: var(--ground);
-  border-bottom: 1px solid var(--line);
-}
-
-.topbar h1 {
-  font-size: var(--t-xl);
-  letter-spacing: 0.01em;
-}
-
-.subtitle {
-  margin-left: 0.6rem;
-  font-size: var(--t-sm);
-  font-weight: 400;
-  color: var(--ink-faint);
-}
-
-.settings {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.25rem 1rem;
-}
-
-.scale {
-  font-family: var(--mono);
-  font-size: var(--t-xs);
-  color: var(--ink-faint);
-}
-
-body.raw-mode .topbar { box-shadow: inset 0 -3px 0 var(--alert); }
-body.raw-mode .check { color: var(--alert); font-weight: 600; }
 
 .lesson { background: var(--surface); }
 
@@ -62,14 +23,12 @@ body.raw-mode .check { color: var(--alert); font-weight: 600; }
     display: grid;
     height: 100vh;
     grid-template-columns: minmax(0, 1fr) minmax(24rem, 30%);
-    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
     grid-template-areas:
-      'top top'
       'flow flow'
       'lesson figures';
   }
 
-  .topbar { grid-area: top; }
   .flow { grid-area: flow; }
   .lesson { grid-area: lesson; min-height: 0; }
   .figure-column { grid-area: figures; min-height: 0; }

@@ -8,11 +8,11 @@ S06;Félix;Gryffondor;5.1886;36.3429;test;1
 S07;Gaspard;Gryffondor;7.5143;31.5714;apprentissage;1
 S08;Hélène;Serpentard;7;41;apprentissage;1
 S09;Iris;Gryffondor;8.6457;39.6286;apprentissage;1
-S10;Jonas;Serpentard;8.6114;46.6571;apprentissage;1
+S10;Jonas;Serpentard;8.6114;;apprentissage;1
 S11;Kenza;Gryffondor;9.8171;47.4857;apprentissage;1
 S12;Louis;Serpentard;10.1829;52.5143;test;1
 S13;Maya;Gryffondor;13.5086;42.7429;apprentissage;1
-S14;Noé;Serpentard;9.2343;70.9714;apprentissage;1
+S14;Noé;Serpentard;;70.9714;apprentissage;1
 S15;Olga;Serpentard;14;54;apprentissage;1
 S16;Paul;Serpentard;11.4857;73.4286;apprentissage;1
 S17;Quentin;Gryffondor;14.8114;63.6571;apprentissage;1
@@ -21,3 +21,11 @@ S19;Samuel;Gryffondor;15.7429;72.7143;apprentissage;1
 S20;Théa;Serpentard;15.2286;82.1429;apprentissage;1
 S21;Ulysse;Gryffondor;16.8743;80.7714;apprentissage;1
 S22;Vera;Serpentard;16.84;87.8;apprentissage;1
+S23;Wanda;Poufsouffle;16.32;74.4;apprentissage;1
+S24;Xavier;Poufsouffle;15.12;84.4;test;1
+S25;Yann;Poufsouffle;16.6;81;apprentissage;1
+S26;Zoé;Poufsouffle;16.32;86.4;apprentissage;1
+S27;Adrien;Poufsouffle;18.2;81;apprentissage;1
+S28;Bérénice;Poufsouffle;17.44;88.8;apprentissage;1
+S29;Côme;Poufsouffle;15.48;88.6;apprentissage;1
+S30;Diane;Poufsouffle;17.8;85;test;1

@@ -5,7 +5,7 @@
 
 const TOKENS = [
   'surface', 'sunk', 'ink', 'ink-soft', 'ink-faint',
-  'line', 'edge', 'grid', 'house-a', 'house-b', 'alert', 'trace',
+  'line', 'edge', 'grid', 'house-0', 'house-1', 'house-2', 'alert', 'trace',
 ];
 
 const camel = (name) => name.replace(/-(\w)/g, (_, letter) => letter.toUpperCase());
@@ -15,6 +15,7 @@ export function palette() {
   const out = {};
   TOKENS.forEach((name) => { out[camel(name)] = style.getPropertyValue(`--${name}`).trim(); });
   out.label = '12px ui-sans-serif, system-ui, sans-serif';
+  out.house = [out.house0, out.house1, out.house2];
   return out;
 }
 
@@ -100,7 +101,7 @@ export function clip(ctx, f, draw) {
   ctx.restore();
 }
 
-// Carré pour la maison cible, disque pour les autres : la forme double la
+// Carré pour la maison du modèle, disque pour les autres : la forme double la
 // couleur, seul encodage lisible sans distinguer les teintes.
 export function marker(ctx, px, py, positive, size) {
   ctx.beginPath();

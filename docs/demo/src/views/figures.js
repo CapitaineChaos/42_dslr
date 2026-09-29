@@ -1,8 +1,8 @@
-// Les sept figures en colonne latérale, et l'agrandissement de l'une d'elles.
-//
-// La figure que l'étape courante commente passe en tête, en grand ; les autres
-// suivent en vignettes. Un clic, Entrée ou Espace sur une carte l'ouvre en
-// superposition sur la page ; fermer, un clic à côté ou Échap la referment.
+// Les sept figures en colonne latérale : une figure de tête, les six autres en
+// miniatures. Un clic, Entrée ou Espace sur une miniature la met en tête ; sur
+// la figure de tête, il l'ouvre en superposition sur la page ; fermer, un clic
+// à côté ou Échap la referment. Le changement d'étape ne touche pas à la figure
+// de tête : il encadre seulement la miniature que l'étape commente.
 //
 // describe() ne sert plus qu'au nom accessible du canevas ; note(), quand une
 // figure en déclare une, porte le paramètre que le tracé fixe.
@@ -14,6 +14,8 @@ import { on, state } from '../state.js';
 
 const app = document.getElementById('app');
 const plots = document.getElementById('plots');
+
+let head = FIGURES[0].key;
 const close = document.getElementById('plots-close');
 const scrim = document.getElementById('scrim');
 const canvases = {};
@@ -50,12 +52,37 @@ export function paint() {
   else FIGURES.forEach((figure) => paintOne(figure.key));
 }
 
+// La figure que l'étape commente est seulement marquée : la figure de tête ne
+// change que sur un clic du lecteur.
 export function follow() {
   const pointed = step().plot;
   document.querySelectorAll('.plot').forEach((card) => {
     card.classList.toggle('spot', card.dataset.plot === pointed);
   });
   paint();
+}
+
+function label(card) {
+  const name = figureFor(card.dataset.plot).label;
+  if (state.zoom !== null) return name;
+  return card.dataset.plot === head ? `Agrandir la figure ${name}` : `Afficher en tête la figure ${name}`;
+}
+
+function relabel() {
+  document.querySelectorAll('.plot').forEach((card) => {
+    if (state.zoom === null) card.setAttribute('tabindex', '0');
+    else card.removeAttribute('tabindex');
+    card.setAttribute('aria-label', label(card));
+  });
+}
+
+function lead(key) {
+  head = key;
+  document.querySelectorAll('.plot').forEach((card) => {
+    card.classList.toggle('head', card.dataset.plot === key);
+  });
+  relabel();
+  requestAnimationFrame(paint);
 }
 
 export function zoom(key) {
@@ -65,17 +92,33 @@ export function zoom(key) {
   close.hidden = key === null;
   scrim.hidden = key === null;
   document.querySelectorAll('.plot').forEach((card) => {
-    const active = card.dataset.plot === key;
-    card.classList.toggle('active', active);
-    if (key === null) {
-      card.setAttribute('tabindex', '0');
-      card.setAttribute('aria-label', `Agrandir la figure ${figureFor(card.dataset.plot).label}`);
-    } else {
-      card.removeAttribute('tabindex');
-      card.setAttribute('aria-label', figureFor(card.dataset.plot).label);
-    }
+    card.classList.toggle('active', card.dataset.plot === key);
   });
+  relabel();
   requestAnimationFrame(paint);
+}
+
+// La figure mise en tête est ramenée dans la vue : en haut de la colonne quand
+// celle-ci défile seule, sinon en haut de la page si elle en est sortie.
+function reveal() {
+  const column = plots.parentElement;
+  const behavior = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+  if (column.scrollHeight > column.clientHeight) {
+    column.scrollTo({ top: 0, behavior });
+    return;
+  }
+  const card = plots.querySelector('.plot.head');
+  if (card.getBoundingClientRect().top < 0) card.scrollIntoView({ block: 'start', behavior });
+}
+
+// Miniature : elle passe en tête. Figure de tête : elle s'ouvre en grand.
+function press(card) {
+  if (state.zoom !== null) return;
+  if (card.dataset.plot === head) zoom(head);
+  else {
+    lead(card.dataset.plot);
+    reveal();
+  }
 }
 
 export function mount() {
@@ -87,14 +130,11 @@ export function mount() {
   });
 
   document.querySelectorAll('.plot').forEach((card) => {
-    card.addEventListener('click', () => {
-      if (state.zoom === null) zoom(card.dataset.plot);
-    });
+    card.addEventListener('click', () => press(card));
     card.addEventListener('keydown', (event) => {
-      if (state.zoom !== null) return;
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
-        zoom(card.dataset.plot);
+        press(card);
       }
     });
   });
@@ -104,6 +144,8 @@ export function mount() {
 
   new ResizeObserver(() => paint()).observe(plots);
 
+  // Un changement de passage émet aussi 'iteration' : un seul dessin suffit.
   on('iteration', paint);
   on('step', follow);
+  lead(head);
 }

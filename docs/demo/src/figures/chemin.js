@@ -6,7 +6,7 @@
 // est évaluée dans cette même section, donc elle repose sur la nappe ; les
 // pertes lues dans la figure « Perte », elles, gardent le w₀ de chaque pas.
 
-import { LAST, ROWS, TRACE, W1, W2, Y, wAt } from '../dataset.js';
+import { HOUSE, LAST, PLI, ROWS, TRACE, W1, W2, Y, wAt } from '../dataset.js';
 import { cost } from '../model.js';
 import { scene } from './scene.js';
 
@@ -26,9 +26,10 @@ const steps = (range) => Array.from(
   (_, i) => range[0] + ((range[1] - range[0]) * i) / M,
 );
 
-// Le relief ne se recalcule que si w₀ a bougé assez pour déplacer les niveaux.
+// Le relief ne se recalcule que si w₀ a bougé assez pour déplacer les niveaux,
+// ou si le modèle a changé.
 function relief(w0) {
-  const key = Math.round(w0 * 12);
+  const key = `${PLI}:${HOUSE}:${Math.round(w0 * 12)}`;
   if (cache && cache.key === key) return cache;
   const xs = steps(W1);
   const ys = steps(W2);

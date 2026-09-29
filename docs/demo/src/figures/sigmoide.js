@@ -1,7 +1,7 @@
 // La fonction logistique dans le plan (z, p), et les scores des élèves portés
 // à l'ordonnée de leur étiquette.
 
-import { N, ROWS, Y, wAt } from '../dataset.js';
+import { N, ROWS, TRAIN, Y, wAt } from '../dataset.js';
 import { score, sigmoid } from '../model.js';
 import { clip, frame, grid, marker } from './canevas.js';
 
@@ -51,7 +51,7 @@ export const sigmoide = {
         const z = score(weights, row);
         const px = f.x(z, -limit, limit);
         const py = f.y(Y[i], -0.08, 1.08);
-        ctx.fillStyle = Y[i] ? p.houseA : p.houseB;
+        ctx.fillStyle = p.house[TRAIN[i].h];
         marker(ctx, px, py, Y[i] === 1, 4);
         if ((z > 0 ? 1 : 0) !== Y[i]) {
           ctx.strokeStyle = p.alert;
