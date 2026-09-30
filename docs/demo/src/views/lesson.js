@@ -1,32 +1,31 @@
-// Panneau de cours. Deux rendus séparés : le titre, la formule et l'atelier ne
-// bougent qu'au changement d'étape, les textes se réécrivent à chaque
-// itération. Sans cette séparation, MathJax retypographierait la formule à
-// chaque cran du curseur d'itération.
+// Panneau de cours. Le titre, la formule, l'idée de l'étape, « En savoir
+// plus » et l'atelier ne changent qu'avec l'étape ou le modèle ; la fiche se
+// réécrit à chaque itération, sans formule. Les liens [[…]] des textes
+// deviennent des termes du wiki (views/wiki.js).
 //
-// Au changement d'étape, le cours remonte en haut et le texte réserve sa plus
-// grande hauteur (views/steady.js) ; la formule reste masquée tant que MathJax
-// ne l'a pas écrite, dans un cadre de hauteur fixe.
+// Au changement d'étape, le cours remonte en haut et la fiche réserve sa plus
+// grande hauteur (views/steady.js). La formule a un cadre de hauteur fixe.
 
 import { NODES, STEPS } from '../content/steps.js';
 import { LABS } from '../content/labs.js';
+import { linkTerms } from '../content/wiki/index.js';
 import { buildContext } from '../context.js';
 import { FINAL, HOUSES, K } from '../dataset.js';
 import { on, state } from '../state.js';
 import { reserve } from './steady.js';
+import { renderFormula, renderMath } from './typeset.js';
 
 const scroller = document.querySelector('.lesson-scroll');
 const where = document.getElementById('where');
 const title = document.getElementById('title');
 const formula = document.getElementById('formula');
+const intro = document.getElementById('intro');
 const lead = document.getElementById('lead');
 const more = document.getElementById('more');
 const moreBox = document.getElementById('more-box');
-const moreTitle = document.getElementById('more-title');
 const lab = document.getElementById('lab');
 
 const step = () => STEPS[state.step];
-
-let written = Promise.resolve();
 
 function passage() {
   return state.pli === FINAL ? 'modèle final' : `pli ${state.pli + 1} sur ${K}`;
@@ -54,23 +53,24 @@ function locate(current) {
 }
 
 function drawLead(t) {
-  lead.innerHTML = step().lead(buildContext(t));
-}
-
-function drawMore(t) {
-  more.innerHTML = step().more(buildContext(t));
+  lead.innerHTML = linkTerms(step().lead(buildContext(t)));
 }
 
 function renderValues() {
-  const context = buildContext(state.t);
-  lead.innerHTML = step().lead(context);
-  more.innerHTML = step().more(context);
-  moreBox.hidden = more.textContent.trim() === '';
+  drawLead(state.t);
 }
 
 function fitLead() {
   reserve(lead, drawLead, state.t);
-  reserve(more, drawMore, state.t);
+}
+
+function renderText() {
+  const current = step();
+  const context = buildContext(state.t);
+  intro.innerHTML = current.intro ? linkTerms(current.intro(context)) : '';
+  more.innerHTML = linkTerms(current.more(context));
+  moreBox.hidden = more.textContent.trim() === '';
+  if (!moreBox.hidden) renderMath(more);
 }
 
 function renderStep() {
@@ -78,37 +78,21 @@ function renderStep() {
   scroller.scrollTop = 0;
   where.innerHTML = locate(current);
   title.textContent = current.title;
-  moreTitle.textContent = current.moreTitle || '';
-  moreTitle.hidden = !current.moreTitle;
-
-  formula.classList.add('pending');
-  formula.innerHTML = current.math ? `\\[${current.math}\\]` : '';
+  renderFormula(formula, current.math);
 
   lab.innerHTML = '';
   if (current.widget && LABS[current.widget]) LABS[current.widget](lab);
 
-  renderValues();
+  renderText();
   fitLead();
-
-  if (current.math && window.MathJax && window.MathJax.startup) {
-    written = window.MathJax.startup.promise
-      .then(() => window.MathJax.typesetPromise([formula]))
-      .catch(() => {})
-      .then(() => formula.classList.remove('pending'));
-  } else {
-    formula.classList.remove('pending');
-    written = Promise.resolve();
-  }
 }
-
-// Promesse tenue quand la formule de l'étape affichée est écrite.
-export const typeset = () => written;
 
 export function mount() {
   on('step', renderStep);
   on('iteration', renderValues);
   on('model', () => {
     where.innerHTML = locate(step());
+    renderText();
     fitLead();
   });
   renderStep();

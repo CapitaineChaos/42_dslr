@@ -4,7 +4,7 @@
 // Le relief est une section de J. w₀ y est fixé à sa valeur de l'itération
 // courante, sans quoi J ne pourrait pas être tracé au-dessus d'un plan. La
 // trajectoire est évaluée dans cette même section, donc elle repose sur la
-// nappe. Les pertes de la figure « Perte » gardent le w₀ de chaque pas.
+// nappe. Les valeurs de la figure « Coût J » gardent le w₀ de chaque pas.
 
 import { HOUSE, LAST, PLI, ROWS, TRACE, W1, W2, Y, wAt } from '../dataset.js';
 import { cost } from '../model.js';

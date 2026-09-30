@@ -11,6 +11,8 @@ const FAULTS = [
   ['pluriel après 1', /(^|[^\d.,])1 (élèves|erreurs|notes)/],
 ];
 
+const { LINK, WIKI } = await import('../src/content/wiki/index.js');
+
 const STEP_FILES = readdirSync(new URL('../src/content/steps/', import.meta.url))
   .filter((name) => name !== 'nodes.js' && name !== 'format.js');
 
@@ -28,12 +30,25 @@ for (const name of STEP_FILES) {
 
 const found = new Map();
 
+function checkLinks(id, text, where) {
+  for (const [, term] of text.matchAll(LINK)) {
+    const key = `${id} : notion absente du wiki ${term}`;
+    if (!WIKI[term] && !found.has(key)) found.set(key, `${key} (${where})`);
+  }
+}
+
 function check(id, text, where) {
   for (const [label, pattern] of FAULTS) {
     const match = text.match(pattern);
     const key = `${id} : ${label}`;
     if (match && !found.has(key)) found.set(key, `${key} « ${match[0]} » (${where})`);
   }
+  checkLinks(id, text, where);
+}
+
+for (const [term, entry] of Object.entries(WIKI)) {
+  checkLinks(`wiki ${term}`, entry.body, 'article');
+  if (/["<]/.test(entry.short)) found.set(`wiki ${term} : bulle`, `wiki ${term} : guillemet droit ou chevron dans la bulle`);
 }
 
 function checkFigures(t, where) {
@@ -54,7 +69,8 @@ for (const crossValidation of [true, false]) {
         const where = `passage ${pass.pli + 1}, ${HOUSES[house]}, itération ${t}`;
         for (const step of steps) {
           if (step.phase === 'valid' && (!crossValidation || pass.held.length === 0)) continue;
-          check(step.id, `${step.lead(context)} ${step.more(context)}`, where);
+          const intro = step.intro ? step.intro(context) : '';
+          check(step.id, `${intro} ${step.lead(context)} ${step.more(context)}`, where);
         }
       }
       for (let t = 0; t <= last; t += 1) {
@@ -65,5 +81,5 @@ for (const crossValidation of [true, false]) {
 }
 
 for (const line of found.values()) console.error(line);
-console.log(`${steps.length} fiches, ${FIGURES.length} figures, ${found.size} défaut${found.size > 1 ? 's' : ''}`);
+console.log(`${steps.length} fiches, ${FIGURES.length} figures, ${Object.keys(WIKI).length} notions, ${found.size} défaut${found.size > 1 ? 's' : ''}`);
 process.exit(found.size ? 1 : 0);

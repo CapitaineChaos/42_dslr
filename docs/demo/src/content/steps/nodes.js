@@ -14,7 +14,7 @@ export const NODES = [
   { key: 'maison', phase: 'maison', label: 'Maison', caption: 'un contre tous' },
   { key: 'score', phase: 'boucle', label: 'Score', caption: 'z = wᵀx' },
   { key: 'proba', phase: 'boucle', label: 'Probabilité', caption: 'p = σ(z)' },
-  { key: 'perte', phase: 'boucle', label: 'Perte', caption: 'J' },
+  { key: 'perte', phase: 'boucle', label: 'Perte et coût', caption: 'ℓ, J' },
   { key: 'gradient', phase: 'boucle', label: 'Gradient', caption: '∇J' },
   { key: 'maj', phase: 'boucle', label: 'Mise à jour', caption: 'w − α∇J' },
   { key: 'decision', phase: 'post', label: 'Décision', caption: 'argmax z' },

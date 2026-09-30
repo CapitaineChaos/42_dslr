@@ -17,6 +17,11 @@ function bind(id, hidden, before = () => {}) {
   });
 }
 
+export function expand(id) {
+  const button = document.getElementById(id);
+  if (button.getAttribute('aria-expanded') !== 'true') button.click();
+}
+
 export function mount() {
   bind('toggle-flow', 'no-flow');
   bind('toggle-plots', 'no-plots', (open) => {

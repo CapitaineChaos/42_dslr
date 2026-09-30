@@ -15,6 +15,9 @@ export default {
   title: 'Élèves mal classés',
   math: null,
   calc: { group: 'train', cols: ['name', 'house', 'x1', 'x2', 'z0', 'z1', 'z2', 'hmax'] },
+  intro: () => `Après la décision, certains élèves d'entraînement restent mal classés. Leur
+    position dans le plan des notes montre pourquoi aucun jeu de poids ne les classe
+    correctement.`,
   lead: (c) => spec([
     ['Résultat', misclassified(c), true],
     ['Position', `Les élèves mal classés, cerclés dans le plan des notes, se trouvent là où

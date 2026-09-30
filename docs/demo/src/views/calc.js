@@ -1,9 +1,10 @@
 // Tableau des élèves et calcul déroulé.
 //
 // L'étape choisit ses colonnes, sa ligne de pied, sa matrice et son calcul
-// déroulé (champ `calc` de l'étape). Le calcul déroulé reprend, avec les
-// nombres de l'élève sélectionné, l'opération que la colonne vient d'ajouter.
-// Un clic sur un nom change d'élève.
+// déroulé (champ `calc` de l'étape). Quand l'étape calcule une grandeur sur
+// tous les élèves (gradient, μ et σ, coût…), ce calcul passe en premier. Le
+// calcul d'un élève reprend ensuite, avec ses nombres, l'opération que la
+// colonne vient d'ajouter. Un clic sur un nom change d'élève.
 //
 // calc/measure.js lit chaque élève, calc/columns.js en tire les cellules,
 // calc/footer.js les lignes de pied, calc/matrix.js la matrice de confusion,
@@ -34,12 +35,15 @@ const CAPTIONS = {
 const FOLD_COLUMNS = ['fold', 'cvpred'];
 
 function workedBlock(spec, picked, weights, rows, t) {
-  if (!spec.worked || !WORKED[spec.worked]) return '';
-  const lines = WORKED[spec.worked](picked, weights, rows, t);
-  return `<div class="worked">
-    <p class="worked-head">${FREE.includes(spec.worked) ? 'calcul' : `calcul pour <b>${picked.student.name}</b>`}</p>
-    ${lines.map((text) => `<p class="worked-line">${text}</p>`).join('')}
-  </div>`;
+  const kinds = [].concat(spec.worked || []).filter((kind) => WORKED[kind]);
+  return kinds.map((kind) => {
+    const global = FREE.includes(kind);
+    const lines = WORKED[kind](picked, weights, rows, t);
+    return `<div class="worked ${!global && kinds.length > 1 ? 'is-detail' : ''}">
+      <p class="worked-head">${global ? `calcul sur ${rows.length} élèves` : `calcul pour <b>${picked.student.name}</b>`}</p>
+      ${lines.map((text) => `<p class="worked-line">${text}</p>`).join('')}
+    </div>`;
+  }).join('');
 }
 
 function tableBlock(spec, rows, index, weights) {

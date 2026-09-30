@@ -8,6 +8,10 @@ export default {
   title: 'Prédiction des élèves réservés',
   math: null,
   calc: { group: 'test', cols: ['name', 'house', 'x1', 'x2', 'z0', 'z1', 'z2', 'hmax'], worked: 'argmax' },
+  intro: (c) => (c.crossValidation
+    ? `Les modèles des plis n'ont servi qu'à estimer l'exactitude. La prédiction utilise le
+      modèle final.`
+    : ''),
   lead: (c) => spec([
     ['Modèle final', `Le modèle final est entraîné sur les ${c.learnCount} élèves
       d'apprentissage. Ses ${c.houseCount} descentes s'arrêtent aux itérations ${c.stops}.${c.crossValidation

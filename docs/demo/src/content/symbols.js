@@ -26,7 +26,7 @@ export const NOTES = {
   p: 'Probabilité que l\'élève soit de la maison du modèle en cours : σ(z).',
   sigmoid: 'Fonction sigmoïde : σ(z) = 1 / (1 + e^(−z)), à valeurs dans ]0, 1[.',
   loss: 'Perte de l\'élève (entropie croisée) : −ln p si y = 1, −ln(1 − p) si y = 0.',
-  J: 'Perte du modèle en cours : moyenne des pertes des élèves d\'entraînement du passage.',
+  J: 'Coût du modèle en cours : moyenne des pertes ℓ des élèves d\'entraînement du passage.',
   err: 'Erreur de l\'élève : dérivée de sa perte par rapport à son score.',
   grad: 'Gradient de J : dérivées partielles de J par rapport à w₀, w₁ et w₂.',
   alpha: 'Pas d\'apprentissage : facteur du gradient retranché aux poids à chaque itération.',

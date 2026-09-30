@@ -1,5 +1,5 @@
 /* Colonne de cours, réservée à la lecture : position dans le parcours, titre,
-   formule, texte, tableau de calcul, atelier, détail replié. Les commandes sont
+   formule, idée de l'étape, fiche, tableau de calcul, atelier, En savoir plus. Les commandes sont
    toutes dans la console, sous le schéma. */
 
 .lesson {
@@ -33,9 +33,6 @@
   .lesson-grid .more { grid-area: more; }
   .lesson-calc #calc > :first-child,
   .lesson-calc #calc:empty + #lab > :first-child { margin-top: 0; }
-
-  /* Sans calcul ni atelier, le détail prend la colonne de droite. */
-  .lesson-grid:has(#calc:empty):has(#lab:empty) .more { grid-area: calc; margin-top: 0; }
 }
 
 .where {
@@ -71,14 +68,12 @@
   background: var(--candy);
 }
 
-/* Le cadre a une hauteur fixe. La formule écrite par MathJax arrive après le
-   texte, et sans cette hauteur elle pousserait tout ce qui suit. La formule
-   reste masquée tant qu'elle n'est pas écrite, pour ne pas montrer le code
-   TeX. */
+/* Le cadre a une hauteur fixe, de sorte qu'une formule plus haute que la
+   précédente ne pousse pas ce qui suit. */
 .formula {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: safe center;
   height: 5.5rem;
   max-width: 62ch;
   margin: 0 0 1.1rem;
@@ -91,8 +86,10 @@
   overflow: auto hidden;
 }
 .formula:empty { display: none; }
-.formula.pending > * { visibility: hidden; }
-.formula.pending { color: transparent; }
+
+.intro { margin: 0 0 1.1rem; color: var(--ink); }
+.intro:empty { display: none; }
+.formula .katex-display { margin: 0; }
 
 .prose {
   max-width: 62ch;
@@ -153,7 +150,7 @@
   .spec dd { margin-bottom: 0.5rem; }
 }
 
-/* ------------------------------------------------------------------ détail */
+/* ---------------------------------------------------------- en savoir plus */
 
 .more {
   max-width: 62ch;
@@ -168,8 +165,10 @@
   text-transform: uppercase;
   color: var(--ink-faint);
 }
-.more .prose { font-size: var(--t-md); line-height: 1.6; color: var(--ink-soft); }
-.more-title[hidden] + .prose { padding-top: 0.9rem; }
+.more .prose { padding-top: 0.4rem; font-size: var(--t-md); line-height: 1.6; color: var(--ink-soft); }
+.more h4 { margin: 1.2rem 0 0.35rem; font-family: var(--display); font-size: var(--t-sm); font-weight: 600; color: var(--ink); }
+.more h4:first-child { margin-top: 0; }
+.more .katex-display { margin: 0.7rem 0; overflow: auto hidden; }
 
 @media (max-width: 63.99rem), (max-height: 41.99rem) {
   .lesson-scroll { padding: 1rem 1rem 1.25rem; }

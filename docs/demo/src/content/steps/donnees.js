@@ -8,11 +8,13 @@ export default {
   title: 'Données',
   math: null,
   calc: { group: 'all', cols: ['name', 'group', 'fold', 'house', 'raw0', 'raw1'], holes: true },
+  intro: () => `L'entraînement a besoin d'élèves dont la maison est connue. Une partie des élèves
+    est gardée à l'écart, pour mesurer le modèle sur des élèves qu'il n'a pas vus.`,
   lead: (c) => spec([
     ['Élèves', `Le jeu compte ${c.learnCount} élèves d'apprentissage, dont la maison est connue,
       et ${c.testCount} élèves réservés, dont le modèle final prédit la maison.`],
     c.crossValidation && ['Plis', `Les ${c.learnCount} élèves d'apprentissage sont répartis en
-      ${c.k} plis stratifiés par maison, de ${c.foldSizes}.`],
+      ${c.k} plis [[stratification|stratifiés]] par maison, de ${c.foldSizes}.`],
     ['Notes', `Chaque élève a une note de ${c.label0} sur ${c.max0} et une note de ${c.label1}
       sur ${c.max1}. Il manque ${c.allMissing} notes.`],
     ['Maisons', `La classe à prédire est la maison : ${c.houseList}.`],

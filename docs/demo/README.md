@@ -26,8 +26,8 @@ fixe.
 |---|---|
 | parcours | schéma de douze nœuds : présentation, données, médiane, standardisation, maison, les cinq nœuds de la boucle de correction, décision, prédiction ; avec la validation croisée, treize, la validation et la prédiction sur deux branches après la décision |
 | console | toutes les commandes, sous le schéma : passage (pli 1 à 5, modèle final) et maison (G, P, S), étape (précédent, compteur, suivant), paramètres (α, ε, limite, n), mesures du modèle affiché (J, erreurs, exactitude), puis itération (compteur, itération d'arrêt et sa cause), sauts, lecture, frise, aller à l'arrêt |
-| cours | lecture seule : position, titre, formule, fiche de l'étape, calcul déroulé, tableau des élèves, atelier, détail |
-| figures | une figure de tête et six miniatures ; la miniature que l'étape commente porte le liseré de l'accent |
+| cours | lecture seule : position, titre, formule générique, idée de l'étape, fiche, calcul déroulé, tableau des élèves, atelier, En savoir plus |
+| figures | une figure de tête et six miniatures ; la miniature que l'étape commente porte le liseré de l'accent ; à leur place, l'article du wiki ouvert |
 
 Le schéma ne porte aucun cadre, aucun nom de boucle et aucun nombre. Les
 boucles sont dessinées par des flèches de retour, et la présentation les nomme.
@@ -54,15 +54,24 @@ avant que la lecture n'atteigne l'arrêt.
 Rien ne bouge quand l'itération change. Les libellés des commandes sont
 constants et chaque nombre a une largeur fixe, y compris le compteur, les
 mesures et le tableau. Sans cela, les commandes se déplaceraient sous le
-curseur à chaque cran. Au changement d'étape, le texte et le tableau réservent
+curseur à chaque cran. Au changement d'étape, la fiche et le tableau réservent
 la plus grande hauteur qu'ils prendront au fil de la descente
-(`views/steady.js`). La formule a un cadre de hauteur fixe et reste masquée
-tant que MathJax ne l'a pas écrite. Au changement d'étape, le cours remonte en
-haut et la figure de tête ne change pas.
+(`views/steady.js`). La formule a un cadre de hauteur fixe. Au changement
+d'étape, le cours remonte en haut et la figure de tête ne change pas.
 
-La fiche de chaque étape est une liste terme-définition, et la ligne teintée de
-l'accent porte la valeur à l'itération courante. Le détail est masqué quand
-l'étape n'en a pas, et ne porte un titre que si l'étape en donne un. Chaque
+Chaque étape suit le même ordre : la formule générique, un paragraphe qui dit
+pourquoi l'étape suit la précédente, la fiche, puis « En savoir plus ». La fiche
+est une liste terme-définition, et la ligne teintée de l'accent porte la valeur
+à l'itération courante. « En savoir plus » porte les développements (formes
+matricielles, dérivations, formes stables) et l'origine des choix.
+
+Les notions du cours (norme, vraisemblance, convexité, précision…) sont
+soulignées de l'accent. Le survol ou le focus affiche leur définition courte ;
+un clic ouvre leur article à la place des figures. Les articles renvoient les
+uns aux autres, `Retour` remonte la suite des articles ouverts, `Fermer` ou
+Échap rend les figures. Les textes marquent une notion par `[[clé]]` ou
+`[[clé|texte]]` ; `verifie_fiches.mjs` échoue sur une clé absente du wiki
+(`src/content/wiki/`). Chaque
 symbole (`x₁`, `z`, `p`, `ℓ`, `J`, `∇J`, `α`, `μ`, `σ`…) est souligné en
 pointillé et affiche sa définition au survol ou au focus clavier, dans le texte
 comme dans les en-têtes du tableau (`content/symbols.js`).
@@ -71,7 +80,9 @@ Le tableau des élèves change de colonnes à chaque étape : notes, `x`, `z`, `
 `ℓ`, `p − y`, contributions au gradient, réponse, cas. Sa ligne de pied donne
 `J`, la somme des contributions et le gradient, la correction des trois poids ou
 le bilan des plis. La matrice de confusion et les scores par maison s'affichent
-au-dessus du tableau. Le calcul déroulé réécrit l'opération de l'étape avec les
+au-dessus du tableau. Quand l'étape calcule une grandeur sur tous les élèves
+(μ et σ, coût, gradient, mise à jour, exactitude hors pli), le calcul déroulé la
+montre en premier. Le calcul d'un élève, s'il y en a un, vient ensuite avec les
 nombres de l'élève sélectionné. Un clic sur un nom change d'élève.
 
 Un clic, Entrée ou Espace sur une miniature la met en tête et ramène la colonne
@@ -272,21 +283,21 @@ valeur de ce jeu se recalcule à la main et était vérifiée par
 
     python3 docs/demo/scripts/verifie_contraste.py   # 42 paires, dans chaque thème
     python3 docs/demo/scripts/verifie_figures.py     # les sept figures dans un navigateur
-    node docs/demo/scripts/verifie_fiches.mjs        # fiches et noms accessibles des figures, à chaque passage : ni valeur absente, ni nombre non arrondi, ni pluriel après 1
+    node docs/demo/scripts/verifie_fiches.mjs        # fiches et noms accessibles des figures, à chaque passage : ni valeur absente, ni nombre non arrondi, ni pluriel après 1, ni lien vers une notion absente du wiki
     python3 docs/demo/scripts/construire_scenario.py # régénère et vérifie le scénario (calculs dans scenario_calcul.py)
     python3 docs/demo/scripts/exporter_donnees.py    # régénère src/data.js
 
 ## Démarrage
 
-L'écran de démarrage occupe la page pendant que `src/boot.js` attend MathJax
-et les polices, calcule les six passages (une préparation et trois descentes
+L'écran de démarrage occupe la page pendant que `src/boot.js` attend les
+polices, calcule les six passages (une préparation et trois descentes
 chacun), puis le bilan de la validation croisée. Tout est calculé quelle que
 soit l'option, car elle peut changer jusqu'à `Démarrer`. Chaque étape rend la
 main au navigateur pendant une durée minimale pour que la jauge soit lisible,
 car le calcul réel ne prend que quelques dizaines de millisecondes. `Démarrer`
 recopie les options dans `src/config.js`, place le premier passage, charge le
-cours, monte les vues et attend l'écriture de la première formule. La page,
-masquée mais déjà mise en place, apparaît ensuite.
+cours et monte les vues. La page, masquée mais déjà mise en place, apparaît
+ensuite.
 
 ## Fichiers
 
@@ -302,10 +313,11 @@ Aucun fichier de `src/` ou de `css/` ne dépasse 200 lignes.
     css/flow.css                 schéma du parcours
     css/console.css              console : groupes, boutons, mesures, mises en page
     css/frise.css                frise des descentes et curseur
-    css/lesson.css               colonne de cours, fiche, détail
+    css/lesson.css               colonne de cours, idée, fiche, détails
     css/lab.css                  ateliers
     css/calc.css                 calcul déroulé, tableau des élèves, matrice de confusion
     css/figures.css              colonne des figures et agrandissement
+    css/wiki.css                 termes soulignés et article du wiki
 
     src/boot.js                  démarrage : chargement, calcul, Démarrer, montage
     src/config.js                options de l'écran de démarrage
@@ -319,11 +331,13 @@ Aucun fichier de `src/` ou de `css/` ne dépasse 200 lignes.
     src/data.js                  généré par scripts/exporter_donnees.py
 
     src/content/steps.js         ordre des étapes
-    src/content/steps/*.js       une étape par fichier : fiche, détail, tableau
+    src/content/steps/*.js       une étape par fichier : formule, idée, fiche, détails, tableau
     src/content/steps/nodes.js   les nœuds du schéma
     src/content/steps/format.js  mise en forme commune aux fiches
     src/content/symbols.js       définition de chaque symbole, affichée au survol
     src/content/labs.js          les ateliers attachés à une étape
+    src/content/wiki/index.js    registre des notions et conversion des liens [[…]]
+    src/content/wiki/*.js        notions par thème : algèbre, analyse, statistique, modèle, apprentissage, évaluation
 
     src/figures/canevas.js       palette, repère, grille, marqueurs
     src/figures/scene.js         socle des deux figures en relief, sur Plotly
@@ -351,8 +365,11 @@ Aucun fichier de `src/` ou de `css/` ne dépasse 200 lignes.
     src/views/live.js            région d'annonce
     src/views/panels.js          repli du parcours et des figures
     src/views/theme.js           bascule clair / sombre
+    src/views/wiki.js            article du wiki à la place des figures, pile de Retour
+    src/views/typeset.js         rendu KaTeX des formules, partagé par le cours et le wiki
+    src/views/tooltip.js         bulle des symboles et des notions, gardée dans la fenêtre
 
-    vendor/tex-svg.js            MathJax, rendu des formules
+    vendor/katex/                KaTeX 0.18.10 et son extension auto-render, polices woff2 ; licence MIT
     vendor/plotly-gl3d.min.js    Plotly 3.7.0, bundle gl3d, pour les deux reliefs
     vendor/*.woff2               Space Grotesk, IBM Plex Sans, JetBrains Mono ; licences OFL à côté
 
@@ -368,5 +385,5 @@ et l'état d'agrandissement, au lieu d'un contexte 2D.
 Une vue ne connaît que sa zone de la page et les canaux auxquels elle
 s'abonne : `step` pour ce qui change d'étape en étape, `model` pour un
 changement de passage ou de maison, `iteration` pour ce qui suit la descente.
-Cette séparation évite de retypographier la formule à chaque cran du curseur
+Cette séparation évite de retypographier les formules à chaque cran du curseur
 d'itération.

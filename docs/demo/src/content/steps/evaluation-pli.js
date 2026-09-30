@@ -8,6 +8,9 @@ export default {
   title: 'Évaluation du pli',
   math: null,
   calc: { group: 'held', cols: ['name', 'house', 'x1', 'x2', 'z0', 'z1', 'z2', 'hmax'], worked: 'argmax' },
+  intro: () => `Mesuré sur ses propres élèves d'entraînement, un modèle paraît meilleur qu'il
+    n'est ([[surapprentissage]]). Les élèves du pli mis de côté servent de test, car ils n'ont servi à aucun calcul du
+    passage.`,
   lead: (c) => spec([
     ['Élèves du pli', `Les ${c.heldCount} élèves du pli ${c.pli + 1} ont été écartés de tout le
       passage. La médiane, μ, σ et les poids des ${c.houseCount} modèles ne dépendent pas

@@ -15,7 +15,9 @@ import * as lesson from './views/lesson.js';
 import * as nav from './views/nav.js';
 import * as panels from './views/panels.js';
 import * as theme from './views/theme.js';
+import * as tooltip from './views/tooltip.js';
 import * as transport from './views/transport.js';
+import * as wiki from './views/wiki.js';
 import { say } from './views/live.js';
 
 flow.mount(goto);
@@ -26,6 +28,8 @@ transport.mount();
 nav.mount();
 panels.mount();
 theme.mount();
+wiki.mount();
+tooltip.mount();
 
 figures.follow();
 
@@ -41,7 +45,7 @@ on('model', () => {
 
 on('iteration', () => {
   const wrong = errors(ROWS, Y, wAt(state.t));
-  say(`Itération ${state.t} sur ${LAST}. Perte ${at(state.t).cost.toFixed(4)}, ${wrong} ${plural(wrong, 'erreur', 'erreurs')} sur ${N}.`);
+  say(`Itération ${state.t} sur ${LAST}. Coût ${at(state.t).cost.toFixed(4)}, ${wrong} ${plural(wrong, 'erreur', 'erreurs')} sur ${N}.`);
 });
 
 // Les flèches parcourent le cours, l'espace lance et arrête la lecture, Échap
@@ -62,9 +66,8 @@ window.addEventListener('keydown', (event) => {
   }
 });
 
-// La promesse est tenue quand la première formule est écrite et que les
-// figures ont eu deux images pour se dessiner.
+// La promesse est tenue quand les figures ont eu deux images pour se
+// dessiner.
 export async function ready() {
-  await lesson.typeset();
   await new Promise((resolve) => { requestAnimationFrame(() => requestAnimationFrame(resolve)); });
 }

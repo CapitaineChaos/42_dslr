@@ -16,6 +16,7 @@
   })();
 </script>
 
+<link rel="stylesheet" href="vendor/katex/katex.min.css">
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/controls.css">
@@ -27,16 +28,11 @@
 <link rel="stylesheet" href="css/lab.css">
 <link rel="stylesheet" href="css/calc.css">
 <link rel="stylesheet" href="css/figures.css">
+<link rel="stylesheet" href="css/wiki.css">
 <link rel="stylesheet" href="css/start.css">
 
-<script>
-  window.MathJax = {
-    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
-    svg: { fontCache: 'global' },
-    startup: { typeset: false }
-  };
-</script>
-<script defer src="vendor/tex-svg.js"></script>
+<script defer src="vendor/katex/katex.min.js"></script>
+<script defer src="vendor/katex/auto-render.min.js"></script>
 <script defer src="vendor/plotly-gl3d.min.js"></script>
 </head>
 <body class="booting">
@@ -146,14 +142,15 @@
           <p class="where" id="where"></p>
           <h2 id="title"></h2>
           <div class="formula" id="formula"></div>
+          <div class="prose intro" id="intro"></div>
           <div class="prose" id="lead"></div>
         </div>
         <div class="lesson-calc">
           <div id="calc"></div>
           <div id="lab"></div>
         </div>
-        <section class="more" id="more-box">
-          <h3 class="more-title" id="more-title" hidden></h3>
+        <section class="more" id="more-box" aria-labelledby="more-title">
+          <h3 class="more-title" id="more-title">En savoir plus</h3>
           <div class="prose" id="more"></div>
         </section>
       </div>
@@ -193,8 +190,8 @@
       </section>
 
       <section class="plot" data-plot="perte" role="button" tabindex="0"
-               aria-label="Agrandir la figure Perte J">
-        <h2 class="plot-name">Perte J</h2>
+               aria-label="Agrandir la figure Coût J">
+        <h2 class="plot-name">Coût J</h2>
         <div class="plot-body"><canvas data-canvas="perte" role="img"></canvas></div>
       </section>
 
@@ -212,6 +209,15 @@
 
       <button type="button" class="button plots-close" id="plots-close" hidden>Fermer</button>
     </div>
+
+    <section class="wiki" id="wiki" aria-labelledby="wiki-title" hidden>
+      <div class="wiki-head">
+        <h2 class="wiki-title" id="wiki-title" tabindex="-1"></h2>
+        <button type="button" class="button" id="wiki-back" hidden>Retour</button>
+        <button type="button" class="button" id="wiki-close">Fermer</button>
+      </div>
+      <div class="prose wiki-body" id="wiki-body"></div>
+    </section>
   </aside>
 
   <div class="scrim" id="scrim" hidden></div>

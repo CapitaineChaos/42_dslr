@@ -39,7 +39,7 @@ export function paint() {
   kind.classList.toggle('warn', !CONVERGED);
 
   readout.innerHTML = [
-    ['perte J', pad(at(state.t).cost.toFixed(4), COST), ''],
+    ['coût J', pad(at(state.t).cost.toFixed(4), COST), ''],
     ['erreurs', pad(`${wrong}/${N}`, WRONG), wrong ? 'warn' : ''],
     ['exactitude', pad(`${(matrix.accuracy * 100).toFixed(1)} %`, 7), ''],
   ].map(([term, value, cls]) =>

@@ -5,13 +5,13 @@ import { clip, frame, grid } from './canevas.js';
 
 // La fenêtre suit l'itération courante au lieu d'afficher d'emblée toute la
 // descente.
-// Sinon les premières itérations, où la perte varie le plus, resteraient
+// Sinon les premières itérations, où le coût varie le plus, resteraient
 // collées à l'axe.
 const spanFor = (t) => Math.max(20, Math.min(LAST, Math.max(t * 2, 40)));
 
 export const perte = {
   key: 'perte',
-  label: 'Perte J',
+  label: 'Coût J',
 
   draw(ctx, w, h, p, t) {
     const f = frame(w, h, { l: 52, r: 12, t: 12, b: 34 });
@@ -20,7 +20,7 @@ export const perte = {
     const low = TRACE[LAST].cost;
     const top = high + (high - low) * 0.08;
     const bottom = Math.max(0, low - (high - low) * 0.12);
-    grid(ctx, p, f, 0, span, bottom, top, 'itération', 'perte J');
+    grid(ctx, p, f, 0, span, bottom, top, 'itération', 'coût J');
 
     clip(ctx, f, () => {
       ctx.strokeStyle = p.trace;
@@ -53,6 +53,6 @@ export const perte = {
   },
 
   describe(t) {
-    return `Perte J sur les ${Math.min(spanFor(t), LAST)} premières itérations. À l'itération ${t}, J vaut ${at(t).cost.toFixed(6)}.`;
+    return `Coût J sur les ${Math.min(spanFor(t), LAST)} premières itérations. À l'itération ${t}, J vaut ${at(t).cost.toFixed(6)}.`;
   },
 };

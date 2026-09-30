@@ -16,6 +16,8 @@
   corner-shape: bevel;
 }
 
+.worked.is-detail { margin-top: 0.75rem; background: var(--sunk); border: 1px solid var(--line); }
+
 .worked-head {
   margin: 0 0 0.4rem;
   font-family: var(--display);

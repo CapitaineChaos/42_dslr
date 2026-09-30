@@ -1,10 +1,13 @@
 // Contenu du cours. Chaque étape correspond à un écran et à un fichier de
 // steps/, dans l'ordre du parcours.
 //
-// `node` rattache l'étape à un nœud du schéma (steps/nodes.js). `lead(c)` est
-// la fiche de l'étape ; `more(c)` le détail, sous le titre `moreTitle` s'il est
-// donné. Les nombres viennent de c (context.js), jamais écrits en dur ; les
-// symboles viennent de symbols.js, avec leur définition au survol.
+// `node` rattache l'étape à un nœud du schéma (steps/nodes.js). `math` est la
+// formule générique. `intro(c)` dit pourquoi l'étape suit la précédente,
+// `lead(c)` est la fiche, `more(c)` les détails repliés, dont les formules sont
+// écrites en TeX entre \( \) ou \[ \]. Les nombres viennent de c
+// (context.js), jamais écrits en dur ; les symboles viennent de symbols.js,
+// avec leur définition au survol. intro et more ne dépendent pas de
+// l'itération.
 //
 // `calc` choisit les élèves et les colonnes du tableau, la ligne de pied, la
 // matrice et le calcul déroulé ; views/calc.js les interprète.

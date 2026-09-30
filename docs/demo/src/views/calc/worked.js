@@ -1,11 +1,13 @@
 // Le calcul déroulé : l'opération de l'étape, écrite avec les nombres de
-// l'élève sélectionné. Les calculs de FREE ne dépendent d'aucun élève.
+// l'élève sélectionné. Les calculs de FREE portent sur tous les élèves et
+// passent avant le calcul d'un élève quand une étape a les deux.
 
-import { ALPHA, CONVERGED, COURSES, HOUSE, K, LAST, N, PLIS, STATS, TRAIN, VALUE } from '../../dataset.js';
+import { plural } from '../../content/steps/format.js';
+import { ALPHA, CONVERGED, COURSES, HOUSE, K, LAST, LEARN, N, PLIS, STATS, TRAIN, VALUE } from '../../dataset.js';
 import { gradient } from '../../model.js';
 import { MINUS, label, num, paren, signed, tag, zh } from './format.js';
 
-export const FREE = ['J', 'update', 'stop', 'impute'];
+export const FREE = ['J', 'update', 'stop', 'impute', 'gradient', 'moments', 'cvtotal'];
 
 export const WORKED = {
   impute: () => {
@@ -20,6 +22,24 @@ export const WORKED = {
     `dans le modèle de ${tag(HOUSE)}, y = 1 pour ses élèves et 0 pour les autres`,
     `${m.student.name} est de ${tag(m.student.h)} → <b>y = ${m.y}</b>`,
   ],
+  moments: () => [0, 1].flatMap((col) => {
+    const stat = STATS[COURSES[col]];
+    const values = TRAIN.map((student) => VALUE(student, col));
+    const total = values.reduce((sum, value) => sum + value, 0);
+    const squares = values.reduce((sum, value) => sum + (value - stat.mu) ** 2, 0);
+    return [
+      `μ ${label(col)} = Σ notes / ${values.length} = ${num(total, 2)} / ${values.length} = <b>${stat.mu.toFixed(2)}</b>`,
+      `σ ${label(col)} = √(Σ (note − μ)² / ${values.length}) = √(${num(squares, 2)} / ${values.length}) = <b>${stat.sd.toFixed(2)}</b>`,
+    ];
+  }),
+  cvtotal: () => {
+    const folds = PLIS.slice(0, K);
+    const correct = folds.reduce((sum, pass) => sum + pass.correct, 0);
+    return [
+      ...folds.map((pass) => `pli ${pass.pli + 1} : ${pass.correct} ${plural(pass.correct, 'élève bien classé', 'élèves bien classés')} sur ${pass.held.length}`),
+      `exactitude hors pli = ${correct} / ${LEARN.length} = <b>${((correct / LEARN.length) * 100).toFixed(1)} %</b>`,
+    ];
+  },
   fold: (m) => [
     `${m.student.name} appartient au pli ${m.cv.fold + 1} sur ${K}`,
     `modèles entraînés sans ce pli, sur ${PLIS[m.cv.fold].train.length} élèves`,
@@ -55,6 +75,13 @@ export const WORKED = {
     `p − y = ${m.p.toFixed(3)} − ${m.y} = <b>${signed(m.err)}</b>`,
     m.err < 0 ? 'p − y &lt; 0, donc augmenter z réduit ℓ' : 'p − y &gt; 0, donc diminuer z réduit ℓ',
   ],
+  gradient: (m, w, rows) => {
+    const factors = ['', ' × x₁', ' × x₂'];
+    return [0, 1, 2].map((col) => {
+      const total = rows.reduce((sum, row) => sum + row.contribution[col], 0);
+      return `∂J/∂w${'₀₁₂'[col]} = Σ (p − y)${factors[col]} / ${rows.length} = ${num(total)} / ${rows.length} = <b>${signed(total / rows.length)}</b>`;
+    });
+  },
   contrib: (m) => [
     '(p − y) × (1, x₁, x₂)',
     `${paren(m.err)} × (1, ${num(m.x[0])}, ${num(m.x[1])})`,

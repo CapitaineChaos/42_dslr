@@ -22,8 +22,8 @@ const LABELS = {
 start.mount();
 loader.start(1 + (K + 1) * (1 + HOUSES.length) + 1);
 
-if (window.MathJax && window.MathJax.startup) await window.MathJax.startup.promise;
 await Promise.all([
+  "1em KaTeX_Main", "italic 1em KaTeX_Math",
   "400 1em 'IBM Plex Sans'", "600 1em 'IBM Plex Sans'",
   "600 1em 'Space Grotesk'", "700 1em 'Space Grotesk'",
   "400 1em 'JetBrains Mono'", "600 1em 'JetBrains Mono'",

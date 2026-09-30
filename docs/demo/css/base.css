@@ -123,10 +123,9 @@ code { font-family: var(--mono); font-size: 0.9em; }
 /* ------------------------------------------------------ rappel des symboles */
 
 /* Un symbole souligné en pointillé porte sa définition, affichée au survol et
-   au focus clavier. La bulle s'affiche au-dessus du symbole dans le texte, et
-   en dessous dans un en-tête de tableau, où le haut du tableau la couperait.
-   Masquée, la bulle est retirée de la mise en page, car une bulle invisible
-   mais présente élargirait le cadre défilant du tableau. */
+   au focus clavier dans une bulle unique (views/tooltip.js). La bulle est en
+   position fixe, donc ni le cadre défilant du tableau ni le bord de la fenêtre
+   ne la coupent. */
 .sym {
   position: relative;
   text-decoration: underline dotted var(--edge);
@@ -135,15 +134,10 @@ code { font-family: var(--mono); font-size: 0.9em; }
 }
 .sym:hover, .sym:focus-visible { color: var(--accent-text); }
 
-.sym::after {
-  content: attr(data-tip);
-  position: absolute;
-  z-index: 30;
-  left: 50%;
-  bottom: calc(100% + 6px);
-  transform: translateX(-50%);
-  width: max-content;
-  max-width: 20rem;
+.tip {
+  position: fixed;
+  z-index: 70;
+  max-width: min(20rem, calc(100vw - 16px));
   padding: 0.4rem 0.65rem;
   font-family: var(--body);
   font-size: var(--t-xs);
@@ -158,10 +152,8 @@ code { font-family: var(--mono); font-size: 0.9em; }
   border-radius: var(--radius);
   box-shadow: var(--shadow-lift);
   pointer-events: none;
-  display: none;
 }
-.sym.below::after { bottom: auto; top: calc(100% + 6px); }
-.sym:hover::after, .sym:focus-visible::after { display: block; }
+.tip[hidden] { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; }
