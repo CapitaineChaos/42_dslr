@@ -1,7 +1,8 @@
-// Outils communs aux quatre figures : palette, repère, grille, marqueurs.
+// Outils communs aux cinq figures sur canevas : palette, repère, grille,
+// marqueurs.
 //
-// Aucune couleur n'est écrite ici : elles sont lues sur les jetons CSS, donc un
-// changement de palette n'a rien à recompiler.
+// Aucune couleur n'est écrite ici. Elles sont lues sur les jetons CSS, donc un
+// changement de palette ne demande aucune recompilation.
 
 const TOKENS = [
   'surface', 'sunk', 'ink', 'ink-soft', 'ink-faint',
@@ -14,7 +15,8 @@ export function palette() {
   const style = getComputedStyle(document.documentElement);
   const out = {};
   TOKENS.forEach((name) => { out[camel(name)] = style.getPropertyValue(`--${name}`).trim(); });
-  out.label = '12px ui-sans-serif, system-ui, sans-serif';
+  out.family = style.getPropertyValue('--body').trim();
+  out.label = `12px ${out.family}`;
   out.house = [out.house0, out.house1, out.house2];
   return out;
 }
@@ -101,8 +103,8 @@ export function clip(ctx, f, draw) {
   ctx.restore();
 }
 
-// Carré pour la maison du modèle, disque pour les autres : la forme double la
-// couleur, seul encodage lisible sans distinguer les teintes.
+// Carré pour la maison du modèle, disque pour les autres. La forme double la
+// couleur et reste lisible sans distinguer les teintes.
 export function marker(ctx, px, py, positive, size) {
   ctx.beginPath();
   if (positive) ctx.rect(px - size, py - size, size * 2, size * 2);
@@ -110,8 +112,8 @@ export function marker(ctx, px, py, positive, size) {
   ctx.fill();
 }
 
-// Bornes élargies pour que les deux axes portent la même échelle : sans cela un
-// angle droit ou une distance lus sur la figure seraient faux.
+// Bornes élargies pour que les deux axes portent la même échelle. Sans cela,
+// un angle droit ou une distance lus sur la figure seraient faux.
 export function isotropic(f, w, h, ax, ay) {
   const inner = { w: w - f.pad.l - f.pad.r, h: h - f.pad.t - f.pad.b };
   const scale = Math.max((ax[1] - ax[0]) / inner.w, (ay[1] - ay[0]) / inner.h);

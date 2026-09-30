@@ -1,11 +1,12 @@
-// Barre de chargement : une unité par étape du démarrage, le libellé de l'étape
-// en cours et le pourcentage.
+// Barre de chargement de l'écran de démarrage : une unité par étape du calcul,
+// le libellé de l'étape en cours et le pourcentage.
 //
-// Chaque étape rend la main au navigateur pendant une durée minimale : le
-// calcul réel ne prend que quelques dizaines de millisecondes, et sans ce
-// temps la barre ne serait qu'un éclair.
+// Chaque étape rend la main au navigateur pendant une durée minimale. Le
+// calcul réel ne prend que quelques dizaines de millisecondes, et sans cette
+// durée la progression de la barre ne serait pas visible.
 
-const root = document.getElementById('loader');
+const screen = document.getElementById('loader');
+const bar = document.getElementById('loader-bar');
 const fill = document.getElementById('loader-fill');
 const stage = document.getElementById('loader-stage');
 const percent = document.getElementById('loader-percent');
@@ -27,13 +28,18 @@ export async function step(text) {
   stage.textContent = text;
   fill.style.width = `${ratio}%`;
   percent.textContent = `${ratio} %`;
-  root.setAttribute('aria-valuenow', String(ratio));
+  bar.setAttribute('aria-valuenow', String(ratio));
   await pause(MINIMUM);
+}
+
+export function ready() {
+  stage.textContent = 'calcul terminé';
+  screen.classList.add('is-ready');
 }
 
 export async function finish() {
   document.body.classList.remove('booting');
-  root.classList.add('is-done');
+  screen.classList.add('is-done');
   await pause(500);
-  root.remove();
+  screen.remove();
 }

@@ -1,8 +1,9 @@
-// Dessin du schéma : placement des nœuds, flèches, pastilles. Une ligne de
-// nœuds de la présentation à la décision, puis l'embranchement vers la
-// validation, en haut, et la prédiction, en bas. Les flèches de retour des
-// trois boucles : sous la ligne, de la mise à jour au score, puis de l'arrêt à
-// la maison ; au-dessus, de la validation à la médiane.
+// Dessin du schéma : placement des nœuds, flèches, pastilles. Les nœuds sont
+// alignés de la présentation à la décision. Avec la validation croisée, la
+// ligne se sépare ensuite vers la validation, en haut, et la prédiction, en
+// bas. Sans elle, la prédiction prolonge la ligne. Les flèches de retour des
+// boucles passent sous la ligne, de la mise à jour au score puis de l'arrêt à
+// la maison, et au-dessus, de la validation à la médiane.
 
 import { NODES, STEPS } from '../../content/steps.js';
 
@@ -11,6 +12,7 @@ const NS = 'http://www.w3.org/2000/svg';
 
 const W = 116;
 const H = 70;
+const CUT = 9;
 const GAP = 20;
 const EXIT = 48;
 const FORK = 22;
@@ -36,9 +38,13 @@ function el(name, attributes = {}, parent = null) {
   return element;
 }
 
+const chamfer = (x, y) =>
+  `M ${x + CUT} ${y} H ${x + W - CUT} L ${x + W} ${y + CUT} V ${y + H - CUT} L ${x + W - CUT} ${y + H} H ${x + CUT} L ${x} ${y + H - CUT} V ${y + CUT} Z`;
+
 function layout() {
   const place = {};
-  const row = NODES.filter((node) => node.phase !== 'valid' && node.phase !== 'aval');
+  const branched = NODES.some((node) => node.phase === 'valid');
+  const row = NODES.filter((node) => node.phase !== 'valid' && (node.phase !== 'aval' || !branched));
   let x = 8;
   row.forEach((node, i) => {
     if (i > 0) x += row[i - 1].phase === 'boucle' && node.phase === 'post' ? EXIT : GAP;
@@ -47,9 +53,13 @@ function layout() {
   });
   const forkX = x + FORK;
   const branchX = forkX + BRANCH;
-  NODES.filter((node) => node.phase === 'valid').forEach((node) => { place[node.key] = { x: branchX, y: UPPER_Y }; });
-  NODES.filter((node) => node.phase === 'aval').forEach((node) => { place[node.key] = { x: branchX, y: LOWER_Y }; });
-  return { place, row, forkX, width: branchX + W + 8 };
+  if (branched) {
+    NODES.filter((node) => node.phase === 'valid').forEach((node) => { place[node.key] = { x: branchX, y: UPPER_Y }; });
+    NODES.filter((node) => node.phase === 'aval').forEach((node) => { place[node.key] = { x: branchX, y: LOWER_Y }; });
+  }
+  const top = branched ? 0 : NODE_Y - 12;
+  const bottom = branched ? HEIGHT : HOUSE_Y + 8;
+  return { place, row, forkX, branched, top, height: bottom - top, width: (branched ? branchX + W : x) + 8 };
 }
 
 function arrowMarker(defs, id) {
@@ -58,6 +68,13 @@ function arrowMarker(defs, id) {
     orient: 'auto-start-reverse',
   }, defs);
   el('path', { d: 'M 0 1 L 9 5 L 0 9 z', class: `arrow-head ${id}` }, marker);
+}
+
+// Remplissage du nœud courant ; les teintes viennent des jetons CSS (stop-color).
+function candy(defs) {
+  const gradient = el('linearGradient', { id: 'candy', x1: 0, y1: 0, x2: 1, y2: 1 }, defs);
+  el('stop', { offset: 0, class: 'stop-a' }, gradient);
+  el('stop', { offset: 1, class: 'stop-b' }, gradient);
 }
 
 function edge(svg, d, to, kind = 'forward') {
@@ -74,7 +91,7 @@ function nodeGroup(svg, node, at, goto) {
     'aria-label': `${node.label}, ${indices.length} étape${indices.length > 1 ? 's' : ''}`,
   }, svg);
 
-  el('rect', { x: at.x, y: at.y, width: W, height: H, rx: 12, class: 'node-box' }, group);
+  el('path', { d: chamfer(at.x, at.y), class: 'node-box' }, group);
   el('text', { x: at.x + W / 2, y: at.y + 25, class: 'node-label' }, group).textContent = node.label;
   el('text', { x: at.x + W / 2, y: at.y + 44, class: 'node-caption' }, group).textContent = node.caption;
 
@@ -100,17 +117,13 @@ function nodeGroup(svg, node, at, goto) {
 }
 
 export function build(goto) {
-  const { place, row, forkX, width } = layout();
-  const svg = el('svg', { viewBox: `0 0 ${width} ${HEIGHT}`, class: 'flow-svg', role: 'group', 'aria-label': 'Parcours' });
+  const { place, row, forkX, branched, top, height, width } = layout();
+  const svg = el('svg', { viewBox: `0 ${top} ${width} ${height}`, class: 'flow-svg', role: 'group', 'aria-label': 'Parcours' });
 
   const defs = el('defs', {}, svg);
   arrowMarker(defs, 'arrow');
   arrowMarker(defs, 'arrow-on');
-  const glow = el('filter', { id: 'glow', x: '-30%', y: '-30%', width: '160%', height: '160%' }, defs);
-  el('feGaussianBlur', { stdDeviation: 5, result: 'blur' }, glow);
-  const merge = el('feMerge', {}, glow);
-  el('feMergeNode', { in: 'blur' }, merge);
-  el('feMergeNode', { in: 'SourceGraphic' }, merge);
+  candy(defs);
 
   const middle = NODE_Y + H / 2;
   for (let i = 0; i < row.length - 1; i += 1) {
@@ -124,12 +137,6 @@ export function build(goto) {
     }
   }
 
-  const last = place[row[row.length - 1].key];
-  NODES.filter((node) => node.phase === 'valid' || node.phase === 'aval').forEach((node) => {
-    const target = place[node.key];
-    edge(svg, `M ${last.x + W} ${middle} H ${forkX} V ${target.y + H / 2} H ${target.x - 2}`, node.key);
-  });
-
   const loop = row.filter((node) => node.phase === 'boucle');
   const head = place[loop[0].key];
   const tail = place[loop[loop.length - 1].key];
@@ -140,9 +147,17 @@ export function build(goto) {
   const exitX = tail.x + W + EXIT / 2;
   edge(svg, `M ${exitX} ${middle} V ${HOUSE_Y} H ${place[maison.key].x + W / 2} V ${NODE_Y + H + 2}`, maison.key, 'house-return');
 
-  const start = row.find((node) => INSIDE.includes(node.phase));
-  const valid = place[NODES.find((node) => node.phase === 'valid').key];
-  edge(svg, `M ${valid.x + W / 2} ${valid.y} V ${LANE_Y} H ${place[start.key].x + W / 2} V ${NODE_Y - 2}`, start.key, 'outer-return');
+  if (branched) {
+    const last = place[row[row.length - 1].key];
+    NODES.filter((node) => node.phase === 'valid' || node.phase === 'aval').forEach((node) => {
+      const target = place[node.key];
+      edge(svg, `M ${last.x + W} ${middle} H ${forkX} V ${target.y + H / 2} H ${target.x - 2}`, node.key);
+    });
+
+    const start = row.find((node) => INSIDE.includes(node.phase));
+    const valid = place[NODES.find((node) => node.phase === 'valid').key];
+    edge(svg, `M ${valid.x + W / 2} ${valid.y} V ${LANE_Y} H ${place[start.key].x + W / 2} V ${NODE_Y - 2}`, start.key, 'outer-return');
+  }
 
   NODES.forEach((node) => nodeGroup(svg, node, place[node.key], goto));
   host.appendChild(svg);

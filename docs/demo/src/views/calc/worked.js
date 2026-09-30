@@ -17,11 +17,11 @@ export const WORKED = {
     return lines.length ? lines : ['aucune note absente parmi les élèves d\'entraînement de ce passage'];
   },
   labels: (m) => [
-    `modèle de ${tag(HOUSE)} : y = 1 pour ses élèves, 0 pour les autres`,
+    `dans le modèle de ${tag(HOUSE)}, y = 1 pour ses élèves et 0 pour les autres`,
     `${m.student.name} est de ${tag(m.student.h)} → <b>y = ${m.y}</b>`,
   ],
   fold: (m) => [
-    `${m.student.name} appartient au pli ${m.cv.fold + 1} sur ${K}.`,
+    `${m.student.name} appartient au pli ${m.cv.fold + 1} sur ${K}`,
     `modèles entraînés sans ce pli, sur ${PLIS[m.cv.fold].train.length} élèves`,
     `${m.cv.z.map((value, h) => `${zh(h)} = ${signed(value)}`).join(', ')} → réponse ${tag(m.cv.pred)}`,
     `maison réelle ${tag(m.student.h)} → <b class="${m.cv.miss ? 'ko' : ''}">${m.cv.miss ? 'erreur' : 'correct'}</b>`,
@@ -44,8 +44,8 @@ export const WORKED = {
     `p = 1 / (1 + e<sup>${m.z > 0 ? MINUS : '+'}${Math.abs(m.z).toFixed(3)}</sup>) = <b>${m.p.toFixed(3)}</b>`,
   ],
   loss: (m) => (m.y
-    ? ['y = 1 : ℓ = −ln(p)', `ℓ = −ln(${m.p.toFixed(3)}) = <b>${m.loss.toFixed(3)}</b>`]
-    : ['y = 0 : ℓ = −ln(1 − p)', `ℓ = −ln(1 − ${m.p.toFixed(3)}) = −ln(${(1 - m.p).toFixed(3)}) = <b>${m.loss.toFixed(3)}</b>`]),
+    ? ['y = 1, donc ℓ = −ln(p)', `ℓ = −ln(${m.p.toFixed(3)}) = <b>${m.loss.toFixed(3)}</b>`]
+    : ['y = 0, donc ℓ = −ln(1 − p)', `ℓ = −ln(1 − ${m.p.toFixed(3)}) = −ln(${(1 - m.p).toFixed(3)}) = <b>${m.loss.toFixed(3)}</b>`]),
   J: (m, w, rows) => {
     const total = rows.reduce((sum, row) => sum + row.loss, 0);
     return [`J = (ℓ₁ + ℓ₂ + … + ℓ${String(N).split('').map((d) => '₀₁₂₃₄₅₆₇₈₉'[d]).join('')}) / ${N}`,
@@ -53,7 +53,7 @@ export const WORKED = {
   },
   err: (m) => [
     `p − y = ${m.p.toFixed(3)} − ${m.y} = <b>${signed(m.err)}</b>`,
-    m.err < 0 ? 'p − y &lt; 0 : augmenter z réduit ℓ' : 'p − y &gt; 0 : diminuer z réduit ℓ',
+    m.err < 0 ? 'p − y &lt; 0, donc augmenter z réduit ℓ' : 'p − y &gt; 0, donc diminuer z réduit ℓ',
   ],
   contrib: (m) => [
     '(p − y) × (1, x₁, x₂)',
@@ -68,7 +68,7 @@ export const WORKED = {
     });
   },
   // Le code compare la norme du gradient au seuil avant de mettre les poids à
-  // jour : c'est le gradient qui servirait à la mise à jour.
+  // jour. Le gradient testé est celui qui servirait à la mise à jour.
   stop: (m, w, rows, t) => {
     const grad = gradient(rows.map((row) => row.row), rows.map((row) => row.y), w);
     const size = Math.hypot(...grad);
@@ -76,7 +76,7 @@ export const WORKED = {
       '‖∇J‖ = √(∇J₀² + ∇J₁² + ∇J₂²)',
       `= √(${grad.map((value) => `(${value < 0 ? MINUS : ''}${Math.abs(value).toExponential(2)})²`).join(' + ')})`,
     ];
-    if (t < LAST) return [...lines, `= ${size.toExponential(3)} ≥ 10⁻³ → <b>on continue</b>`];
+    if (t < LAST) return [...lines, `= ${size.toExponential(3)} ≥ 10⁻³ → <b>poursuite</b>`];
     if (CONVERGED) return [...lines, `= ${size.toExponential(3)} &lt; 10⁻³ → <b>arrêt</b>`];
     return [...lines, `= ${size.toExponential(3)} ≥ 10⁻³, mais itération ${t} = limite → <b>arrêt</b>`];
   },

@@ -1,13 +1,15 @@
 // Nœuds du schéma de parcours, dans l'ordre de la ligne. `phase` situe le
 // nœud : 'intro' et 'amont' avant l'entraînement ; 'prep', 'maison', 'boucle'
 // et 'post' dans l'entraînement, la boucle des maisons autour de la boucle de
-// correction ; 'valid' sur la branche des plis ; 'aval' sur celle du modèle
-// final.
+// correction ; 'valid' sur la branche des plis, absente sans validation
+// croisée ; 'aval' sur celle du modèle final.
+
+import { config } from '../../config.js';
 
 export const NODES = [
-  { key: 'presentation', phase: 'intro', label: 'Présentation', caption: 'objet · méthode' },
-  { key: 'donnees', phase: 'amont', label: 'Données', caption: '5 plis' },
-  { key: 'mediane', phase: 'prep', label: 'Médiane', caption: 'notes manquantes' },
+  { key: 'presentation', phase: 'intro', label: 'Présentation', caption: 'jeu réduit' },
+  { key: 'donnees', phase: 'amont', label: 'Données', caption: config.cv ? '5 plis' : '2 matières' },
+  { key: 'mediane', phase: 'prep', label: 'Médiane', caption: 'notes absentes' },
   { key: 'echelle', phase: 'prep', label: 'Standardisation', caption: '(x − μ) / σ' },
   { key: 'maison', phase: 'maison', label: 'Maison', caption: 'un contre tous' },
   { key: 'score', phase: 'boucle', label: 'Score', caption: 'z = wᵀx' },
@@ -18,4 +20,4 @@ export const NODES = [
   { key: 'decision', phase: 'post', label: 'Décision', caption: 'argmax z' },
   { key: 'validation', phase: 'valid', label: 'Validation', caption: 'plis 1 à 5' },
   { key: 'prediction', phase: 'aval', label: 'Prédiction', caption: 'modèle final' },
-];
+].filter((node) => config.cv || node.phase !== 'valid');

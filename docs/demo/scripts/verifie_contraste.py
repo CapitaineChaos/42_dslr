@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """Contrôle WCAG des couleurs de l'atelier.
 
-Les paires à vérifier sont déclarées ici, pas devinées depuis le CSS : une
-couleur n'a de contraste que relativement au fond sur lequel elle est posée, et
-ce fond n'est pas déductible de la feuille de style seule.
+Les paires à vérifier sont déclarées ici. Une couleur n'a de contraste que
+relativement au fond sur lequel elle est posée, et ce fond n'est pas déductible
+de la feuille de style seule.
 
-Le texte de l'interface vise le seuil AAA de 7.0. Les couleurs de données et
-les avertissements tiennent 4.5, les éléments graphiques 3.0. Les filets
-décoratifs et la grille des figures portent un seuil plus bas, indiqué dans la
-table.
+Le texte de l'interface vise le seuil AAA de 7.0, sauf l'étiquette d'un bouton
+plein. Les couleurs de données et les avertissements tiennent 4.5, les éléments
+graphiques 3.0. Les filets décoratifs et la grille des figures portent un seuil
+plus bas, indiqué dans la table. Chaque paire est contrôlée dans les deux
+thèmes : le bloc :root, clair, et le bloc :root[data-theme='dark'].
 """
 
 from __future__ import annotations
@@ -30,14 +31,22 @@ CHECKS = [
     ("--ink-faint", "--surface", 7.0, "libellés de commande"),
     ("--ink-faint", "--sunk", 7.0, "graduations d'axe"),
     ("--ink-faint", "--raised", 7.0, "libellés sur zone surélevée"),
-    ("--on-bar", "--bar", 7.0, "texte sur barre pleine"),
-    ("--accent", "--surface", 7.0, "étape courante, commandes d'itération"),
-    ("--accent", "--ground", 7.0, "parcours sur le fond de page"),
-    ("--ink", "--accent-deep", 7.0, "texte sur nœud courant"),
-    ("--ground", "--accent", 7.0, "texte sur bouton principal"),
-    ("--surface", "--alert", 4.5, "étiquette sans centrage ni réduction"),
+    ("--ink-faint", "--ground", 7.0, "libellés sur le fond de page"),
+    ("--on-bar", "--bar", 7.0, "texte sur barre pleine, bulle de symbole"),
+    ("--accent-text", "--surface", 7.0, "étape courante, commandes d'itération"),
+    ("--accent-text", "--ground", 7.0, "parcours sur le fond de page"),
+    ("--accent-text", "--sunk", 7.0, "valeur d'atelier"),
+    ("--accent-text", "--raised", 7.0, "frise, passage courant"),
+    ("--accent-text", "--accent-soft", 7.0, "calcul déroulé, élève sélectionné"),
+    ("--ink", "--accent-soft", 7.0, "texte sur nœud franchi, itération courante"),
+    ("--on-accent", "--accent", 4.5, "étiquette de bouton plein, nœud courant"),
+    ("--on-accent", "--hot", 4.5, "étiquette de bouton plein, fin du dégradé"),
+    ("--hot", "--ground", 3.0, "flèche active du parcours"),
+    ("--accent", "--surface", 3.0, "nœud courant, poignée, liseré"),
+    ("--accent", "--ground", 3.0, "flèche active du parcours"),
     ("--alert", "--surface", 4.5, "erreurs et avertissements"),
     ("--alert", "--sunk", 4.5, "erreurs sur zone creusée"),
+    ("--alert", "--accent-soft", 4.5, "erreur sur l'élève sélectionné"),
     ("--house-0", "--surface", 4.5, "marqueurs de maison"),
     ("--house-1", "--surface", 4.5, "marqueurs de maison"),
     ("--house-2", "--surface", 4.5, "marqueurs de maison"),
@@ -47,6 +56,9 @@ CHECKS = [
     ("--house-0", "--raised", 4.5, "maison dans le tableau"),
     ("--house-1", "--raised", 4.5, "maison dans le tableau"),
     ("--house-2", "--raised", 4.5, "maison dans le tableau"),
+    ("--house-0", "--accent-soft", 4.5, "maison de l'élève sélectionné"),
+    ("--house-1", "--accent-soft", 4.5, "maison de l'élève sélectionné"),
+    ("--house-2", "--accent-soft", 4.5, "maison de l'élève sélectionné"),
     ("--trace", "--surface", 3.0, "tracé de la descente"),
     ("--edge", "--surface", 3.0, "bord d'une commande"),
     ("--edge", "--ground", 3.0, "nœud du parcours"),
@@ -55,10 +67,13 @@ CHECKS = [
 ]
 
 
-def parse_tokens(text: str) -> dict[str, str]:
-    match = re.search(r":root\s*\{(.*?)\n\}", text, re.S)
+THEMES = [("clair", r":root"), ("sombre", r":root\[data-theme='dark'\]")]
+
+
+def parse_tokens(text: str, selector: str) -> dict[str, str]:
+    match = re.search(selector + r"\s*\{(.*?)\n\}", text, re.S)
     if not match:
-        raise SystemExit(f"bloc :root introuvable dans {CSS.name}")
+        raise SystemExit(f"bloc {selector} introuvable dans {CSS.name}")
     return {token: value.strip() for token, value in re.findall(r"(--[\w-]+)\s*:\s*([^;]+);", match.group(1))}
 
 
@@ -85,8 +100,8 @@ def contrast(first: str, second: str) -> float:
     return (lighter + 0.05) / (darker + 0.05)
 
 
-def main() -> None:
-    tokens = parse_tokens(CSS.read_text(encoding="utf-8"))
+def check(name: str, tokens: dict[str, str]) -> int:
+    print(f"thème {name}")
     failures = 0
     for front, back, threshold, label in CHECKS:
         if front not in tokens or back not in tokens:
@@ -98,10 +113,16 @@ def main() -> None:
         if ratio < threshold:
             failures += 1
         print(f"  {status} {ratio:5.2f}  (min {threshold:.1f})  {front} sur {back} : {label}")
+    return failures
+
+
+def main() -> None:
+    text = CSS.read_text(encoding="utf-8")
+    failures = sum(check(name, parse_tokens(text, selector)) for name, selector in THEMES)
     if failures:
         print(f"\n{failures} paire(s) sous le seuil.")
         sys.exit(1)
-    print(f"\n{len(CHECKS)} paires contrôlées, toutes au-dessus du seuil.")
+    print(f"\n{len(CHECKS)} paires contrôlées dans chacun des {len(THEMES)} thèmes, toutes au-dessus du seuil.")
 
 
 if __name__ == "__main__":

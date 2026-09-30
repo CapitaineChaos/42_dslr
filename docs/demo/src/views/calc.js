@@ -9,6 +9,7 @@
 // calc/footer.js les lignes de pied, calc/matrix.js la matrice de confusion,
 // calc/worked.js le calcul déroulé.
 
+import { config } from '../config.js';
 import { STEPS } from '../content/steps.js';
 import { CV_MATRIX, FITTED, HELD, HOUSES, LEARN, TEST, TRAIN, wAt } from '../dataset.js';
 import { matrixOf } from '../model.js';
@@ -30,6 +31,8 @@ const CAPTIONS = {
   learn: 'élèves d\'apprentissage',
 };
 
+const FOLD_COLUMNS = ['fold', 'cvpred'];
+
 function workedBlock(spec, picked, weights, rows, t) {
   if (!spec.worked || !WORKED[spec.worked]) return '';
   const lines = WORKED[spec.worked](picked, weights, rows, t);
@@ -41,7 +44,7 @@ function workedBlock(spec, picked, weights, rows, t) {
 
 function tableBlock(spec, rows, index, weights) {
   if (!spec.cols) return '';
-  const { cols } = spec;
+  const cols = spec.cols.filter((col) => config.cv || !FOLD_COLUMNS.includes(col));
   const phase = STEPS[state.step].phase;
   const judged = !['intro', 'amont', 'prep', 'maison'].includes(phase);
   const decided = ['post', 'valid', 'aval'].includes(phase);
@@ -87,8 +90,8 @@ function render(t) {
   host.innerHTML = workedBlock(spec, rows[index], weights, trainRows, t) + block + tableBlock(spec, rows, index, weights);
 }
 
-// Hauteur réservée sur toute la descente : le tableau et le calcul déroulé ne
-// bougent pas quand l'itération change (views/steady.js).
+// La hauteur est réservée pour toute la descente, de sorte que le tableau et
+// le calcul déroulé ne bougent pas quand l'itération change (views/steady.js).
 function fit() {
   reserve(host, render, state.t);
 }

@@ -4,6 +4,7 @@
 // grand score. Les élèves portent la couleur de leur maison réelle.
 
 import { STEPS } from '../content/steps.js';
+import { plural } from '../content/steps/format.js';
 import { AX, AY, COURSES, FEATURES, HOUSE, HOUSES, MODELS, N, ROWS, STATS, TRAIN, Y, wAt } from '../dataset.js';
 import { argmax, errors, score, sigmoid } from '../model.js';
 import { state } from '../state.js';
@@ -11,6 +12,8 @@ import { clip, frame, grid, isotropic, marker, mix } from './canevas.js';
 
 const axisLabel = (index) => STATS[COURSES[index]].label;
 const decided = () => ['post', 'valid', 'aval'].includes(STEPS[state.step].phase);
+const misplaced = (count) => `${count} ${plural(count, 'élève mal placé', 'élèves mal placés')} sur ${N}`;
+const misclassified = (count) => `${count} ${plural(count, 'élève mal classé', 'élèves mal classés')} sur ${N}`;
 
 function line(ctx, f, p, weights, bounds, color = p.trace) {
   const [X0, X1, Y0, Y1] = bounds;
@@ -106,12 +109,12 @@ export const frontiere = {
     if (decided()) {
       const all = MODELS.map((model) => model.weights);
       const wrong = TRAIN.filter((student, i) => argmax(all.map((wt) => score(wt, ROWS[i]))) !== student.h).length;
-      return `Plan des notes standardisées : régions des trois maisons par le plus grand score, ${wrong} élèves cerclés sur ${N}.`;
+      return `Plan des notes standardisées. Régions des trois maisons selon le plus grand score, ${misclassified(wrong)}.`;
     }
     const weights = wAt(t);
     if (weights.every((value) => Math.abs(value) < 1e-12)) {
-      return `Plan des notes standardisées, modèle ${HOUSES[HOUSE]}, itération 0 : aucune droite, z = 0 en tout point.`;
+      return `Plan des notes standardisées, modèle ${HOUSES[HOUSE]}, itération 0. Aucune droite, z = 0 en tout point.`;
     }
-    return `Plan des notes standardisées, modèle ${HOUSES[HOUSE]}, itération ${t} : droite z = 0, ${errors(ROWS, Y, weights)} élèves cerclés sur ${N}.`;
+    return `Plan des notes standardisées, modèle ${HOUSES[HOUSE]}, itération ${t}. Droite z = 0, ${misplaced(errors(ROWS, Y, weights))}.`;
   },
 };

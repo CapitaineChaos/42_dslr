@@ -1,9 +1,10 @@
 // Portage JavaScript de la descente de dslr/model.py.
-// Les deux implémentations doivent rendre les mêmes nombres : mêmes parades
-// numériques, même ordre des opérations, même critère d'arrêt.
+// Les deux implémentations doivent rendre les mêmes nombres, ce qui impose les
+// mêmes écritures stables, le même ordre des opérations et le même critère
+// d'arrêt.
 
-// Les deux branches gardent l'exposant négatif ou nul : un score de -1000
-// donne 0 au lieu de faire déborder l'exponentielle.
+// Les deux branches gardent l'exposant négatif ou nul, de sorte qu'un score de
+// -1000 donne 0 au lieu de faire déborder l'exponentielle.
 export function sigmoid(x) {
   if (x >= 0) return 1 / (1 + Math.exp(-x));
   const ex = Math.exp(x);
@@ -61,8 +62,9 @@ export function errors(rows, targets, weights) {
 }
 
 // Quatre cases, puis les taux qui s'en déduisent. Un taux dont le dénominateur
-// est nul vaut null et non zéro : au premier tour rien n'est prédit positif, et
-// une précision nulle dirait le contraire d'une précision indéfinie.
+// est nul vaut null et non zéro. À l'itération 0, aucun élève n'est prédit
+// positif et la précision est indéfinie, ce que la valeur 0 ne distinguerait
+// pas d'une précision nulle.
 export function confusion(rows, targets, weights) {
   let tp = 0, fp = 0, fn = 0, tn = 0;
   for (let i = 0; i < rows.length; i += 1) {

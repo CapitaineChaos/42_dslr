@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import math
 
-# Bornes de conformité : marqué, mais ni plat ni vertical.
+# Bornes de conformité : une nappe nettement inclinée, sans être verticale.
 NORM_RANGE = (2.5, 9.0)
 LAST_FLIP_RANGE = (20, 300)
 MAX_ITERATIONS = 700
@@ -25,16 +25,16 @@ def softplus(x: float) -> float:
 
 
 def standardize(rows, positive: str):
-    pot = [r[1] for r in rows]
-    vol = [r[2] for r in rows]
+    pot = [r[0] for r in rows]
+    vol = [r[1] for r in rows]
     def stat(col):
         mu = sum(col) / len(col)
         sd = (sum((v - mu) ** 2 for v in col) / len(col)) ** 0.5
         return mu, sd
     mu_p, sd_p = stat(pot)
     mu_v, sd_v = stat(vol)
-    design = [[1.0, (r[1] - mu_p) / sd_p, (r[2] - mu_v) / sd_v] for r in rows]
-    targets = [1 if r[3] == positive else 0 for r in rows]
+    design = [[1.0, (r[0] - mu_p) / sd_p, (r[1] - mu_v) / sd_v] for r in rows]
+    targets = [1 if r[2] == positive else 0 for r in rows]
     return design, targets, (mu_p, sd_p, mu_v, sd_v)
 
 
@@ -66,7 +66,7 @@ def predictions(design, weights):
 
 
 def measure(design, targets, trace):
-    """Mesure les propriétés visées, sans juger."""
+    """Mesure les propriétés visées. conforms() les compare aux bornes."""
     n = len(targets)
     flips = {}
     previous = predictions(design, trace[0][1])
@@ -113,7 +113,7 @@ def conforms(m) -> list[str]:
 
 def show(label, m, faults):
     print(f"{label}")
-    print(f"  {m['iterations']} tours, ‖w‖ {m['norm']:.2f}, "
+    print(f"  {m['iterations']} itérations, ‖w‖ {m['norm']:.2f}, "
           f"dernier basculement t={m['last_flip']}, {m['late']} tardifs, "
           f"{m['levels']} paliers")
     if faults:

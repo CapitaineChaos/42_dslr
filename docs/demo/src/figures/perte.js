@@ -3,13 +3,15 @@
 import { ALPHA, LAST, TRACE, at } from '../dataset.js';
 import { clip, frame, grid } from './canevas.js';
 
-// La fenêtre suit l'itération courante au lieu d'étaler d'emblée les 528 pas :
-// les premières itérations, où tout se joue, resteraient collées à l'axe.
+// La fenêtre suit l'itération courante au lieu d'afficher d'emblée toute la
+// descente.
+// Sinon les premières itérations, où la perte varie le plus, resteraient
+// collées à l'axe.
 const spanFor = (t) => Math.max(20, Math.min(LAST, Math.max(t * 2, 40)));
 
 export const perte = {
   key: 'perte',
-  label: 'Perte',
+  label: 'Perte J',
 
   draw(ctx, w, h, p, t) {
     const f = frame(w, h, { l: 52, r: 12, t: 12, b: 34 });
@@ -51,6 +53,6 @@ export const perte = {
   },
 
   describe(t) {
-    return `Perte J des ${Math.min(spanFor(t), LAST)} premières itérations, point à l'itération ${t} où J vaut ${at(t).cost.toFixed(6)}.`;
+    return `Perte J sur les ${Math.min(spanFor(t), LAST)} premières itérations. À l'itération ${t}, J vaut ${at(t).cost.toFixed(6)}.`;
   },
 };

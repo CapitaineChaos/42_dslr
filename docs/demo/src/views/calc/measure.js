@@ -1,4 +1,4 @@
-// Deux lectures d'un élève : pour le modèle de la maison en cours, étiquette
+// Trois lectures d'un élève : pour le modèle de la maison en cours, étiquette
 // y, score, probabilité, perte, contributions au gradient et case binaire ;
 // pour la décision, les trois scores des modèles à l'arrêt et la maison du plus
 // grand ; hors pli, la réponse des modèles entraînés sans lui.

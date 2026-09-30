@@ -11,12 +11,12 @@
 .lesson-scroll {
   flex: 1 1 auto;
   overflow-y: auto;
-  padding: 1.1rem 1.75rem 1.5rem;
+  padding: 1.4rem 2rem 1.75rem;
   container-type: inline-size;
 }
 
-/* Assez large, le calcul passe à droite du texte : le tableau se lit sans
-   défiler pendant qu'on lit l'explication. */
+/* Quand la colonne est assez large, le calcul passe à droite du texte, et le
+   tableau reste visible pendant la lecture de l'explication. */
 @container (min-width: 60rem) {
   .lesson-grid {
     display: grid;
@@ -42,40 +42,52 @@
   display: flex;
   gap: 0.75rem;
   white-space: nowrap;
-  margin: 0 0 0.35rem;
+  margin: 0 0 0.4rem;
+  font-family: var(--display);
   font-size: var(--t-xs);
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 .where-phase { min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--ink-faint); }
-.where-phase.phase-boucle { color: var(--accent); }
+.where-phase.phase-boucle { color: var(--accent-text); }
 .where-node { flex: none; color: var(--ink-soft); }
 
 .lesson h2 {
   max-width: 30ch;
-  margin: 0 0 0.9rem;
+  margin: 0 0 1rem;
   font-size: var(--t-2xl);
-  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
   text-wrap: balance;
 }
+.lesson h2::before {
+  content: '';
+  display: block;
+  width: 3rem;
+  height: 3px;
+  margin-bottom: 0.6rem;
+  background: var(--candy);
+}
 
-/* Hauteur fixe : la formule écrite par MathJax arrive après le texte, et sans
-   cadre figé elle pousserait tout ce qui suit. Masquée tant qu'elle n'est pas
-   écrite, pour ne pas montrer le code TeX. */
+/* Le cadre a une hauteur fixe. La formule écrite par MathJax arrive après le
+   texte, et sans cette hauteur elle pousserait tout ce qui suit. La formule
+   reste masquée tant qu'elle n'est pas écrite, pour ne pas montrer le code
+   TeX. */
 .formula {
   display: flex;
   align-items: center;
   justify-content: center;
   height: 5.5rem;
   max-width: 62ch;
-  margin: 0 0 1rem;
+  margin: 0 0 1.1rem;
   padding: 0 1rem;
   color: var(--ink);
   background: var(--sunk);
   border: 1px solid var(--line);
-  border-left: 3px solid var(--accent);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
+  corner-shape: bevel;
   overflow: auto hidden;
 }
 .formula:empty { display: none; }
@@ -89,16 +101,16 @@
 }
 .prose p { margin: 0 0 0.8rem; }
 .prose p:last-child { margin-bottom: 0; }
-.prose b, .prose strong { font-weight: 650; color: var(--ink); }
+.prose b, .prose strong { font-weight: 600; color: var(--ink); }
 .prose code { color: var(--ink-soft); }
 
 .prose .now {
   display: block;
   margin: 0.9rem 0;
-  padding: 0.6rem 0.8rem;
-  background: var(--sunk);
-  border-left: 3px solid var(--accent);
-  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 0.6rem 0.85rem;
+  background: var(--accent-soft);
+  border-left: 3px solid;
+  border-image: var(--fill-hot) 1;
   font-size: var(--t-sm);
 }
 .prose .now b { font-family: var(--mono); font-variant-numeric: tabular-nums; }
@@ -110,13 +122,14 @@
 .spec {
   display: grid;
   grid-template-columns: 8.5rem minmax(0, 1fr);
-  gap: 0.55rem 1rem;
+  gap: 0.7rem 1rem;
   margin: 0;
   font-size: var(--t-md);
   line-height: 1.55;
 }
 .spec dt {
   padding-top: 0.2rem;
+  font-family: var(--display);
   font-size: var(--t-xs);
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -124,12 +137,15 @@
   color: var(--ink-faint);
 }
 .spec dd { margin: 0; color: var(--ink-soft); }
-.spec dt.is-now { color: var(--accent); }
+.spec dt.is-now { color: var(--accent-text); }
 .spec dt.is-now + dd {
+  padding: 0.35rem 0.6rem;
   color: var(--ink);
   font-family: var(--mono);
   font-size: var(--t-sm);
-  padding-top: 0.1rem;
+  background: var(--accent-soft);
+  border-radius: var(--radius);
+  corner-shape: bevel;
 }
 
 @container (max-width: 30rem) {
@@ -141,11 +157,11 @@
 
 .more {
   max-width: 62ch;
-  margin: 1.5rem 0 0;
+  margin: 1.75rem 0 0;
   border-top: 1px solid var(--line);
 }
 .more-title {
-  padding: 0.8rem 0 0.5rem;
+  padding: 0.9rem 0 0.5rem;
   font-size: var(--t-xs);
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -153,6 +169,7 @@
   color: var(--ink-faint);
 }
 .more .prose { font-size: var(--t-md); line-height: 1.6; color: var(--ink-soft); }
+.more-title[hidden] + .prose { padding-top: 0.9rem; }
 
 @media (max-width: 63.99rem), (max-height: 41.99rem) {
   .lesson-scroll { padding: 1rem 1rem 1.25rem; }

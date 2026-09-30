@@ -1,7 +1,7 @@
 // La nappe des probabilités au-dessus du plan des notes, la ligne p = 1/2 et
 // les élèves posés au sol.
 //
-// Le tracé est confié à Plotly : voir scene.js pour ce que les deux figures en
+// Le tracé est confié à Plotly. scene.js contient ce que les deux figures en
 // relief partagent.
 
 import { AX, AY, COURSES, FEATURES, HOUSE, HOUSES, ROWS, STATS, TRAIN, Y, wAt } from '../dataset.js';
@@ -46,7 +46,7 @@ function half(weights, p) {
   return [{
     type: 'scatter3d',
     mode: 'lines',
-    name: 'p = 0,5',
+    name: 'p = 0.5',
     x: points.map(([x]) => x),
     y: points.map(([, y]) => y),
     z: points.map(() => 0.5),
@@ -67,15 +67,15 @@ function nappe(weights, p, full) {
     z: ys.map((y) => xs.map((x) => sigmoid(weights[0] + weights[1] * x + weights[2] * y))),
     cmin: 0,
     cmax: 1,
-    // Un gris franc au milieu plutôt que le blanc du fond : sans lui, la nappe
-    // s'efface là où elle vaut 1/2, c'est-à-dire tout entière au départ de la
-    // descente.
+    // Le milieu de l'échelle est un gris marqué et non le blanc du fond. Avec
+    // du blanc, la nappe serait invisible là où elle vaut 1/2, donc tout
+    // entière au départ de la descente.
     colorscale: [[0, p.edge], [0.5, p.line], [1, p.house[HOUSE]]],
     opacity: 0.92,
     showscale: full,
     colorbar: { title: { text: 'p' }, thickness: 10, len: 0.6, outlinewidth: 0, tickvals: [0, 0.25, 0.5, 0.75, 1] },
-    // Les lignes de niveau tous les dixièmes de probabilité. Un quadrillage en
-    // plus, le long de x et de y, brouillait la nappe de croisillons.
+    // Lignes de niveau tous les dixièmes de probabilité. Un quadrillage
+    // supplémentaire, le long de x et de y, rendait la nappe illisible.
     contours: {
       z: { show: true, start: 0.1, end: 0.9, size: 0.1, color: p.edge, width: 1, highlight: false },
     },
@@ -85,7 +85,7 @@ function nappe(weights, p, full) {
 
 export const surface = {
   key: 'surface',
-  label: 'p(x)',
+  label: 'Surface p(x)',
   dom: true,
 
   render(element, p, t, box) {
@@ -96,14 +96,14 @@ export const surface = {
       { title: 'p', range: [0, 1], tickvals: [0, 0.5, 1] },
     ];
     const data = [nappe(weights, p, box.full), ...half(weights, p), ...houses(p)];
-    // La probabilité tient dans [0, 1] : à hauteur égale au plan des notes, la
-    // nappe se dresse comme une falaise.
+    // La probabilité reste dans [0, 1]. Avec une hauteur égale aux côtés du
+    // plan des notes, la nappe paraîtrait presque verticale.
     scene(element, 'surface', data, axes, p, { ...box, rise: 0.55 });
   },
 
   describe(t) {
-    if (t === 0) return 'Surface de probabilité, itération 0 : plan horizontal à p = 0,5.';
+    if (t === 0) return 'Surface de probabilité à l\'itération 0. La surface est le plan horizontal p = 0.5.';
     const probabilities = ROWS.map((row) => sigmoid(score(wAt(t), row)));
-    return `Surface de probabilité à l'itération ${t}, ligne de niveau p = 0,5 tracée dessus ; p de ${Math.min(...probabilities).toFixed(3)} à ${Math.max(...probabilities).toFixed(3)}.`;
+    return `Surface de probabilité à l'itération ${t}, avec la ligne de niveau p = 0.5. Les probabilités des élèves vont de ${Math.min(...probabilities).toFixed(3)} à ${Math.max(...probabilities).toFixed(3)}.`;
   },
 };

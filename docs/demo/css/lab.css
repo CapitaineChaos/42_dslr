@@ -7,7 +7,7 @@
   padding: 0.9rem 1rem 1rem;
   background: var(--sunk);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
 }
 
 .lab-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
@@ -16,8 +16,8 @@
   font-family: var(--mono);
   font-variant-numeric: tabular-nums;
   font-size: var(--t-md);
-  font-weight: 700;
-  color: var(--accent);
+  font-weight: 600;
+  color: var(--accent-text);
 }
 
 .lab input[type="range"] { margin: 0.5rem 0 0.75rem; }
@@ -41,7 +41,7 @@
 .lab td { padding: 0.28rem 0.4rem; text-align: right; }
 .lab td:first-child { color: var(--ink-soft); }
 .lab td.void { color: var(--ink-faint); }
-.lab .broken { color: var(--alert); font-weight: 700; }
+.lab .broken { color: var(--alert); font-weight: 600; }
 
 .lab-note {
   margin: 0.8rem 0 0;

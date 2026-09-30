@@ -1,7 +1,7 @@
 // Paramètres fixes de la descente, compteur d'itération avec l'arrêt et sa
-// cause, et les trois mesures du modèle affiché. Largeurs figées, en
-// caractères, sur la plus longue des descentes : changer de modèle ou
-// d'itération ne décale rien.
+// cause, et les trois mesures du modèle affiché. Les largeurs sont fixées, en
+// caractères, d'après la plus longue des descentes, de sorte que changer de
+// modèle ou d'itération ne décale rien.
 
 import { NOTES, tip } from '../../content/symbols.js';
 import { ALPHA, CONVERGED, LAST, LEARN, MAX_ITER, N, PLIS, ROWS, Y, at, wAt } from '../../dataset.js';

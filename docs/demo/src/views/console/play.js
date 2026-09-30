@@ -1,11 +1,11 @@
 // Lecture continue de la frise, et les sauts d'itération.
 //
-// Quatre secondes du premier au dernier pas de chaque descente, quelle que soit
-// sa longueur : le curseur traverse chaque segment à la même vitesse. À l'arrêt
-// d'une descente, une courte pause, puis la lecture continue au début de la
-// suivante, jusqu'à l'arrêt du dernier modèle final. Un saut manuel interrompt
-// la lecture : reprendre la main sur l'itération et voir le compteur continuer
-// de défiler serait incompréhensible.
+// La lecture parcourt chaque descente en quatre secondes, quelle que soit sa
+// longueur, donc le curseur traverse chaque segment à la même vitesse. À
+// l'arrêt d'une descente, elle marque une courte pause, puis continue au début
+// de la suivante, jusqu'à l'arrêt du dernier modèle final. Un saut manuel
+// interrompt la lecture, sans quoi le compteur continuerait de défiler après
+// une commande manuelle.
 
 import { FINAL, HOUSES, LAST } from '../../dataset.js';
 import { enterLoop, setIteration, shift } from '../../navigation.js';
@@ -69,7 +69,8 @@ export function togglePlay() {
   frame = requestAnimationFrame(tick);
 }
 
-// Toute commande manuelle : arrêt de la lecture, entrée dans la boucle, action.
+// Une commande manuelle arrête la lecture, entre dans la boucle, puis exécute
+// son action.
 export const jump = (action) => () => {
   stop();
   enterLoop();

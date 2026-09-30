@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
-"""Contrôle des figures de l'atelier dans un vrai navigateur.
+"""Contrôle des figures de l'atelier dans un navigateur.
 
-Les deux figures en relief sont des scènes WebGL : ni un test de module ni une
-lecture du DOM ne disent si elles se sont construites. Le script sert le dossier,
-ouvre la page, agrandit chaque carte, tourne les scènes, change d'itération, et
-échoue si la console rapporte une erreur ou si une scène reste vide.
+Les deux figures en relief sont des scènes WebGL. Un test de module ou une
+lecture du DOM n'indiquent pas si elles se sont construites. Le script sert le
+dossier, ouvre la page, agrandit chaque carte, tourne les scènes, change
+d'itération, et échoue si la console rapporte une erreur ou si une scène reste
+vide.
 
-    pip install playwright        # hors requirements.txt : lourd, et jamais
-                                  # nécessaire pour se servir de l'atelier
+    pip install playwright        # hors requirements.txt : lourd, et inutile
+                                  # pour se servir de l'atelier
     python3 docs/demo/scripts/verifie_figures.py [--images DOSSIER]
 
-En rendu logiciel — machine sans GPU, intégration continue — le coût d'un cran
-est plusieurs fois celui d'une machine de bureau : le chiffre affiché sert à
-comparer deux versions sur la même machine, pas à juger d'une fluidité.
+En rendu logiciel (machine sans GPU, intégration continue), le coût d'un cran
+est plusieurs fois celui d'une machine de bureau. Le chiffre affiché sert à
+comparer deux versions sur la même machine. Il ne mesure pas la fluidité.
 """
 
 from __future__ import annotations
@@ -31,8 +32,8 @@ HERE = Path(__file__).resolve().parents[1]
 RELIEFS = ["surface", "chemin"]
 PLOTS = ["frontiere", "scores", "sigmoide", "surface", "perte", "chemin", "roc"]
 
-# Vingt crans d'itération enchaînés, sans laisser au navigateur le temps de
-# souffler entre deux.
+# Vingt crans d'itération enchaînés, sans rendre la main au navigateur entre
+# deux.
 CRANS = """
   () => {
     const slider = document.querySelector('input[type=range]');
@@ -90,9 +91,9 @@ def main() -> int:
         )
         page = browser.new_page(viewport={"width": 1400, "height": 900})
         page.on("pageerror", lambda error: faults.append(f"exception : {error}"))
-        # Les échecs de chargement passent par le contrôle réseau : la console
-        # les rapporte sans dire quelle adresse, et le favicon que le navigateur
-        # réclame de lui-même en fait partie.
+        # Les échecs de chargement passent par le contrôle réseau. La console
+        # les rapporte sans donner l'adresse, et le favicon que le navigateur
+        # demande de lui-même en fait partie.
         page.on("console", lambda message: faults.append(f"console : {message.text}")
                 if message.type == "error" and "Failed to load resource" not in message.text else None)
         page.on("response", lambda answer: faults.append(f"réseau : {answer.status} {answer.url}")
@@ -101,8 +102,8 @@ def main() -> int:
         page.goto(f"{base}/index.html", wait_until="load")
         page.wait_for_timeout(4000)
 
-        # L'itération n'avance qu'à l'intérieur de l'entraînement : les crans
-        # se mesurent depuis une étape de la boucle de correction.
+        # L'itération n'avance qu'à l'intérieur de l'entraînement, donc les
+        # crans se mesurent depuis une étape de la boucle de correction.
         page.locator('.node[aria-label^="Score,"]').click()
         page.wait_for_timeout(800)
 
@@ -113,7 +114,7 @@ def main() -> int:
         print("mosaïque : %.0f ms par cran" % page.evaluate(CRANS))
 
         for key in PLOTS:
-            # Une miniature passe d'abord en tête ; la figure de tête s'agrandit.
+            # Une miniature passe d'abord en tête. La figure de tête s'agrandit.
             page.locator(f'[data-plot="{key}"]').click()
             if page.locator(".plots.zoomed").count() == 0:
                 page.wait_for_timeout(300)
@@ -130,7 +131,7 @@ def main() -> int:
                 page.wait_for_timeout(800)
                 after = page.evaluate(f"document.querySelector('[data-canvas={key}]')._fullLayout.scene.camera.eye")
                 if turned != after:
-                    faults.append(f"{key} : l'orientation n'a pas survécu au changement d'itération")
+                    faults.append(f"{key} : l'orientation n'est pas conservée après le changement d'itération")
                 print("%s agrandie : %.0f ms par cran" % (key, page.evaluate(CRANS)))
             if options.images:
                 options.images.mkdir(parents=True, exist_ok=True)
@@ -143,7 +144,7 @@ def main() -> int:
     httpd.shutdown()
     for line in faults:
         print("ÉCHEC", line, file=sys.stderr)
-    print("aucun défaut" if not faults else f"{len(faults)} défauts")
+    print("aucun défaut" if not faults else f"{len(faults)} défaut{'s' if len(faults) > 1 else ''}")
     return 1 if faults else 0
 
 

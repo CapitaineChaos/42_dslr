@@ -1,28 +1,31 @@
 /* Calcul déroulé et tableau des élèves.
 
-   Les nombres sont en chasse fixe et alignés à droite : une colonne se lit de
-   haut en bas sans que les virgules dansent. La ligne de l'élève sélectionné
-   porte le liseré cyan du parcours ; une ligne mal classée, un liseré ambre. */
+   Les nombres sont en chasse fixe et alignés à droite, de sorte que les
+   séparateurs décimaux d'une colonne sont alignés. La ligne de l'élève
+   sélectionné porte le liseré de l'accent ; une ligne mal classée, un liseré
+   cyan. */
 
+/* Cadre en dégradé : le fond de bordure passe sous une bordure transparente. */
 .worked {
   max-width: 62ch;
   margin: 1.2rem 0 0;
-  padding: 0.75rem 1rem 0.85rem;
-  background: var(--sunk);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius);
-  box-shadow: 0 0 18px -6px var(--accent-glow);
+  padding: 0.8rem 1.1rem 0.9rem;
+  background: linear-gradient(var(--accent-soft), var(--accent-soft)) padding-box, var(--candy) border-box;
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-lg);
+  corner-shape: bevel;
 }
 
 .worked-head {
   margin: 0 0 0.4rem;
+  font-family: var(--display);
   font-size: var(--t-xs);
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--accent-text);
 }
-.worked-head b { color: var(--ink); letter-spacing: normal; text-transform: none; font-size: var(--t-sm); }
+.worked-head b { font-family: var(--body); color: var(--ink); letter-spacing: normal; text-transform: none; font-size: var(--t-sm); }
 
 .worked-line {
   margin: 0.15rem 0;
@@ -30,9 +33,9 @@
   font-size: var(--t-sm);
   font-variant-numeric: tabular-nums;
   line-height: 1.7;
-  color: var(--ink-soft);
+  color: var(--ink);
 }
-.worked-line b { color: var(--accent); font-weight: 700; }
+.worked-line b { color: var(--accent-text); font-weight: 600; }
 
 .table-wrap {
   margin: 1.1rem 0 0;
@@ -48,10 +51,10 @@
 
 .students caption {
   padding: 0 0 0.45rem;
-  font-family: var(--body);
+  font-family: var(--display);
   font-size: var(--t-xs);
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.06em;
   text-align: left;
   text-transform: uppercase;
   color: var(--ink-faint);
@@ -65,7 +68,7 @@
 }
 
 .students th, .students td {
-  padding: 0.24rem 0.55rem;
+  padding: 0.3rem 0.6rem;
   text-align: right;
   white-space: nowrap;
 }
@@ -78,16 +81,16 @@
 }
 .students th:first-child, .students td:first-child { text-align: left; padding-left: 0.6rem; }
 
-/* Largeur minimale des colonnes qui suivent l'itération : un nombre qui gagne
+/* Largeur minimale des colonnes qui suivent l'itération. Un nombre qui gagne
    un chiffre au fil de la descente ne doit pas élargir sa colonne et décaler
    les autres. */
 .students thead :is(th.col-z, th.col-p, th.col-loss, th.col-err, th.col-c0, th.col-c1, th.col-c2) { width: 5rem; }
 .students thead th.col-y { width: 2.5rem; }
 .students tbody tr { border-bottom: 1px solid var(--line); }
-.students tbody tr:hover { background: var(--raised); }
+.students tbody tr:hover { background: var(--sunk); }
 
 .students tr.miss td:first-child { box-shadow: inset 3px 0 0 var(--alert); }
-.students tr.picked { background: var(--accent-deep); }
+.students tr.picked { background: var(--accent-soft); }
 .students tr.picked td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
 
 .pick {
@@ -99,8 +102,8 @@
   border: 0;
   cursor: pointer;
 }
-.pick:hover { color: var(--accent); text-decoration: underline; }
-.pick[aria-pressed='true'] { font-weight: 700; }
+.pick:hover { color: var(--accent-text); text-decoration: underline; }
+.pick[aria-pressed='true'] { font-weight: 600; }
 
 .students tfoot th {
   padding-top: 0.35rem;
@@ -113,22 +116,23 @@
 .students tfoot tr:first-child th, .students tfoot tr:first-child td { border-top: 1px solid var(--edge); }
 .students tfoot td { color: var(--ink-soft); }
 .students tfoot th.wrap { white-space: normal; text-align: left; font-weight: 400; }
-.students tfoot tr.key th { color: var(--accent); }
-.students tfoot tr.key td { color: var(--accent); font-weight: 700; }
+.students tfoot tr.key th { color: var(--accent-text); }
+.students tfoot tr.key td { color: var(--accent-text); font-weight: 600; }
 
-.students .hole { color: var(--alert); font-weight: 700; }
-.students .imputed .sym { color: var(--accent); }
+.students .hole { color: var(--alert); font-weight: 600; }
+.students .imputed .sym { color: var(--accent-text); }
 
 .house.h0 { color: var(--house-0); }
 .house.h1 { color: var(--house-1); }
 .house.h2 { color: var(--house-2); }
-.ko { margin-left: 0.3rem; color: var(--alert); font-weight: 700; }
+.ko { margin-left: 0.3rem; color: var(--alert); font-weight: 600; }
 .case.ko { margin-left: 0; }
-.up { color: var(--accent); }
+.up { color: var(--accent-text); }
 .down { color: var(--ink-soft); }
 
-/* Matrice de confusion : une case d'erreur non vide est cerclée d'ambre. Colonnes à largeur fixe, les comptes et les taux changent
-   avec l'itération. */
+/* Matrice de confusion : une case d'erreur non vide est cerclée de cyan. Les
+   colonnes ont une largeur fixe, car les comptes et les taux changent avec
+   l'itération. */
 .matrix-wrap {
   display: flex;
   flex-wrap: wrap;
@@ -146,10 +150,10 @@
 .matrix caption {
   padding: 0 0 0.3rem 4px;
   white-space: nowrap;
-  font-family: var(--body);
+  font-family: var(--display);
   font-size: var(--t-xs);
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.06em;
   text-align: left;
   text-transform: uppercase;
   color: var(--ink-faint);
@@ -168,11 +172,12 @@
   text-align: center;
   white-space: nowrap;
   background: var(--sunk);
-  border: 1px solid var(--edge);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
+  corner-shape: bevel;
 }
-.matrix td.err { border-color: var(--alert); }
-.matrix .count { font-size: var(--t-lg); font-weight: 700; color: var(--ink); }
+.matrix td.err { border: 2px solid var(--alert); }
+.matrix .count { font-size: var(--t-lg); font-weight: 600; color: var(--ink); }
 .matrix .kase { font-size: var(--t-xs); color: var(--ink-faint); }
 .matrix td.err .kase { color: var(--alert); }
 

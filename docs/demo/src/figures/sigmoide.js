@@ -6,7 +6,7 @@ import { score, sigmoid } from '../model.js';
 import { clip, frame, grid, marker } from './canevas.js';
 
 // L'axe des scores garde 6 unités de part et d'autre tant que la descente n'a
-// pas produit de plus grands scores : σ y atteint 0,9975, la saturation est
+// pas produit de plus grands scores. σ y atteint 0,9975, donc la saturation est
 // visible dès le premier écran.
 function span(weights) {
   const largest = Math.max(...ROWS.map((row) => Math.abs(score(weights, row))));
@@ -67,6 +67,6 @@ export const sigmoide = {
   describe(t) {
     const weights = wAt(t);
     const scores = ROWS.map((row) => score(weights, row));
-    return `Fonction logistique dans le plan (z, p) à l'itération ${t}. Les ${N} élèves sont portés à l'ordonnée de leur étiquette, en abscisse de leur score, de ${Math.min(...scores).toFixed(2)} à ${Math.max(...scores).toFixed(2)} ; la verticale marque z = 0.`;
+    return `Sigmoïde dans le plan (z, p) à l'itération ${t}. Chacun des ${N} élèves a pour abscisse son score, de ${Math.min(...scores).toFixed(2)} à ${Math.max(...scores).toFixed(2)}, et pour ordonnée son étiquette. La verticale marque z = 0.`;
   },
 };

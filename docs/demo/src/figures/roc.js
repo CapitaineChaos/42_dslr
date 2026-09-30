@@ -3,7 +3,8 @@
 //
 // Les scores ex aequo sont traités par groupes, sans quoi la courbe montrerait
 // des marches que l'ordre de lecture du fichier aurait seul décidées. À
-// l'itération 0 tous les scores valent 0 : la courbe se réduit à la diagonale.
+// l'itération 0, tous les scores valent 0, donc la courbe se réduit à la
+// diagonale.
 
 import { ROWS, Y, wAt } from '../dataset.js';
 import { score } from '../model.js';
@@ -62,8 +63,8 @@ export const roc = {
   label: 'ROC',
 
   draw(ctx, w, h, p, t) {
-    // Les deux axes portent des taux : la zone de tracé est carrée, sinon la
-    // diagonale de référence ne serait plus à 45 degrés.
+    // Les deux axes portent des taux. La zone de tracé est donc carrée, sinon
+    // la diagonale de référence ne serait plus à 45 degrés.
     const base = { l: 46, r: 12, t: 12, b: 34 };
     const innerW = w - base.l - base.r;
     const innerH = h - base.t - base.b;
@@ -107,7 +108,7 @@ export const roc = {
 
   describe(t) {
     const [x, y] = operating(t);
-    return `Courbe ROC du groupe d'apprentissage à l'itération ${t}, aire ${curve(t).area.toFixed(3)}. Le carré marque le seuil un demi, en (${x.toFixed(2)}, ${y.toFixed(2)}).`;
+    return `Courbe ROC des élèves d'entraînement à l'itération ${t}, aire ${curve(t).area.toFixed(3)}. Le carré marque le seuil 0.5, en (${x.toFixed(2)}, ${y.toFixed(2)}).`;
   },
 
   note: (t) => `aire = ${curve(t).area.toFixed(3)}`,

@@ -1,7 +1,7 @@
-// Commandes d'étape de la console. Les libellés ne changent jamais : un bouton
-// qui change de texte change de largeur et pousse ses voisins. Au bout de la
-// boucle, suivant repart au score à l'itération suivante, ce que le schéma
-// montre ; aller à l'arrêt, grisé hors de la boucle, saute à la dernière
+// Commandes d'étape de la console. Les libellés ne changent jamais, car un
+// bouton qui change de texte change de largeur et pousse ses voisins. Au bout
+// de la boucle, suivant repart au score à l'itération suivante, ce que le
+// schéma montre. Aller à l'arrêt, grisé hors de la boucle, saute à la dernière
 // itération.
 
 import { STEPS } from '../content/steps.js';

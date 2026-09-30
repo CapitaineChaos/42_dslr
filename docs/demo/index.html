@@ -5,8 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Régression logistique</title>
 
+<script>
+  (() => {
+    let theme = null;
+    try { theme = localStorage.getItem('theme'); } catch (error) {}
+    if (theme !== 'light' && theme !== 'dark') {
+      theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    document.documentElement.dataset.theme = theme;
+  })();
+</script>
+
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/controls.css">
 <link rel="stylesheet" href="css/shell.css">
 <link rel="stylesheet" href="css/flow.css">
 <link rel="stylesheet" href="css/console.css">
@@ -15,7 +27,7 @@
 <link rel="stylesheet" href="css/lab.css">
 <link rel="stylesheet" href="css/calc.css">
 <link rel="stylesheet" href="css/figures.css">
-<link rel="stylesheet" href="css/loader.css">
+<link rel="stylesheet" href="css/start.css">
 
 <script>
   window.MathJax = {
@@ -29,11 +41,45 @@
 </head>
 <body class="booting">
 
-<div class="loader" id="loader" role="progressbar" aria-label="Préparation de la démonstration"
-     aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-  <p class="loader-title">Régression logistique</p>
-  <div class="loader-bar"><div class="loader-fill" id="loader-fill"></div></div>
-  <p class="loader-line"><span id="loader-stage"></span><span id="loader-percent">0 %</span></p>
+<!-- Icônes Lucide, https://lucide.dev (ISC) -->
+<svg class="sprite" aria-hidden="true">
+  <defs>
+    <linearGradient id="logo-line" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" style="stop-color: var(--candy-pink)"/>
+      <stop offset="0.5" style="stop-color: var(--accent)"/>
+      <stop offset="1" style="stop-color: var(--candy-sky)"/>
+    </linearGradient>
+  </defs>
+  <symbol id="logo" viewBox="0 0 48 48">
+    <path d="M24 3 42.2 13.5v21L24 45 5.8 34.5v-21Z" style="fill: var(--surface); stroke: url(#logo-line); stroke-width: 2.5; stroke-linejoin: round"/>
+    <path d="M24 9.5 36.6 16.8v14.4L24 38.5 11.4 31.2V16.8Z" style="fill: none; stroke: var(--line); stroke-width: 1"/>
+    <path d="M12 31.5c6 0 7.6-1 9.6-5.2s3.4-8.6 8.6-9.4c2.2-.3 4-.4 5.8-.4" style="fill: none; stroke: var(--ink); stroke-width: 2.6; stroke-linecap: round"/>
+    <circle cx="23.2" cy="23.6" r="2.4" style="fill: var(--candy-lemon); stroke: var(--ink); stroke-width: 1"/>
+  </symbol>
+  <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+  <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2m-7.07-17.07 1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></symbol>
+  <symbol id="icon-chevron" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></symbol>
+</svg>
+
+<div class="start" id="loader">
+  <div class="start-card">
+    <span class="start-logo">
+      <svg class="start-ring" viewBox="0 0 100 100" aria-hidden="true"><path d="M50 3 90.7 26.5v47L50 97 9.3 73.5v-47Z"/></svg>
+      <svg class="logo" aria-hidden="true"><use href="#logo"/></svg>
+    </span>
+
+    <div class="gauge" id="loader-bar" role="progressbar" aria-label="Calcul des descentes"
+         aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div class="gauge-track"><div class="gauge-fill" id="loader-fill"></div></div>
+      <p class="gauge-line"><span class="gauge-stage" id="loader-stage"></span><span class="gauge-percent" id="loader-percent">0 %</span></p>
+    </div>
+
+    <form class="config" id="config">
+      <h2 class="config-title">Configuration</h2>
+      <div class="options" id="options"></div>
+      <button type="submit" class="button strong start-go" id="start" disabled>Démarrer</button>
+    </form>
+  </div>
 </div>
 
 <a class="skip" href="#lesson">Contenu</a>
@@ -43,7 +89,18 @@
   <h1 class="visually-hidden">Régression logistique</h1>
 
   <nav class="flow" aria-label="Parcours">
-    <div class="flow-map" id="flow"></div>
+    <div class="flow-panel">
+      <div class="flow-map" id="flow"></div>
+      <div class="panel-tools">
+        <button type="button" class="tool" id="toggle-flow" aria-label="Parcours" aria-expanded="true" aria-controls="flow">
+          <svg class="tool-icon" aria-hidden="true"><use href="#icon-chevron"/></svg>
+        </button>
+        <button type="button" class="tool" id="theme" aria-label="Thème sombre" aria-pressed="false">
+          <svg class="tool-icon moon" aria-hidden="true"><use href="#icon-moon"/></svg>
+          <svg class="tool-icon sun" aria-hidden="true"><use href="#icon-sun"/></svg>
+        </button>
+      </div>
+    </div>
 
     <div class="console">
 
@@ -95,15 +152,20 @@
           <div id="calc"></div>
           <div id="lab"></div>
         </div>
-        <section class="more" id="more-box" aria-labelledby="more-title">
-          <h3 class="more-title" id="more-title">Détail mathématique</h3>
+        <section class="more" id="more-box">
+          <h3 class="more-title" id="more-title" hidden></h3>
           <div class="prose" id="more"></div>
         </section>
       </div>
     </div>
   </main>
 
-  <aside class="figure-column" aria-label="Figures">
+  <aside class="figure-column" id="figures" aria-label="Figures">
+    <div class="panel-tools">
+      <button type="button" class="tool tool-side" id="toggle-plots" aria-label="Figures" aria-expanded="true" aria-controls="plots">
+        <svg class="tool-icon" aria-hidden="true"><use href="#icon-chevron"/></svg>
+      </button>
+    </div>
     <div class="plots" id="plots">
 
       <section class="plot" data-plot="frontiere" role="button" tabindex="0"
@@ -113,7 +175,7 @@
       </section>
 
       <section class="plot" data-plot="scores" role="button" tabindex="0"
-               aria-label="Agrandir la figure Scores">
+               aria-label="Agrandir la figure Scores z">
         <h2 class="plot-name">Scores z</h2>
         <div class="plot-body"><canvas data-canvas="scores" role="img"></canvas></div>
       </section>
@@ -125,19 +187,19 @@
       </section>
 
       <section class="plot" data-plot="surface" role="button" tabindex="0"
-               aria-label="Agrandir la figure Surface de probabilité">
+               aria-label="Agrandir la figure Surface p(x)">
         <h2 class="plot-name">Surface p(x) <span class="plot-note" data-note="surface"></span></h2>
         <div class="plot-body"><div class="plot-scene" data-canvas="surface" role="img"></div></div>
       </section>
 
       <section class="plot" data-plot="perte" role="button" tabindex="0"
-               aria-label="Agrandir la figure Perte">
+               aria-label="Agrandir la figure Perte J">
         <h2 class="plot-name">Perte J</h2>
         <div class="plot-body"><canvas data-canvas="perte" role="img"></canvas></div>
       </section>
 
       <section class="plot" data-plot="chemin" role="button" tabindex="0"
-               aria-label="Agrandir la figure Trajectoire des poids">
+               aria-label="Agrandir la figure Trajectoire">
         <h2 class="plot-name">Trajectoire <span class="plot-note" data-note="chemin"></span></h2>
         <div class="plot-body"><div class="plot-scene" data-canvas="chemin" role="img"></div></div>
       </section>
@@ -148,7 +210,7 @@
         <div class="plot-body"><canvas data-canvas="roc" role="img"></canvas></div>
       </section>
 
-      <button type="button" class="plots-close" id="plots-close" hidden>Fermer</button>
+      <button type="button" class="button plots-close" id="plots-close" hidden>Fermer</button>
     </div>
   </aside>
 

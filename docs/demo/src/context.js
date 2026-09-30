@@ -1,7 +1,8 @@
-// Tout ce que la prose du cours peut citer. Les nombres ne sont jamais écrits en
-// dur dans le contenu : ils viennent d'ici, calculés au moment de l'appel pour
-// le passage et la maison affichés.
+// Valeurs que les textes du cours peuvent citer. Les nombres ne sont jamais
+// écrits en dur dans le contenu. Ils sont calculés ici, au moment de l'appel,
+// pour le passage et la maison affichés.
 
+import { config } from './config.js';
 import { errors, gradient, matrixOf, norm, report, score, sigmoid } from './model.js';
 import {
   ALPHA, CONVERGED, COURSES, CV_CORRECT, CV_MATRIX, FINAL, FITTED, HELD, HOUSE, HOUSES, K, LAST, LEARN, MAX_ITER,
@@ -15,7 +16,7 @@ const list = (items) => (items.length > 1 ? `${items.slice(0, -1).join(', ')} et
 
 const ALL_MISSING = LEARN.concat(TEST).reduce((sum, student) => sum + student.imputed.filter(Boolean).length, 0);
 
-// Tailles des plis, en toutes lettres : « 5, 5, 5, 5 et 5 élèves ».
+// Tailles des plis, en texte : « 5, 5, 5, 5 et 5 élèves ».
 const FOLD_SIZES = `${list(PLIS.slice(0, K).map((pass) => pass.held.length))} élèves`;
 
 // Scores de chaque maison, mis en forme pour le texte.
@@ -30,7 +31,7 @@ const shown = (matrix) => {
   };
 };
 
-// Erreurs hors diagonale d'une matrice, en toutes lettres.
+// Erreurs hors diagonale d'une matrice, en texte.
 function confusions(matrix) {
   const out = [];
   matrix.forEach((row, real) => row.forEach((count, predicted) => {
@@ -72,6 +73,7 @@ export function buildContext(t) {
     t,
     pli: PLI,
     final,
+    crossValidation: config.cv,
     k: K,
     learnCount: LEARN.length,
     total: LEARN.length + TEST.length,
@@ -105,12 +107,12 @@ export function buildContext(t) {
     label1: stat(1).label,
     max0: stat(0).max,
     max1: stat(1).max,
-    median0: stat(0).median,
-    median1: stat(1).median,
-    mu0: stat(0).mu,
-    mu1: stat(1).mu,
-    sd0: stat(0).sd,
-    sd1: stat(1).sd,
+    median0: stat(0).median.toFixed(2),
+    median1: stat(1).median.toFixed(2),
+    mu0: stat(0).mu.toFixed(2),
+    mu1: stat(1).mu.toFixed(2),
+    sd0: stat(0).sd.toFixed(2),
+    sd1: stat(1).sd.toFixed(2),
     wf: w.map(signed),
     wnf: wNext.map(signed),
     gf: g.map(signed),

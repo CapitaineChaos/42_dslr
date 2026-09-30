@@ -1,8 +1,8 @@
 // Socle commun aux figures en relief, confiées à Plotly (bundle gl3d de
 // vendor/) : mise en page, jetons de couleur, mémoire de l'orientation.
 //
-// Le premier appel construit la scène, les suivants la mettent à jour : react
-// garde le contexte WebGL et l'orientation en place, newPlot les jetterait à
+// Le premier appel construit la scène, les suivants la mettent à jour. react
+// garde le contexte WebGL et l'orientation, alors que newPlot les recréerait à
 // chaque itération.
 
 const cameras = {};
@@ -13,13 +13,13 @@ const built = new Set();
 
 const START = { eye: { x: -1.65, y: -1.5, z: 0.85 } };
 
-// Points et traits se comptent en pixels : sans correction ils gardent leur
-// taille pendant que la scène grossit, et un nuage rapproché devient une
-// bouillie de disques. La taille suit donc la distance de l'œil, rapportée à
-// celle du premier tracé — la seule dont on sache qu'elle vaut l'échelle
-// nominale, les conventions de la bibliothèque restant hors de vue.
-// La position réelle de l'œil se lit sur la scène, pas dans la mise en page :
-// celle-ci garde la valeur du dernier tracé et ignore les gestes.
+// Points et traits se comptent en pixels. Sans correction, ils gardent leur
+// taille pendant que la scène grossit, et les disques d'un nuage rapproché se
+// recouvrent. La taille suit donc la distance de l'œil, rapportée à celle du
+// premier tracé. Cette distance est la seule connue pour valoir l'échelle
+// nominale, les conventions de la bibliothèque n'étant pas accessibles.
+// La position réelle de l'œil est lue sur la scène. La mise en page garde la
+// valeur du dernier tracé et ignore les gestes.
 function live(element) {
   const scene3d = element._fullLayout && element._fullLayout.scene;
   const view = scene3d && scene3d._scene && scene3d._scene.getCamera ? scene3d._scene.getCamera() : null;
@@ -53,8 +53,8 @@ function sized(data, element, key) {
   });
 }
 
-// Après une orbite ou un zoom, seules ces tailles changent : un restyle suffit,
-// là où un react rejouerait toute la nappe à chaque image du glissement.
+// Après une orbite ou un zoom, seules ces tailles changent, donc un restyle
+// suffit. Un react retracerait toute la nappe à chaque image du glissement.
 function rescale(Plotly, element, key) {
   const k = factor(element, key);
   if (applied[key] && Math.abs(k - applied[key]) < 0.04 * applied[key]) return;
@@ -81,7 +81,7 @@ export function scene(element, key, data, axes, p, { full, width, height, rise =
   if (!Plotly) return;
   last[key] = data;
 
-  const face = { family: 'ui-sans-serif, system-ui, sans-serif', size: full ? 12 : 10, color: p.inkSoft };
+  const face = { family: p.family, size: full ? 12 : 10, color: p.inkSoft };
   const axis = ({ title, range, tickvals }) => ({
     title: { text: full ? title : '' },
     range,
@@ -94,8 +94,9 @@ export function scene(element, key, data, axes, p, { full, width, height, rise =
     linecolor: p.edge,
     backgroundcolor: p.surface,
     showbackground: true,
-    // Les traits qui suivent le curseur sur les trois faces : ils sautent d'un
-    // mur à l'autre au moindre mouvement et se lisent comme des repères.
+    // Les traits qui suivent le curseur sur les trois faces sont désactivés.
+    // Ils sautent d'une face à l'autre au moindre mouvement et se confondent
+    // avec des repères.
     showspikes: false,
   });
 
@@ -114,8 +115,8 @@ export function scene(element, key, data, axes, p, { full, width, height, rise =
       xaxis: axis(axes[0]),
       yaxis: axis(axes[1]),
       zaxis: axis(axes[2]),
-      // La hauteur n'est pas une troisième longueur : elle porte une autre
-      // grandeur, et un cube la monterait bien plus haut qu'elle ne mérite.
+      // La hauteur porte une autre grandeur que les deux longueurs du plan, et
+      // un cube lui donnerait trop de hauteur.
       aspectmode: 'manual',
       aspectratio: { x: 1, y: 1, z: rise },
       camera: cameras[key] || START,
@@ -134,12 +135,13 @@ export function scene(element, key, data, axes, p, { full, width, height, rise =
     modeBarButtonsToRemove: ['tableRotation', 'resetCameraLastSave3d'],
   });
 
-  // L'orbite se termine par un relayout, le zoom à la molette non : celui-ci
-  // n'annonce rien tant que la roue tourne.
+  // L'orbite se termine par un relayout. Le zoom à la molette n'en émet aucun
+  // tant que la roue tourne.
   //
-  // Le geste est recopié dans la mise en page avant tout restyle : sans cela le
-  // tracé suivant repartirait de l'orientation qui y dort encore, et la scène
-  // sauterait à sa position de départ au relâchement de la souris.
+  // Le geste est recopié dans la mise en page avant tout restyle. Sans cela, le
+  // tracé suivant repartirait de l'orientation enregistrée dans la mise en
+  // page, et la scène reviendrait à sa position de départ au relâchement de la
+  // souris.
   let pending = null;
   const watch = () => {
     clearTimeout(pending);

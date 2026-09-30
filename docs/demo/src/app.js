@@ -1,7 +1,8 @@
 // Monte les vues, branche le clavier, lance le premier rendu. Importé par
-// boot.js une fois les données calculées.
+// boot.js à Démarrer, une fois les données calculées et les options fixées.
 
 import { STEPS } from './content/steps.js';
+import { plural } from './content/steps/format.js';
 import { FINAL, HOUSES, K, LAST, N, ROWS, Y, at, wAt } from './dataset.js';
 import { errors } from './model.js';
 import { goNext, goPrev, goto } from './navigation.js';
@@ -12,6 +13,8 @@ import * as figures from './views/figures.js';
 import * as flow from './views/flow.js';
 import * as lesson from './views/lesson.js';
 import * as nav from './views/nav.js';
+import * as panels from './views/panels.js';
+import * as theme from './views/theme.js';
 import * as transport from './views/transport.js';
 import { say } from './views/live.js';
 
@@ -21,6 +24,8 @@ calc.mount();
 figures.mount();
 transport.mount();
 nav.mount();
+panels.mount();
+theme.mount();
 
 figures.follow();
 
@@ -35,7 +40,8 @@ on('model', () => {
 });
 
 on('iteration', () => {
-  say(`Itération ${state.t} sur ${LAST}. Perte ${at(state.t).cost.toFixed(4)}, ${errors(ROWS, Y, wAt(state.t))} erreurs sur ${N}.`);
+  const wrong = errors(ROWS, Y, wAt(state.t));
+  say(`Itération ${state.t} sur ${LAST}. Perte ${at(state.t).cost.toFixed(4)}, ${wrong} ${plural(wrong, 'erreur', 'erreurs')} sur ${N}.`);
 });
 
 // Les flèches parcourent le cours, l'espace lance et arrête la lecture, Échap
@@ -56,8 +62,8 @@ window.addEventListener('keydown', (event) => {
   }
 });
 
-// Tenue quand la première formule est écrite et que les figures ont eu deux
-// images pour se dessiner.
+// La promesse est tenue quand la première formule est écrite et que les
+// figures ont eu deux images pour se dessiner.
 export async function ready() {
   await lesson.typeset();
   await new Promise((resolve) => { requestAnimationFrame(() => requestAnimationFrame(resolve)); });

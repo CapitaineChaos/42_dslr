@@ -1,8 +1,8 @@
 // Les sept figures en colonne latérale : une figure de tête, les six autres en
-// miniatures. Un clic, Entrée ou Espace sur une miniature la met en tête ; sur
-// la figure de tête, il l'ouvre en superposition sur la page ; fermer, un clic
-// à côté ou Échap la referment. Le changement d'étape ne touche pas à la figure
-// de tête : il encadre seulement la miniature que l'étape commente.
+// miniatures. Un clic, Entrée ou Espace sur une miniature la met en tête. Sur
+// la figure de tête, la même action l'ouvre en superposition sur la page.
+// Fermer, un clic à côté ou Échap la referment. Le changement d'étape ne
+// modifie pas la figure de tête. Il encadre la miniature que l'étape commente.
 //
 // describe() ne sert plus qu'au nom accessible du canevas ; note(), quand une
 // figure en déclare une, porte le paramètre que le tracé fixe.
@@ -52,8 +52,8 @@ export function paint() {
   else FIGURES.forEach((figure) => paintOne(figure.key));
 }
 
-// La figure que l'étape commente est seulement marquée : la figure de tête ne
-// change que sur un clic du lecteur.
+// La figure que l'étape commente est marquée. La figure de tête ne change que
+// sur un clic.
 export function follow() {
   const pointed = step().plot;
   document.querySelectorAll('.plot').forEach((card) => {
@@ -111,7 +111,7 @@ function reveal() {
   if (card.getBoundingClientRect().top < 0) card.scrollIntoView({ block: 'start', behavior });
 }
 
-// Miniature : elle passe en tête. Figure de tête : elle s'ouvre en grand.
+// Une miniature passe en tête. La figure de tête s'ouvre en grand.
 function press(card) {
   if (state.zoom !== null) return;
   if (card.dataset.plot === head) zoom(head);
@@ -144,7 +144,7 @@ export function mount() {
 
   new ResizeObserver(() => paint()).observe(plots);
 
-  // Un changement de passage émet aussi 'iteration' : un seul dessin suffit.
+  // Un changement de passage émet aussi 'iteration', donc un seul dessin suffit.
   on('iteration', paint);
   on('step', follow);
   lead(head);

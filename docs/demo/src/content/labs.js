@@ -1,5 +1,6 @@
-// Ateliers attachés à une micro-étape par son champ `widget`. Leur état est
-// indépendant de l'itération : on y manipule une valeur, pas la descente.
+// Ateliers attachés à une étape par son champ `widget`. Leur état est
+// indépendant de l'itération : un atelier fait varier une valeur, sans effet
+// sur la descente.
 
 import { sigmoid, softplus } from '../model.js';
 
@@ -14,8 +15,8 @@ function show(value) {
 }
 
 export const LABS = {
-  // Le débordement se constate : à partir de |z| ≈ 710, exp() dépasse ce qu'un
-  // flottant double peut représenter.
+  // À partir de |z| ≈ 710, exp() dépasse ce qu'un flottant double peut
+  // représenter.
   overflow(host) {
     host.innerHTML = `
       <div class="lab">
@@ -42,9 +43,9 @@ export const LABS = {
       const naive = { s: naiveSigmoid(z), sp: naiveSoftplus(z) };
       const stable = { s: sigmoid(z), sp: softplus(z) };
       const rows = [
-        ['exp(-z)', Math.exp(-z), null],
+        ['e<sup>−z</sup>', Math.exp(-z), null],
         ['σ(z)', naive.s, stable.s],
-        ['ln(1+e^z)', naive.sp, stable.sp],
+        ['ln(1 + e<sup>z</sup>)', naive.sp, stable.sp],
         ['ℓ pour y = 1', -Math.log(naive.s), stable.sp - z],
       ];
 
@@ -57,8 +58,8 @@ export const LABS = {
 
       const broken = !Number.isFinite(naive.sp) || !Number.isFinite(-Math.log(naive.s)) || naive.s === 0;
       note.innerHTML = broken
-        ? `<code>exp</code> dépasse la borne du flottant double. En JavaScript le résultat vaut <b>Infinity</b> et la perte cesse d'être un nombre ; en Python, <code>np.exp(750)</code> renvoie <code>inf</code> avec un avertissement. L'écriture stable reste définie.`
-        : `Les deux écritures coïncident pour <code>|z| &lt; 709,78</code>.`;
+        ? `<code>exp</code> dépasse la borne du flottant double. En Python, <code>np.exp(750)</code> renvoie <code>inf</code> avec un avertissement.`
+        : `Les deux écritures coïncident pour <code>|z| &lt; 709.78</code>.`;
     };
 
     slider.addEventListener('input', draw);

@@ -2,7 +2,7 @@
 //
 // La hessienne de J restreinte au plan (w₁, w₂) donne l'allongement des lignes
 // de niveau : le rapport des demi-axes vaut la racine du rapport des valeurs
-// propres. Le calcul passe par model.js, pas par une réimplémentation.
+// propres. Le calcul réutilise les fonctions de model.js.
 //
 //   node scripts/conditionnement.mjs
 
@@ -24,7 +24,7 @@ function hessian(rows, weights) {
   return out.map((line) => line.map((value) => value / rows.length));
 }
 
-// Valeurs propres et direction molle du bloc (w₁, w₂).
+// Valeurs propres et direction de plus faible courbure du bloc (w₁, w₂).
 function spectrum(H) {
   const a = H[1][1];
   const b = H[1][2];
@@ -40,12 +40,12 @@ function spectrum(H) {
 function report(label, features) {
   const rows = DATA.train.map((student) => [1, ...features(student)]);
   const trace = descend(rows, TARGETS, { alpha: DATA.alpha, epsilon: 1e-6, maxIter: 6000 }).trace;
-  console.log(`\n${label} — ${trace.length} itérations`);
+  console.log(`\n${label}, ${trace.length} itérations`);
   for (const t of [0, 20, 100, trace.length - 1]) {
     const { high, low, soft } = spectrum(hessian(rows, trace[t].weights));
     const head = `  t=${String(t).padStart(4)}`;
-    // p(1−p) sous-passe dès que les scores atteignent quelques centaines : le
-    // bloc est alors nul et le rapport n'a plus de valeur, pas même infinie.
+    // p(1−p) est arrondi à zéro (soupassement) dès que les scores atteignent
+    // quelques centaines. Le bloc est alors nul et le rapport est indéfini.
     if (high === 0) {
       console.log(`${head}  hessienne saturée à zéro`);
       continue;
@@ -54,7 +54,7 @@ function report(label, features) {
     console.log(
       `${head}  κ=${(high / low).toPrecision(3).padStart(9)}`
       + `  axes ${axes.toPrecision(3).padStart(9)}:1`
-      + `  molle (${soft[0].toFixed(2)}, ${soft[1].toFixed(2)})`,
+      + `  faible courbure (${soft[0].toFixed(2)}, ${soft[1].toFixed(2)})`,
     );
   }
 }

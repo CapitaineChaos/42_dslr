@@ -10,7 +10,7 @@ import { niceStep, tick } from './canevas.js';
 
 export const scores = {
   key: 'scores',
-  label: 'z',
+  label: 'Scores z',
 
   draw(ctx, w, h, p, t) {
     const weights = wAt(t);
@@ -46,15 +46,17 @@ export const scores = {
     ctx.lineTo(right, axis);
     ctx.stroke();
 
-    // La graduation 0 porte la décision : elle traverse la droite.
+    // La graduation 0 sépare les deux décisions, donc son trait traverse la
+    // droite.
     const zero = Math.round(at(0)) + 0.5;
     ctx.beginPath();
     ctx.moveTo(zero, axis - 16);
     ctx.lineTo(zero, axis + 12);
     ctx.stroke();
 
-    // Liseré au fond de la carte : sur une droite unique, les élèves de la zone
-    // de recouvrement se touchent, et sans lui la grappe formerait une tache.
+    // Chaque marqueur porte un liseré de la couleur du fond de la carte. Sur
+    // une droite unique, les élèves de la zone de recouvrement se touchent, et
+    // sans ce liseré ils formeraient une tache.
     values.forEach((value, i) => {
       const px = at(value);
       const size = 4.5;
@@ -81,8 +83,8 @@ export const scores = {
   describe(t) {
     const values = ROWS.map((row) => score(wAt(t), row));
     if (values.every((value) => Math.abs(value) < 1e-12)) {
-      return `Scores des ${N} élèves à l'itération 0 : tous nuls, confondus sur la graduation 0.`;
+      return `Scores des ${N} élèves à l'itération 0. Tous sont nuls et confondus sur la graduation 0.`;
     }
-    return `Scores des ${N} élèves à l'itération ${t}, de ${Math.min(...values).toFixed(2)} à ${Math.max(...values).toFixed(2)} sur une droite graduée. La graduation 0 sépare les deux décisions ; les élèves du mauvais côté sont cerclés.`;
+    return `Scores des ${N} élèves à l'itération ${t}, de ${Math.min(...values).toFixed(2)} à ${Math.max(...values).toFixed(2)} sur une droite graduée. La graduation 0 sépare les deux décisions. Les élèves mal placés sont cerclés.`;
   },
 };

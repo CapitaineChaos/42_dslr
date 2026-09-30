@@ -4,6 +4,12 @@
 
 html { font-size: 100%; }
 
+/* Motif Hero Patterns « Hexagons », https://heropatterns.com (CC BY 4.0).
+   Employé en masque : la teinte vient d'un jeton, le motif n'en porte aucune. */
+:root {
+  --honeycomb: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='49' viewBox='0 0 28 49'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z'/%3E%3C/svg%3E");
+}
+
 body {
   margin: 0;
   background: var(--ground);
@@ -12,12 +18,16 @@ body {
   font-size: var(--t-md);
   line-height: 1.6;
   font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
   -webkit-text-size-adjust: 100%;
+  scrollbar-color: var(--edge) transparent;
 }
 
-h1, h2, h3 { margin: 0; font-weight: 600; }
+::selection { background: var(--accent-soft); color: var(--ink); }
 
-/* Anneau cyan de 3 px, décollé de 2 px : visible sur les panneaux comme sur les
+h1, h2, h3 { margin: 0; font-family: var(--display); font-weight: 600; }
+
+/* Anneau de 3 px, décollé de 2 px, visible sur les panneaux comme sur les
    boutons pleins. */
 :where(a, button, select, summary, input, [tabindex]):focus-visible {
   outline: 3px solid var(--accent);
@@ -36,6 +46,8 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
   white-space: nowrap;
 }
 
+.sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+
 .skip {
   position: absolute;
   left: 0.5rem;
@@ -48,30 +60,6 @@ h1, h2, h3 { margin: 0; font-weight: 600; }
   text-decoration: none;
 }
 .skip:focus { top: 0.5rem; }
-
-/* ------------------------------------------------------------------ boutons */
-
-.button {
-  min-height: 2.25rem;
-  padding: 0.35rem 0.85rem;
-  font: inherit;
-  font-size: var(--t-sm);
-  color: var(--ink);
-  background: var(--raised);
-  border: 1px solid var(--edge);
-  border-radius: var(--radius);
-  cursor: pointer;
-}
-.button:hover:not(:disabled) { border-color: var(--accent); }
-.button:disabled { color: var(--ink-faint); border-color: var(--line); background: var(--surface); cursor: not-allowed; }
-
-.button.strong {
-  background: var(--accent);
-  color: var(--ground);
-  border-color: var(--accent);
-  font-weight: 700;
-}
-.button.strong:hover:not(:disabled) { box-shadow: 0 0 0 4px var(--accent-glow); }
 
 /* ------------------------------------------------------- champs et curseurs */
 
@@ -101,52 +89,51 @@ input[type="range"] {
   cursor: pointer;
 }
 input[type="range"]::-webkit-slider-runnable-track {
-  height: 6px;
-  background: var(--raised);
-  border: 1px solid var(--edge);
-  border-radius: 3px;
+  height: 4px;
+  background: var(--candy);
+  border: 0;
+  border-radius: 2px;
 }
 input[type="range"]::-moz-range-track {
-  height: 6px;
-  background: var(--raised);
-  border: 1px solid var(--edge);
-  border-radius: 3px;
+  height: 4px;
+  background: var(--candy);
+  border: 0;
+  border-radius: 2px;
 }
 input[type="range"]::-webkit-slider-thumb {
   appearance: none;
-  width: 1.15rem;
-  height: 1.15rem;
-  margin-top: -0.4rem;
-  border-radius: 50%;
-  background: var(--accent);
-  border: 2px solid var(--ground);
-  box-shadow: 0 0 0 4px var(--accent-glow);
+  width: 1.2rem;
+  height: 1.1rem;
+  margin-top: -0.45rem;
+  background: var(--fill-hot);
+  border: 0;
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
 }
 input[type="range"]::-moz-range-thumb {
-  width: 1.15rem;
-  height: 1.15rem;
-  border-radius: 50%;
-  background: var(--accent);
-  border: 2px solid var(--ground);
-  box-shadow: 0 0 0 4px var(--accent-glow);
+  width: 1.2rem;
+  height: 1.1rem;
+  background: var(--fill-hot);
+  border: 0;
+  border-radius: 0;
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
 }
 
-code { font-family: var(--mono); font-size: 0.92em; }
+code { font-family: var(--mono); font-size: 0.9em; }
 
 /* ------------------------------------------------------ rappel des symboles */
 
 /* Un symbole souligné en pointillé porte sa définition, affichée au survol et
-   au focus clavier. Au-dessus du symbole dans le texte, en dessous dans un
-   en-tête de tableau, que le haut du tableau couperait. Masquée, la bulle est
-   retirée de la mise en page : invisible mais présente, elle élargirait le
-   cadre défilant du tableau. */
+   au focus clavier. La bulle s'affiche au-dessus du symbole dans le texte, et
+   en dessous dans un en-tête de tableau, où le haut du tableau la couperait.
+   Masquée, la bulle est retirée de la mise en page, car une bulle invisible
+   mais présente élargirait le cadre défilant du tableau. */
 .sym {
   position: relative;
-  text-decoration: underline dotted var(--ink-faint);
+  text-decoration: underline dotted var(--edge);
   text-underline-offset: 3px;
   cursor: help;
 }
-.sym:hover, .sym:focus-visible { color: var(--accent); }
+.sym:hover, .sym:focus-visible { color: var(--accent-text); }
 
 .sym::after {
   content: attr(data-tip);
@@ -157,19 +144,19 @@ code { font-family: var(--mono); font-size: 0.92em; }
   transform: translateX(-50%);
   width: max-content;
   max-width: 20rem;
-  padding: 0.35rem 0.6rem;
+  padding: 0.4rem 0.65rem;
   font-family: var(--body);
   font-size: var(--t-xs);
   font-weight: 400;
   letter-spacing: normal;
-  line-height: 1.4;
+  line-height: 1.45;
   text-align: left;
   text-transform: none;
   white-space: normal;
-  color: var(--ink);
-  background: var(--raised);
-  border: 1px solid var(--accent);
+  color: var(--on-bar);
+  background: var(--bar);
   border-radius: var(--radius);
+  box-shadow: var(--shadow-lift);
   pointer-events: none;
   display: none;
 }

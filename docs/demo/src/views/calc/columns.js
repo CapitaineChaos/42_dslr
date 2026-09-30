@@ -34,7 +34,7 @@ export const COLUMNS = {
   z0: { head: () => tip(zh(0), NOTES.zh[0], true), cell: scoreCell(0) },
   z1: { head: () => tip(zh(1), NOTES.zh[1], true), cell: scoreCell(1) },
   z2: { head: () => tip(zh(2), NOTES.zh[2], true), cell: scoreCell(2) },
-  side: { head: () => tip('côté', `z &gt; 0 → ${HOUSES[HOUSE]}, sinon autres maisons`, true),
+  side: { head: () => tip('côté', `Côté de ${HOUSES[HOUSE]} si z &gt; 0, côté des autres maisons sinon.`, true),
     cell: (m) => `${m.pred ? tag(HOUSE) : 'autres'}${cross(m.miss)}` },
   hmax: { head: () => tip('réponse', NOTES.hmax, true), cell: (m) => `${tag(m.decision.pred)}${cross(m.wrong)}` },
   p: { head: () => tip('p', NOTES.p, true), cell: (m) => m.p.toFixed(3) },

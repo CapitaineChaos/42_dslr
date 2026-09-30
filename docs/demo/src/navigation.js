@@ -1,15 +1,16 @@
 // Déplacements dans le cours, dans la descente et entre les modèles.
 //
-// Trois boucles imbriquées, comme dans le code. La boucle de correction se
-// referme d'elle-même : au bout de la mise à jour, suivant repart au score avec
-// l'itération suivante. À l'arrêt, la boucle des maisons repart aux étiquettes
-// avec la maison suivante ; après la dernière, la décision. La boucle des plis
-// part de la validation : l'évaluation du pli k renvoie à la médiane avec le
-// pli k + 1. Après le cinquième pli, le bilan, puis un dernier retour pour le
+// Le parcours a trois boucles imbriquées, comme le code. Dans la boucle de
+// correction, suivant repart de la mise à jour au score avec l'itération
+// suivante. À l'arrêt, la boucle des maisons repart aux étiquettes avec la
+// maison suivante, et mène à la décision après la dernière maison. Dans la
+// boucle des plis, l'évaluation du pli k renvoie à la médiane avec le pli
+// k + 1. Le bilan suit le cinquième pli, puis un dernier retour lance le
 // modèle final, qui sort de l'entraînement vers la prédiction.
 
+import { config } from './config.js';
 import { STEPS } from './content/steps.js';
-import { FINAL, HOUSES, K, LAST, PLIS, usePli } from './dataset.js';
+import { FINAL, HOUSES, K, LAST, passesFor, usePli } from './dataset.js';
 import { emit, state } from './state.js';
 
 const INSIDE = ['prep', 'maison', 'boucle', 'post'];
@@ -27,13 +28,17 @@ export const PREDICT = index('prediction');
 
 export const inFrame = (at) => INSIDE.includes(STEPS[at].phase);
 
-// Frise des dix-huit descentes mises bout à bout, passage par passage et maison
-// par maison : une position globale par état de poids.
-const RUNS = PLIS.flatMap((pass) => pass.models.map((model, house) => ({ pli: pass.pli, house, last: model.last })));
+export const PASSES = passesFor(config.cv);
+export const FIRST = PASSES[0].pli;
+export const rankOf = (pli) => PASSES.findIndex((pass) => pass.pli === pli);
+
+// Frise des descentes mises bout à bout, passage par passage et maison par
+// maison : une position globale par état de poids.
+const RUNS = PASSES.flatMap((pass) => pass.models.map((model, house) => ({ pli: pass.pli, house, last: model.last })));
 const OFFSETS = RUNS.reduce((starts, run, i) => [...starts, i ? starts[i - 1] + RUNS[i - 1].last + 1 : 0], []);
 const SPAN = OFFSETS[RUNS.length - 1] + RUNS[RUNS.length - 1].last;
 
-const globalOf = (pli, house, t) => OFFSETS[pli * H + house] + t;
+const globalOf = (pli, house, t) => OFFSETS[rankOf(pli) * H + house] + t;
 
 function localOf(position) {
   const clamped = Math.min(Math.max(Math.round(position), 0), SPAN);
@@ -49,7 +54,7 @@ export function setIteration(t) {
   emit('iteration');
 }
 
-// Changer de passage ou de maison change les données : les vues abonnées à
+// Changer de passage ou de maison change les données. Les vues abonnées à
 // 'model' recalculent ce qu'elles avaient figé, puis l'itération est replacée.
 export function setModel(pli, house, t = state.t) {
   if (pli !== state.pli || house !== state.house) {
@@ -65,8 +70,8 @@ export function setModel(pli, house, t = state.t) {
 export const setPli = (pli, t) => setModel(pli, state.house, t);
 export const setHouse = (house, t) => setModel(state.pli, house, t);
 
-// Déplacement sur la frise : au-delà de l'arrêt d'une descente, on continue au
-// début de la suivante.
+// Déplacement sur la frise : au-delà de l'arrêt d'une descente, il continue
+// au début de la suivante.
 export function moveTo(position) {
   const { pli, house, t } = localOf(position);
   setModel(pli, house, t);
@@ -82,7 +87,7 @@ function show(target) {
   emit('step');
 }
 
-// Après la boucle des maisons, les trois modèles sont à l'arrêt : les étapes
+// Après la boucle des maisons, les trois modèles sont à l'arrêt, et les étapes
 // qui suivent montrent la dernière descente terminée. L'évaluation montre un pli
 // de validation ; le bilan, le dernier pli ; la prédiction, le modèle final.
 export function goto(at) {
@@ -146,7 +151,7 @@ export function goPrev() {
     show(LOOP_END);
     return;
   }
-  if (state.step === FRAME_START && state.pli > 0) {
+  if (state.step === FRAME_START && state.pli > FIRST) {
     if (state.pli === FINAL) goto(VALID_END);
     else {
       setModel(state.pli - 1, H - 1, Infinity);
@@ -162,14 +167,14 @@ export function goPrev() {
   goto(state.step - 1);
 }
 
-// Hors de l'entraînement, l'étape ne suit pas l'itération : les commandes
+// Hors de l'entraînement, l'étape ne suit pas l'itération, donc les commandes
 // d'itération entrent d'abord dans la boucle de correction.
 export function enterLoop() {
   if (!inFrame(state.step)) goto(LOOP_START);
 }
 
-// La boucle du code ne s'interrompt qu'au critère d'arrêt ou à la limite : en
-// sortir, c'est aller à la dernière itération, sur l'étape du critère.
+// La boucle du code ne s'interrompt qu'au critère d'arrêt ou à la limite. En
+// sortir revient donc à aller à la dernière itération, sur l'étape du critère.
 export function exitLoop() {
   setIteration(LAST);
   show(LOOP_END);

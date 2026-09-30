@@ -1,5 +1,5 @@
-// Contenu du cours. Une étape = un écran = un fichier de steps/, dans l'ordre
-// du parcours.
+// Contenu du cours. Chaque étape correspond à un écran et à un fichier de
+// steps/, dans l'ordre du parcours.
 //
 // `node` rattache l'étape à un nœud du schéma (steps/nodes.js). `lead(c)` est
 // la fiche de l'étape ; `more(c)` le détail, sous le titre `moreTitle` s'il est
@@ -8,7 +8,10 @@
 //
 // `calc` choisit les élèves et les colonnes du tableau, la ligne de pied, la
 // matrice et le calcul déroulé ; views/calc.js les interprète.
+//
+// Sans validation croisée, les étapes de la branche des plis sont retirées.
 
+import { config } from '../config.js';
 import presentation from './steps/presentation.js';
 import donnees from './steps/donnees.js';
 import imputation from './steps/imputation.js';
@@ -59,4 +62,4 @@ export const STEPS = [
   validation,
   confusion,
   prediction,
-];
+].filter((step) => config.cv || step.phase !== 'valid');

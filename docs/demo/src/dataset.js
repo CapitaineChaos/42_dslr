@@ -3,12 +3,12 @@
 // préparation sur ses seuls élèves d'entraînement (médiane des notes présentes,
 // puis moyenne et écart type de population sur les colonnes complétées), puis
 // entraîne un modèle par maison, un contre tous, chacun par sa propre descente.
-// Tout se calcule une fois, au chargement, par compute() : la page attend la fin
-// du calcul pour monter ses vues. L'itération devient ensuite un index dans la
+// compute() calcule tout une fois, au chargement, et la page attend la fin du
+// calcul pour monter ses vues. L'itération devient ensuite un index dans la
 // trace du modèle affiché.
 //
 // Le passage et la maison affichés sont exposés par des liaisons vivantes
-// (`export let`) : usePli() les réaffecte, et tout module qui lit TRACE, ROWS
+// (`export let`). usePli() les réaffecte, et tout module qui lit TRACE, ROWS
 // ou STATS au moment de dessiner voit le modèle courant.
 
 import { DATA } from './data.js';
@@ -63,8 +63,8 @@ async function build(pli, report) {
     return { z, pred: argmax(z) };
   };
 
-  // Le plan des notes standardisées garde des bornes carrées : une distance y a
-  // un sens, et un cadrage anisotrope fausserait l'angle de la frontière.
+  // Le plan des notes standardisées garde des bornes carrées, car une distance
+  // y a un sens, et un cadrage anisotrope fausserait l'angle de la frontière.
   const span = Math.max(...LEARN.concat(TEST).flatMap((student) => features(student).map(Math.abs))) * 1.14;
 
   const results = held.map((student) => ({ student, ...decide(student) }));
@@ -89,6 +89,10 @@ async function build(pli, report) {
 }
 
 export const PLIS = [];
+
+// Passages parcourus : les six avec la validation croisée, le modèle final seul
+// sans elle.
+export const passesFor = (cv) => (cv ? PLIS : PLIS.slice(FINAL));
 
 export let PLI;
 export let HOUSE;

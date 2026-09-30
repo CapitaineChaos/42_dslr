@@ -3,10 +3,12 @@
 // Dans l'entraînement, choisir un passage mène à son début, ou à son arrêt
 // après la boucle ; sur l'évaluation, au pli évalué ; ailleurs, à la médiane du
 // passage. Choisir une maison mène au début de sa descente, dans la boucle.
+// Sans validation croisée, le seul passage est le modèle final, et son
+// sélecteur est masqué.
 
 import { STEPS } from '../../content/steps.js';
-import { FINAL, HOUSES, K, LEARN, PLIS } from '../../dataset.js';
-import { FRAME_START, HELD_STEP, enterLoop, goto, inFrame, setHouse, setModel, setPli } from '../../navigation.js';
+import { FINAL, HOUSES, K, LEARN } from '../../dataset.js';
+import { FRAME_START, HELD_STEP, PASSES, enterLoop, goto, inFrame, setHouse, setModel, setPli } from '../../navigation.js';
 import { state } from '../../state.js';
 import { stop } from './play.js';
 
@@ -50,7 +52,8 @@ export function paint() {
 }
 
 export function mount() {
-  PLIS.forEach((pass) => {
+  passes.closest('.console-pli').classList.toggle('single', PASSES.length === 1);
+  PASSES.forEach((pass) => {
     const final = pass.pli === FINAL;
     const element = button(passes, final ? 'Final' : String(pass.pli + 1),
       final ? `Modèle final, ${LEARN.length} élèves` : `Pli ${pass.pli + 1} sur ${K}, mis de côté`,

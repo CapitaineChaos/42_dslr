@@ -11,6 +11,7 @@ DEMO_EXPORTER := $(DEMO_DIR)/scripts/exporter_donnees.py
 DEMO_SCENARIO := $(DEMO_DIR)/data/scenario.csv
 DEMO_BUILDER  := $(DEMO_DIR)/scripts/construire_scenario.py
 DEMO_CONTRAST := $(DEMO_DIR)/scripts/verifie_contraste.py
+DEMO_SERVER   := $(DEMO_DIR)/scripts/serveur.py
 PORT ?= 8000
 
 .PHONY: install train predict describe histogram histograms scatter scatters pair heatmap cross demo contraste clean fclean re
@@ -64,7 +65,7 @@ $(DEMO_DATA): $(DEMO_EXPORTER) $(DEMO_SCENARIO)
 
 demo: $(STAMP) $(DEMO_DATA)
 	@echo "atelier sur http://localhost:$(PORT)/  (Ctrl-C pour arrêter)"
-	@cd $(DEMO_DIR) && $(CURDIR)/$(PY) -m http.server $(PORT) --bind 127.0.0.1
+	@$(PY) $(DEMO_SERVER) $(PORT)
 
 contraste: $(STAMP)
 	$(PY) $(DEMO_CONTRAST)

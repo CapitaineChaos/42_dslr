@@ -1,5 +1,6 @@
-// Région d'annonce pour les lecteurs d'écran. Le message est retardé : pendant
-// un glissement du curseur d'itération, une annonce par cran serait illisible.
+// Région d'annonce pour les lecteurs d'écran. Le message est retardé, car
+// pendant un glissement du curseur d'itération une annonce par cran serait
+// inintelligible.
 
 const host = document.getElementById('live');
 let timer = null;

@@ -9,6 +9,7 @@
   grid-template-areas:
     'pli step params read'
     'loop loop loop loop';
+  background: var(--surface);
   border-top: 1px solid var(--line);
 }
 
@@ -16,10 +17,6 @@
 .console-pli { grid-area: pli; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .console-loop { grid-area: loop; flex-wrap: wrap; }
 
-.pli { display: flex; gap: 0.25rem; }
-.pli .button { width: 2.4rem; padding-inline: 0; font-family: var(--mono); }
-.pli .button:last-child { width: 3.5rem; font-family: var(--body); }
-.pli [aria-pressed='true'] { background: var(--accent); color: var(--ground); border-color: var(--accent); }
 .console #params { grid-area: params; }
 .console #readout { grid-area: read; }
 .console .readout { border-left: 1px solid var(--line); border-bottom: 1px solid var(--line); }
@@ -35,24 +32,77 @@
 .console-group {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1.25rem;
+  gap: 0.6rem;
+  padding: 0.55rem 1.25rem;
 }
 
+/* Puce hexagonale en dégradé devant chaque libellé, comprise dans sa largeur. */
 .console-label {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
   flex: none;
   width: 6.5rem;
+  font-family: var(--display);
   font-size: var(--t-xs);
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--ink-faint);
+}
+.console-label::before {
+  content: '';
+  flex: none;
+  width: 0.6rem;
+  height: 0.55rem;
+  background: var(--candy);
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
 }
 
 .console .button { min-height: 2.4rem; }
 .console #prev, .console #next { width: 6.5rem; }
 .console-step .console-label, .console-pli .console-label { width: auto; }
 .console #exit { width: 9.5rem; flex: none; }
+
+/* ------------------------------------------------ passages et maisons */
+
+/* Puces hexagonales presque régulières : --cut vaut le quart de la largeur. */
+.pli, .houses { display: flex; flex: none; gap: 0.2rem; }
+.pli .button, .houses .button { --cut: 0.6rem; min-height: 2.25rem; padding-inline: 0; color: var(--ink-soft); }
+.pli .button { width: 2.4rem; font-family: var(--mono); }
+.pli .button:last-child { width: 3.6rem; font-family: var(--display); }
+.pli [aria-pressed='true'], .pli [aria-pressed='true']:hover:not(:disabled) {
+  --frame: var(--fill-hot);
+  --face: var(--fill-hot);
+  color: var(--on-accent);
+}
+
+.houses .button { width: 2.4rem; font-family: var(--mono); font-weight: 600; }
+.houses .button.h0 { color: var(--house-0); }
+.houses .button.h1 { color: var(--house-1); }
+.houses .button.h2 { color: var(--house-2); }
+.houses [aria-pressed='true'], .houses [aria-pressed='true']:hover:not(:disabled) {
+  --frame: var(--accent);
+  --face: var(--accent-soft);
+  --stroke: 2px;
+}
+
+/* Sans validation croisée, un seul passage : son sélecteur disparaît. */
+.console-pli.single #console-pli, .console-pli.single .pli { display: none; }
+.console-pli.single .console-sublabel { margin-left: 0; padding-left: 0; border-left: 0; }
+
+/* Maison, dans le bloc passage : un filet la sépare des passages. */
+.console-sublabel {
+  width: auto;
+  margin-left: 0.4rem;
+  padding-left: 1rem;
+  border-left: 1px solid var(--line);
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+}
+
+/* ---------------------------------------------------------- compteurs */
 
 .console-count {
   display: flex;
@@ -66,53 +116,40 @@
 .console-count output {
   min-width: 4ch;
   font-size: var(--t-xl);
-  font-weight: 700;
+  font-weight: 600;
   text-align: right;
   color: var(--ink);
 }
 .console-count .of { min-width: 6ch; font-size: var(--t-sm); color: var(--ink-faint); }
 .console-count .stop { min-width: 20ch; }
-.console-count .stop .warn { color: var(--alert); }
+.console-count .stop .warn { color: var(--alert); font-weight: 600; }
 
-.jog { display: flex; gap: 0.25rem; flex: none; }
+.jog { display: flex; gap: 0.3rem; flex: none; }
 .jog .button { width: 2.9rem; padding-inline: 0; font-family: var(--mono); }
-.jog .button:first-child, .jog .button:last-child { width: 4rem; font-family: var(--body); }
-.jog [data-play] { width: 5.5rem; font-family: var(--body); }
-.jog [data-play] { box-shadow: 0 0 14px -2px var(--accent-glow); }
-.jog [data-play][aria-pressed='true'] { animation: playing 1.4s ease-in-out infinite; }
-@keyframes playing {
-  50% { box-shadow: 0 0 0 5px var(--accent-glow); }
+.jog .button:first-child, .jog .button:last-child { width: 4rem; font-family: var(--display); }
+.jog [data-play] { width: 5.5rem; font-family: var(--display); }
+.jog [data-play][aria-pressed='true'] {
+  --frame: var(--candy-lemon);
+  --stroke: 2px;
+  animation: playing 1.4s ease-in-out infinite;
 }
-@media (prefers-reduced-motion: reduce) {
-  .jog [data-play][aria-pressed='true'] { animation: none; box-shadow: 0 0 0 4px var(--accent-glow); }
+@keyframes playing {
+  50% { filter: brightness(1.18); }
 }
 
-/* Maison, dans le bloc passage : un filet la sépare des passages. */
-.console-sublabel {
-  width: auto;
-  margin-left: 0.25rem;
-  padding-left: 0.75rem;
-  border-left: 1px solid var(--line);
-  align-self: stretch;
-  display: flex;
-  align-items: center;
-}
-.houses { display: flex; gap: 0.25rem; flex: none; }
-.houses .button { width: 2.4rem; padding-inline: 0; font-family: var(--mono); font-weight: 700; }
-.houses .button.h0 { color: var(--house-0); }
-.houses .button.h1 { color: var(--house-1); }
-.houses .button.h2 { color: var(--house-2); }
-.houses [aria-pressed='true'] { border-color: var(--accent); background: var(--accent-deep); }
+/* ------------------------------------------------------------ mesures */
 
 .readout {
   display: flex;
-  gap: 1.25rem;
+  gap: 1.4rem;
   margin: 0;
   padding: 0.55rem 1.25rem;
 }
 .readout div { display: flex; flex-direction: column; justify-content: center; }
 .readout dt {
+  font-family: var(--display);
   font-size: var(--t-xs);
+  font-weight: 500;
   color: var(--ink-faint);
 }
 .readout dd {

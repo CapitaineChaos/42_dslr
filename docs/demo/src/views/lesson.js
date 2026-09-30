@@ -20,6 +20,7 @@ const title = document.getElementById('title');
 const formula = document.getElementById('formula');
 const lead = document.getElementById('lead');
 const more = document.getElementById('more');
+const moreBox = document.getElementById('more-box');
 const moreTitle = document.getElementById('more-title');
 const lab = document.getElementById('lab');
 
@@ -31,7 +32,8 @@ function passage() {
   return state.pli === FINAL ? 'modèle final' : `pli ${state.pli + 1} sur ${K}`;
 }
 
-// Une seule ligne : la position se tronque plutôt que de pousser le titre.
+// La position tient sur une seule ligne et se tronque plutôt que de pousser
+// le titre.
 function locate(current) {
   const node = NODES.find((candidate) => candidate.key === current.node);
   const siblings = STEPS.filter((candidate) => candidate.node === current.node);
@@ -63,6 +65,7 @@ function renderValues() {
   const context = buildContext(state.t);
   lead.innerHTML = step().lead(context);
   more.innerHTML = step().more(context);
+  moreBox.hidden = more.textContent.trim() === '';
 }
 
 function fitLead() {
@@ -75,7 +78,8 @@ function renderStep() {
   scroller.scrollTop = 0;
   where.innerHTML = locate(current);
   title.textContent = current.title;
-  moreTitle.textContent = current.moreTitle || 'Détail mathématique';
+  moreTitle.textContent = current.moreTitle || '';
+  moreTitle.hidden = !current.moreTitle;
 
   formula.classList.add('pending');
   formula.innerHTML = current.math ? `\\[${current.math}\\]` : '';

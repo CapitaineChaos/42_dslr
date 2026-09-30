@@ -1,8 +1,10 @@
-// Schéma du parcours, tracé par flow/draw.js. Ici son état : le nœud courant
-// s'allume, les nœuds franchis restent marqués, la flèche qui mène au nœud
-// courant s'anime, les flèches de retour des boucles en cours restent teintées.
+// Schéma du parcours, tracé par flow/draw.js. Ce module tient son état : le
+// nœud courant s'allume, les nœuds franchis restent marqués, la flèche qui mène
+// au nœud courant s'anime, les flèches de retour des boucles en cours restent
+// teintées.
 
 import { NODES, STEPS } from '../content/steps.js';
+import { FIRST } from '../navigation.js';
 import { on, state } from '../state.js';
 import { INSIDE, build, edges, nodes, pips } from './flow/draw.js';
 
@@ -16,10 +18,10 @@ function update() {
   NODES.forEach((node, index) => {
     const group = nodes[node.key];
     const repeated = inFrame && INSIDE.includes(node.phase)
-      && (state.pli > 0
+      && (state.pli > FIRST
         || (['maison', 'boucle'].includes(node.phase) && ['maison', 'boucle'].includes(step.phase) && state.house > 0)
         || (node.phase === 'boucle' && step.phase === 'boucle' && state.t > 0));
-    const validated = node.phase === 'valid' && inFrame && state.pli > 0;
+    const validated = node.phase === 'valid' && inFrame && state.pli > FIRST;
     group.classList.toggle('is-current', index === current);
     group.classList.toggle('is-done', index < current || repeated || validated);
     if (index === current) group.setAttribute('aria-current', 'step');
@@ -39,7 +41,7 @@ function update() {
     let lit = firstOfNode && step.node === to;
     if (to === loopHead) lit = lit && (kind === 'return' ? state.t > 0 : state.t === 0);
     if (to === houseHead) lit = lit && (kind === 'house-return' ? state.house > 0 : state.house === 0);
-    if (to === frameHead) lit = lit && (kind === 'outer-return' ? state.pli > 0 : state.pli === 0);
+    if (to === frameHead) lit = lit && (kind === 'outer-return' ? state.pli > FIRST : state.pli === FIRST);
     const live = (kind === 'return' && step.phase === 'boucle')
       || (kind === 'house-return' && ['maison', 'boucle'].includes(step.phase))
       || (kind === 'outer-return' && (inFrame || step.phase === 'valid'));
